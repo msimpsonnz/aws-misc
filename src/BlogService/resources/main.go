@@ -10,18 +10,20 @@ import (
 func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	//index, err := ioutil.ReadFile("public/index.html")
-	if err != nil {
-		return events.APIGatewayProxyResponse{}, err
-	}
 
-	return events.APIGatewayProxyResponse{
+	evt := events.APIGatewayProxyResponse{
 		StatusCode: 200,
-		Body:       string(index),
+		Body:       "Hello World",
 		Headers: map[string]string{
 			"Content-Type": "text/html",
 		},
-	}, nil
+	}
 
+	// if err != nil {
+	// 	return events.APIGatewayProxyResponse{}, err
+	// }
+
+	return evt, nil
 }
 
 func main() {
