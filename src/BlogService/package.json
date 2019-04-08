@@ -1,0 +1,24 @@
+{
+  "name": "blog_service",
+  "version": "0.1.0",
+  "bin": {
+    "blog_service": "bin/blog_service.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@types/node": "8.10.40",
+    "typescript": "^3.3.3333",
+    "aws-cdk": "^0.28.0"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-apigateway": "^0.28.0",
+    "@aws-cdk/aws-lambda": "^0.28.0",
+    "@aws-cdk/aws-s3": "^0.28.0",
+    "@aws-cdk/cdk": "^0.28.0",
+    "source-map-support": "^0.5.9"
+  }
+}
