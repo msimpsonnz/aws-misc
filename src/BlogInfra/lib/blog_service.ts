@@ -7,9 +7,9 @@ export class WidgetService extends cdk.Construct {
     super(scope, id);
 
     const handler = new lambda.Function(this, "WidgetHandler", {
-      runtime: lambda.Runtime.Go1x,
+      runtime: lambda.Runtime.DotNetCore21,
       code: lambda.Code.directory("resources"),
-      handler: "main",
+      handler: "BlogServiceNet::BlogServiceNet.Functions::Get",
     });
 
     const api = new apigateway.RestApi(this, "widgets-api", {
