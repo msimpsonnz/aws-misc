@@ -29,7 +29,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 
 	svc := sqs.New(sess)
 
-	qURL := "QueueURL"
+	qURL := "https://sqs.ap-southeast-2.amazonaws.com/632298589294/sam-app-MySqsQueue-1Q3J5BGF86L1I"
 
 	var res = []*sqs.SendMessageOutput{}
 
