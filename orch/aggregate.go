@@ -29,7 +29,7 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) {
 			"message": "message to other lambda func",
 		})
 
-		result, err := client.Invoke(&svcLambda.InvokeInput{FunctionName: aws.String("MyGetItemsFunction"), Payload: payload})
+		result, err := client.Invoke(&svcLambda.InvokeInput{FunctionName: aws.String("dynamo-go-HelloWorldFunction-F1D3K0FM6TRX"), Payload: payload})
 		if err != nil {
 			fmt.Println("Error calling MyGetItemsFunction")
 			os.Exit(0)
