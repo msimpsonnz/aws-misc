@@ -11,6 +11,6 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\lamb-net\lamb-net.csproj" />
+    <ProjectReference Include="..\..\src\StarterFunc\StarterFunc.csproj" />
   </ItemGroup>
 </Project>

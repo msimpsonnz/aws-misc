@@ -8,9 +8,9 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.TestUtilities;
 using Amazon.Lambda.APIGatewayEvents;
 
-using lamb_net;
+using StarterFunc;
 
-namespace lamb_net.Tests
+namespace StarterFunc.Tests
 {
     public class FunctionTest
     {

@@ -11,7 +11,10 @@
             "presentation": {
                 "reveal": "silent"
             },
-            "problemMatcher": "$msCompile"
+            "problemMatcher": "$msCompile",
+            "options": {
+                "cwd": "${workspaceFolder}/lamb-net/src/lamb-net"
+            }
         }
     ]
 }
