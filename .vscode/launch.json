@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             "program": "C:/Users/matt/.dotnet/tools/dotnet-lambda-test-tool-2.1.exe",
             "args": [],
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/lamb-net/src/lamb-net",
             "console": "internalConsole",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart"
