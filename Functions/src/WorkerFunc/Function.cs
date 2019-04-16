@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
-using Amazon.Lambda;
-using Amazon.Lambda.Model;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 
 
@@ -49,16 +49,16 @@ namespace WorkerFunc
         private async Task ProcessMessageAsync(SQSEvent.SQSMessage message, ILambdaContext context)
         {
             context.Logger.LogLine($"Processed message {message.Body}");
-            CancellationToken cancellationToken = new CancellationToken();
 
-            var request = new InvokeAsyncRequest
-            {
-                FunctionName = "mjsdemo-lambda-dynamo"
-            };
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            var response = await client.InvokeAsyncAsync(request, cancellationToken);
+            var stringTask = client.GetStringAsync(message.Body);
 
-            context.Logger.LogLine($"Status: {response.Status}");
+            var msg = await stringTask;
+            Console.Write(msg);
+
+            context.Logger.LogLine($"Status: {msg}");
         }
     }
 }
