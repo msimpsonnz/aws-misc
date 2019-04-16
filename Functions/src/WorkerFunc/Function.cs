@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
+using Amazon.Lambda;
+using Amazon.Lambda.Model;
+using System.Threading;
 
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -34,18 +37,28 @@ namespace WorkerFunc
         /// <returns></returns>
         public async Task FunctionHandler(SQSEvent evnt, ILambdaContext context)
         {
-            foreach(var message in evnt.Records)
+            foreach (var message in evnt.Records)
             {
                 await ProcessMessageAsync(message, context);
             }
         }
 
+        //private static AmazonLambdaClient client = new AmazonLambdaClient();
+        private static readonly HttpClient client = new HttpClient();
+
         private async Task ProcessMessageAsync(SQSEvent.SQSMessage message, ILambdaContext context)
         {
             context.Logger.LogLine($"Processed message {message.Body}");
+            CancellationToken cancellationToken = new CancellationToken();
 
-            // TODO: Do interesting work based on the new message
-            await Task.CompletedTask;
+            var request = new InvokeAsyncRequest
+            {
+                FunctionName = "mjsdemo-lambda-dynamo"
+            };
+
+            var response = await client.InvokeAsyncAsync(request, cancellationToken);
+
+            context.Logger.LogLine($"Status: {response.Status}");
         }
     }
 }
