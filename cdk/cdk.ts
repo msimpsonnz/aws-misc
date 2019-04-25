@@ -127,7 +127,7 @@ const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProj
       },
     },
     artifacts: {
-      type: 'zip'
+      files: 'main'
     },
   },
 });
