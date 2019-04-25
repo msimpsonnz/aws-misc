@@ -70,10 +70,14 @@ const cdkBuildProject = new codebuild.Project(pipelineStack, 'CdkBuildProject', 
     version: '0.2',
     phases: {
       install: {
-        commands: 'npm install',
+        commands: [
+          'cd ./cdk',
+          'npm install'
+        ]
       },
       build: {
         commands: [
+          'cd ./cdk',
           'npm run build',
           'npm run cdk synth LambdaStack -- -o .',
         ],
@@ -97,34 +101,34 @@ const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
 // make sure to adjust the build environment and/or commands if they don't match your specific situation
 const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
   environment: {
-      buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
+    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
   },
   buildSpec: {
-      version: '0.2',
-      phases: {
-          install: {
-              commands: [
-                  'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
-                  'go get golang.org/x/lint/golint',
-                  'go get -u github.com/stretchr/testify'
-              ]
-          },
-          pre_build: {
-              commands: [
-                  'cd "/go/src/handler"',
-                  'go get ./...',
-                  'golint -set_exit_status',
-                  'go tool vet .',
-                  'go test .'
-              ]
-          },
-          build: {
-              commands: 'go build -o main',
-          },
+    version: '0.2',
+    phases: {
+      install: {
+        commands: [
+          'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
+          'go get golang.org/x/lint/golint',
+          'go get -u github.com/stretchr/testify'
+        ]
       },
-      artifacts: {
-          type: 'zip'
+      pre_build: {
+        commands: [
+          'cd "/go/src/handler"',
+          'go get ./...',
+          'golint -set_exit_status',
+          'go tool vet .',
+          'go test .'
+        ]
       },
+      build: {
+        commands: 'go build -o main',
+      },
+    },
+    artifacts: {
+      type: 'zip'
+    },
   },
 });
 const lambdaBuildOutput = new codepipeline.Artifact();
