@@ -1,7 +1,7 @@
 import cdk = require('@aws-cdk/cdk');
 //import dynamo = require('@aws-cdk/aws-dynamodb');
 import lambda = require('@aws-cdk/aws-lambda');
-import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';
+//import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';
 
 
 export class LambdaStarterStack extends cdk.Stack {
