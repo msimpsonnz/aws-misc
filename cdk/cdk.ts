@@ -79,7 +79,7 @@ const cdkBuildProject = new codebuild.Project(pipelineStack, 'CdkBuildProject', 
         commands: [
           'cd "${CODEBUILD_SRC_DIR}/cdk"',
           'npm run build',
-          'npm run cdk synth LambdaStack -o ../',
+          'npm run cdk synth LambdaStack -- -o ../',
         ],
       },
     },
