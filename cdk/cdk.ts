@@ -71,13 +71,13 @@ const cdkBuildProject = new codebuild.Project(pipelineStack, 'CdkBuildProject', 
     phases: {
       install: {
         commands: [
-          'cd ./cdk',
+          'cd "${CODEBUILD_SRC_DIR}/cdk"',
           'npm install'
         ]
       },
       build: {
         commands: [
-          'cd ./cdk',
+          'cd "${CODEBUILD_SRC_DIR}/cdk"',
           'npm run build',
           'npm run cdk synth LambdaStack -- -o .',
         ],
