@@ -84,7 +84,7 @@ const cdkBuildProject = new codebuild.Project(pipelineStack, 'CdkBuildProject', 
       },
     },
     artifacts: {
-      files: 'LambdaStack.template.yaml',
+      files: '${CODEBUILD_SRC_DIR}/cdk/LambdaStack.template.yaml',
     },
   },
 });
