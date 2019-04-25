@@ -10,14 +10,21 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@types/node": "8.10.40",
+    "@types/node": "8.10.45",
     "typescript": "^3.3.3333",
-    "aws-cdk": "^0.28.0"
+    "aws-cdk": "^0.29.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-sns": "^0.28.0",
-    "@aws-cdk/aws-sqs": "^0.28.0",
-    "@aws-cdk/aws-dynamodb": "^0.28.0",
-    "@aws-cdk/cdk": "^0.28.0"
+    "@aws-cdk/aws-dynamodb": "^0.29.0",
+    "@aws-cdk/aws-lambda": "^0.29.0",
+    "@aws-cdk/aws-lambda-event-sources": "^0.29.0",
+    "@aws-cdk/aws-sqs": "^0.29.0",
+    "@aws-cdk/cdk": "^0.29.0",
+    "@aws-cdk/aws-codebuild": "^0.29.0",
+    "@aws-cdk/aws-codepipeline": "^0.29.0",
+    "@aws-cdk/aws-codepipeline-actions": "^0.29.0",
+    "@aws-cdk/aws-secretsmanager": "^0.29.0",
+    "@aws-cdk/aws-ssm": "^0.29.0",
+    "source-map-support": "^0.5.9"
   }
 }
