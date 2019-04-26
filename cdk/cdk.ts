@@ -127,7 +127,7 @@ const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProj
       },
     },
     artifacts: {
-      files: 'main'
+      files: '/go/src/handler/main'
     },
   },
 });
