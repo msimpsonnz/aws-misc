@@ -37,6 +37,7 @@ namespace StarterFunc
         public APIGatewayProxyResponse Get(APIGatewayProxyRequest request, ILambdaContext context)
         {
             context.Logger.LogLine("Get Request\n");
+            context.Logger.LogLine("Some additional log?\n");
             // context.Logger.LogLine(request.Body);
 
             // var requestBody = JsonConvert.DeserializeObject<Message>(request.Body);
@@ -45,16 +46,26 @@ namespace StarterFunc
             // {
             //     string messageId = await QueueMessage(context, requestBody.Url);
             // }         
-
-            var response = new APIGatewayProxyResponse
+            try
             {
-                StatusCode = (int)HttpStatusCode.OK,
-                //Body = $"Sent Messages: {requestBody.Batch}",
-                Body = $"Ok",
-                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
-            };
+                var response = new APIGatewayProxyResponse
+                {
+                    StatusCode = (int)HttpStatusCode.OK,
+                    //Body = $"Sent Messages: {requestBody.Batch}",
+                    Body = $"Ok",
+                    Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+                };
 
-            return response;
+                return response;
+
+            }
+            catch (Exception ex)
+            {
+                context.Logger.LogLine($"Error: {ex.Message}");
+                throw;
+            }
+
+
         }
 
         private async Task<string> QueueMessage(ILambdaContext context, string url)
