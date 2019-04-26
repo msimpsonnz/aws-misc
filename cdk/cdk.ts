@@ -16,8 +16,8 @@ const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
 const lambdaCode = lambda.Code.cfnParameters();
 new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
-  handler: 'main',
-  runtime: lambda.Runtime.Go1x,
+  handler: 'lamb-net::StarterFunc.Functions::Get',
+  runtime: lambda.Runtime.DotNetCore21,
 });
 // other resources that your Lambda needs, added to the lambdaStack...
 
@@ -48,7 +48,7 @@ const lambdaSourceOutput = new codepipeline.Artifact();
 const lambdaSourceAction = new codepipeline_actions.GitHubSourceAction({
   actionName: 'Lambda_Source',
   owner: 'msimpsonnz',
-  repo: 'cdk-ci-cd',
+  repo: 'sls-net',
   oauthToken: secret.secretJsonValue('GitHubPAT'),
   output: lambdaSourceOutput,
   branch: 'master'
@@ -99,35 +99,61 @@ const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
 // build your Lambda code, using CodeBuild
 // again, this example assumes your Lambda is written in TypeScript/JavaScript -
 // make sure to adjust the build environment and/or commands if they don't match your specific situation
+// const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
+//   environment: {
+//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
+//   },
+//   buildSpec: {
+//     version: '0.2',
+//     phases: {
+//       install: {
+//         commands: [
+//           'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
+//           'go get golang.org/x/lint/golint',
+//           'go get -u github.com/stretchr/testify'
+//         ]
+//       },
+//       pre_build: {
+//         commands: [
+//           'cd "/go/src/handler"',
+//           'go get ./...',
+//           'golint -set_exit_status',
+//           'go tool vet .',
+//           'go test .'
+//         ]
+//       },
+//       build: {
+//         commands: 'go build -o main',
+//       },
+//     },
+//     artifacts: {
+//       files: '/go/src/handler/main'
+//     },
+//   },
+// });
 const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
   environment: {
-    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
+    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_DOTNET_CORE_2_1
   },
   buildSpec: {
     version: '0.2',
     phases: {
       install: {
         commands: [
-          'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
-          'go get golang.org/x/lint/golint',
-          'go get -u github.com/stretchr/testify'
+          'pip install --upgrade awscli'
         ]
       },
       pre_build: {
         commands: [
-          'cd "/go/src/handler"',
-          'go get ./...',
-          'golint -set_exit_status',
-          'go tool vet .',
-          'go test .'
+          'dotnet restore Functions/src/StarterFunc/StarterFunc.csproj'
         ]
       },
       build: {
-        commands: 'go build -o main',
+        commands: 'dotnet publish -c release -o ./build_output Functions/src/StarterFunc/StarterFunc.csproj',
       },
     },
     artifacts: {
-      files: '/go/src/handler/main'
+      files: 'Functions/src/StarterFunc/build_output/**/*'
     },
   },
 });
