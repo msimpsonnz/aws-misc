@@ -16,7 +16,7 @@ const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
 const lambdaCode = lambda.Code.cfnParameters();
 new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
-  handler: 'lamb-net::StarterFunc.Functions::Get',
+  handler: 'StarterFunc::StarterFunc.Functions::Get',
   runtime: lambda.Runtime.DotNetCore21,
 });
 // other resources that your Lambda needs, added to the lambdaStack...
