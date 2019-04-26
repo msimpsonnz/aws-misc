@@ -40,10 +40,10 @@ namespace StarterFunc
 
             var requestBody = JsonConvert.DeserializeObject<Message>(request.Body);
 
-            for (int i = 0; i < requestBody.Batch; i++)
-            {
-                string messageId = await QueueMessage(context, requestBody.Url);
-            }         
+            // for (int i = 0; i < requestBody.Batch; i++)
+            // {
+            //     string messageId = await QueueMessage(context, requestBody.Url);
+            // }         
 
             var response = new APIGatewayProxyResponse
             {
