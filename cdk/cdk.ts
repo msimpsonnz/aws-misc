@@ -153,7 +153,8 @@ const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProj
       },
     },
     artifacts: {
-      files: 'Functions/src/StarterFunc/build_output/**/*'
+      'files': 'Functions/src/StarterFunc/build_output/**/*',
+      'discard-paths': 'yes' 
     },
   },
 });
