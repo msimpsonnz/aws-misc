@@ -14,12 +14,19 @@ const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
   // unless you explicitly filter for it
   autoDeploy: false,
 });
+// const lambdaCode = lambda.Code.cfnParameters();
+// const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
+//   code: lambdaCode,
+//   handler: 'StarterFunc::StarterFunc.Functions::Get',
+//   runtime: lambda.Runtime.DotNetCore21,
+//});
 const lambdaCode = lambda.Code.cfnParameters();
 const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
-  handler: 'StarterFunc::StarterFunc.Functions::Get',
-  runtime: lambda.Runtime.DotNetCore21,
+  handler: 'hello.handler',
+  runtime: lambda.Runtime.NodeJS810,
 });
+
 // other resources that your Lambda needs, added to the lambdaStack...
 new apigw.LambdaRestApi(lambdaStack, 'Endpoint', {
   handler: StarterFunc
@@ -135,30 +142,55 @@ const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
 //     },
 //   },
 // });
+// const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
+//   environment: {
+//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_DOTNET_CORE_2_1
+//   },
+//   buildSpec: {
+//     version: '0.2',
+//     phases: {
+//       install: {
+//         commands: [
+//           'pip install --upgrade awscli'
+//         ]
+//       },
+//       pre_build: {
+//         commands: [
+//           'dotnet restore Functions/src/StarterFunc/StarterFunc.csproj'
+//         ]
+//       },
+//       build: {
+//         commands: 'dotnet publish -c release -o ./build_output Functions/src/StarterFunc/StarterFunc.csproj',
+//       },
+//     },
+//     artifacts: {
+//       'files': 'Functions/src/StarterFunc/build_output/**/*',
+//       'discard-paths': 'yes' 
+//     },
+//   },
+// });
 const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
   environment: {
-    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_DOTNET_CORE_2_1
+    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_NODEJS_10_1_0
   },
   buildSpec: {
     version: '0.2',
     phases: {
-      install: {
-        commands: [
-          'pip install --upgrade awscli'
-        ]
-      },
-      pre_build: {
-        commands: [
-          'dotnet restore Functions/src/StarterFunc/StarterFunc.csproj'
-        ]
-      },
       build: {
-        commands: 'dotnet publish -c release -o ./build_output Functions/src/StarterFunc/StarterFunc.csproj',
+        commands: [
+          'cd "${CODEBUILD_SRC_DIR}/Functions/node"',
+          'npm install'
+        ]
       },
+      post_build: {
+        commands: [
+          'mkdir build-output',
+          'cp -R Functions/node/hello.js Functions/node_modules/ build-output'
+        ]
+      }
     },
     artifacts: {
-      'files': 'Functions/src/StarterFunc/build_output/**/*',
-      'discard-paths': 'yes' 
+      'files': 'build-output/**/*',
     },
   },
 });
