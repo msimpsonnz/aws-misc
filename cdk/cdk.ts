@@ -5,6 +5,7 @@ import codepipeline_actions = require('@aws-cdk/aws-codepipeline-actions');
 import lambda = require('@aws-cdk/aws-lambda');
 import secretsmanager = require('@aws-cdk/aws-secretsmanager');
 import ssm = require('@aws-cdk/aws-ssm');
+import apigw = require('@aws-cdk/aws-apigateway');
 
 const app = new cdk.App();
 
@@ -14,12 +15,15 @@ const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
   autoDeploy: false,
 });
 const lambdaCode = lambda.Code.cfnParameters();
-new lambda.Function(lambdaStack, 'Lambda', {
+const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
   handler: 'StarterFunc::StarterFunc.Functions::Get',
   runtime: lambda.Runtime.DotNetCore21,
 });
 // other resources that your Lambda needs, added to the lambdaStack...
+new apigw.LambdaRestApi(lambdaStack, 'Endpoint', {
+  handler: StarterFunc
+});
 
 const pipelineStack = new cdk.Stack(app, 'PipelineStack');
 const pipeline = new codepipeline.Pipeline(pipelineStack, 'Pipeline');
