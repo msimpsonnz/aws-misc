@@ -15,18 +15,6 @@
             "options": {
                 "cwd": "${workspaceFolder}/Functions/src/StarterFunc"
             }
-        },
-        {
-            "type": "typescript",
-            "tsconfig": "cdk\\tsconfig.json",
-            "option": "watch",
-            "problemMatcher": [
-                "$tsc-watch"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
         }
     ]
 }
