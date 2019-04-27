@@ -13,7 +13,7 @@
             },
             "problemMatcher": "$msCompile",
             "options": {
-                "cwd": "${workspaceFolder}/lamb-net/src/lamb-net"
+                "cwd": "${workspaceFolder}/Functions/src/StarterFunc"
             }
         },
         {
