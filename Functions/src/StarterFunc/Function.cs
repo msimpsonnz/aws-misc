@@ -33,26 +33,26 @@ namespace StarterFunc
         /// </summary>
         /// <param name="request"></param>
         /// <returns>The list of blogs</returns>
-        //public async Task<APIGatewayProxyResponse> Get(APIGatewayProxyRequest request, ILambdaContext context)
-        public APIGatewayProxyResponse Get(APIGatewayProxyRequest request, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> Get(APIGatewayProxyRequest request, ILambdaContext context)
+        //public APIGatewayProxyResponse Get(APIGatewayProxyRequest request, ILambdaContext context)
         {
             context.Logger.LogLine("Get Request\n");
             context.Logger.LogLine("Some additional log?\n");
             // context.Logger.LogLine(request.Body);
 
-            // var requestBody = JsonConvert.DeserializeObject<Message>(request.Body);
+            var requestBody = JsonConvert.DeserializeObject<Message>(request.Body);
 
-            // for (int i = 0; i < requestBody.Batch; i++)
-            // {
-            //     string messageId = await QueueMessage(context, requestBody.Url);
-            // }         
+            for (int i = 0; i < requestBody.Batch; i++)
+            {
+                string messageId = await QueueMessage(context, requestBody.Url);
+            }         
             try
             {
                 var response = new APIGatewayProxyResponse
                 {
                     StatusCode = (int)HttpStatusCode.OK,
-                    //Body = $"Sent Messages: {requestBody.Batch}",
-                    Body = $"Ok",
+                    Body = $"Sent Messages: {requestBody.Batch}",
+                    //Body = $"Ok",
                     Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
                 };
 
