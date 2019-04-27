@@ -23,8 +23,8 @@ const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
 const lambdaCode = lambda.Code.cfnParameters();
 const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
-  handler: 'hello.handler',
-  runtime: lambda.Runtime.NodeJS810,
+  handler: 'main',
+  runtime: lambda.Runtime.Go1x,
 });
 
 // other resources that your Lambda needs, added to the lambdaStack...
@@ -110,38 +110,42 @@ const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
 // build your Lambda code, using CodeBuild
 // again, this example assumes your Lambda is written in TypeScript/JavaScript -
 // make sure to adjust the build environment and/or commands if they don't match your specific situation
-// const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
-//   environment: {
-//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
-//   },
-//   buildSpec: {
-//     version: '0.2',
-//     phases: {
-//       install: {
-//         commands: [
-//           'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
-//           'go get golang.org/x/lint/golint',
-//           'go get -u github.com/stretchr/testify'
-//         ]
-//       },
-//       pre_build: {
-//         commands: [
-//           'cd "/go/src/handler"',
-//           'go get ./...',
-//           'golint -set_exit_status',
-//           'go tool vet .',
-//           'go test .'
-//         ]
-//       },
-//       build: {
-//         commands: 'go build -o main',
-//       },
-//     },
-//     artifacts: {
-//       files: '/go/src/handler/main'
-//     },
-//   },
-// });
+const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
+  environment: {
+    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
+  },
+  buildSpec: {
+    version: '0.2',
+    phases: {
+      install: {
+        commands: [
+          'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
+          'go get golang.org/x/lint/golint',
+          'go get -u github.com/stretchr/testify'
+        ]
+      },
+      pre_build: {
+        commands: [
+          'cd "/go/src/handler"',
+          'go get ./...',
+          'golint -set_exit_status',
+          'go tool vet .',
+          'go test .'
+        ]
+      },
+      build: {
+        commands: [
+          'mkdir "${CODEBUILD_SRC_DIR}/build-output"',
+          'go build -o "${CODEBUILD_SRC_DIR}/build-output/main"',
+        ]
+      },
+    },
+    artifacts: {
+      'files': 'build-output/**/*',
+      'discard-paths': 'yes' 
+    },
+  },
+});
 // const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
 //   environment: {
 //     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_DOTNET_CORE_2_1
@@ -169,31 +173,31 @@ const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
 //     },
 //   },
 // });
-const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
-  environment: {
-    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_NODEJS_10_1_0
-  },
-  buildSpec: {
-    version: '0.2',
-    phases: {
-      build: {
-        commands: [
-          'cd "${CODEBUILD_SRC_DIR}/Functions/node"',
-          'npm install'
-        ]
-      },
-      post_build: {
-        commands: [
-          'mkdir build-output',
-          'cp -R Functions/node/hello.js Functions/node_modules/ build-output'
-        ]
-      }
-    },
-    artifacts: {
-      'files': 'build-output/**/*',
-    },
-  },
-});
+// const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
+//   environment: {
+//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_NODEJS_10_1_0
+//   },
+//   buildSpec: {
+//     version: '0.2',
+//     phases: {
+//       build: {
+//         commands: [
+//           'cd "${CODEBUILD_SRC_DIR}/Functions/node"',
+//           'npm install'
+//         ]
+//       },
+//       post_build: {
+//         commands: [
+//           'mkdir build-output',
+//           'cp -R Functions/node/hello.js Functions/node_modules/ build-output'
+//         ]
+//       }
+//     },
+//     artifacts: {
+//       'files': 'build-output/**/*',
+//     },
+//   },
+// });
 const lambdaBuildOutput = new codepipeline.Artifact();
 const lambdaBuildAction = new codepipeline_actions.CodeBuildAction({
   actionName: 'Lambda_Build',
