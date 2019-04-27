@@ -59,7 +59,7 @@ const lambdaSourceOutput = new codepipeline.Artifact();
 const lambdaSourceAction = new codepipeline_actions.GitHubSourceAction({
   actionName: 'Lambda_Source',
   owner: 'msimpsonnz',
-  repo: 'sls-net',
+  repo: 'cdk-ci-cd',
   oauthToken: secret.secretJsonValue('GitHubPAT'),
   output: lambdaSourceOutput,
   branch: 'master'
