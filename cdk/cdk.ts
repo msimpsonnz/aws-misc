@@ -24,7 +24,7 @@ const lambdaCode = lambda.Code.cfnParameters();
 const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
   handler: 'main',
-  runtime: lambda.Runtime.Go1x,
+  runtime: lambda.Runtime.Go1x
 });
 
 // other resources that your Lambda needs, added to the lambdaStack...
