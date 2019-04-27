@@ -14,18 +14,18 @@ const lambdaStack = new cdk.Stack(app, 'LambdaStack', {
   // unless you explicitly filter for it
   autoDeploy: false,
 });
-// const lambdaCode = lambda.Code.cfnParameters();
-// const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
-//   code: lambdaCode,
-//   handler: 'StarterFunc::StarterFunc.Functions::Get',
-//   runtime: lambda.Runtime.DotNetCore21,
-//});
 const lambdaCode = lambda.Code.cfnParameters();
 const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
   code: lambdaCode,
-  handler: 'main',
-  runtime: lambda.Runtime.Go1x
+  handler: 'StarterFunc::StarterFunc.Functions::Get',
+  runtime: lambda.Runtime.DotNetCore21,
 });
+// const lambdaCode = lambda.Code.cfnParameters();
+// const StarterFunc = new lambda.Function(lambdaStack, 'Lambda', {
+//   code: lambdaCode,
+//   handler: 'main',
+//   runtime: lambda.Runtime.Go1x
+// });
 
 // other resources that your Lambda needs, added to the lambdaStack...
 new apigw.LambdaRestApi(lambdaStack, 'Endpoint', {
@@ -33,7 +33,8 @@ new apigw.LambdaRestApi(lambdaStack, 'Endpoint', {
 });
 
 const pipelineStack = new cdk.Stack(app, 'PipelineStack');
-const pipeline = new codepipeline.Pipeline(pipelineStack, 'Pipeline');
+//const pipelineGo = new codepipeline.Pipeline(pipelineStack, 'PipelineGo');
+const pipelineNet = new codepipeline.Pipeline(pipelineStack, 'PipelineNet');
 
 const secretArnParam = new ssm.ParameterStoreString(pipelineStack, 'secretMgrArn', {
   parameterName: 'secretMgrArn'
@@ -46,28 +47,19 @@ const secret = secretsmanager.Secret.import(pipelineStack, 'GitHubAccessToken', 
 // add the source code repository containing this code to your Pipeline,
 // and the source code of the Lambda Function, if they're separate
 const cdkSourceOutput = new codepipeline.Artifact();
-const cdkSourceAction = new codepipeline_actions.GitHubSourceAction({
-  actionName: 'CDK_Source',
-  owner: 'msimpsonnz',
-  repo: 'sls-net',
-  oauthToken: secret.secretJsonValue('GitHubPAT'),
-  output: cdkSourceOutput,
-  branch: 'master'
-});
+const cdkSourceAction = GitHubRepo('CDK_Source', 'sls-net', cdkSourceOutput);
 
-const lambdaSourceOutput = new codepipeline.Artifact();
-const lambdaSourceAction = new codepipeline_actions.GitHubSourceAction({
-  actionName: 'Lambda_Source',
-  owner: 'msimpsonnz',
-  repo: 'cdk-ci-cd',
-  oauthToken: secret.secretJsonValue('GitHubPAT'),
-  output: lambdaSourceOutput,
-  branch: 'master'
-});
+// const lambdaGoSourceOutput = new codepipeline.Artifact();
+// const lambdaGoSourceAction = GitHubRepo('Lambda_Source', 'cdk-ci-cd', lambdaGoSourceOutput);
 
-pipeline.addStage({
+// pipelineGo.addStage({
+//   name: 'Source',
+//   actions: [cdkSourceAction, lambdaGoSourceAction],
+// });
+
+pipelineNet.addStage({
   name: 'Source',
-  actions: [cdkSourceAction, lambdaSourceAction],
+  actions: [cdkSourceAction],
 });
 
 // synthesize the Lambda CDK template, using CodeBuild
@@ -110,122 +102,139 @@ const cdkBuildAction = new codepipeline_actions.CodeBuildAction({
 // build your Lambda code, using CodeBuild
 // again, this example assumes your Lambda is written in TypeScript/JavaScript -
 // make sure to adjust the build environment and/or commands if they don't match your specific situation
-const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
-  environment: {
-    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
-  },
-  buildSpec: {
-    version: '0.2',
-    phases: {
-      install: {
-        commands: [
-          'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
-          'go get golang.org/x/lint/golint',
-          'go get -u github.com/stretchr/testify'
-        ]
-      },
-      pre_build: {
-        commands: [
-          'cd "/go/src/handler"',
-          'go get ./...',
-          'golint -set_exit_status',
-          'go tool vet .',
-          'go test .'
-        ]
-      },
-      build: {
-        commands: [
-          'mkdir "${CODEBUILD_SRC_DIR}/build-output"',
-          'go build -o "${CODEBUILD_SRC_DIR}/build-output/main"',
-        ]
-      },
-    },
-    artifacts: {
-      'files': 'build-output/**/*',
-      'discard-paths': 'yes' 
-    },
-  },
-});
-// const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
+// const lambdaGoBuildProject = new codebuild.Project(pipelineStack, 'LambdaGoBuildProject', {
 //   environment: {
-//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_DOTNET_CORE_2_1
+//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_GOLANG_1_10,
 //   },
 //   buildSpec: {
 //     version: '0.2',
 //     phases: {
 //       install: {
 //         commands: [
-//           'pip install --upgrade awscli'
+//           'ln -s "${CODEBUILD_SRC_DIR}/src/resources" "/go/src/handler"',
+//           'go get golang.org/x/lint/golint',
+//           'go get -u github.com/stretchr/testify'
 //         ]
 //       },
 //       pre_build: {
 //         commands: [
-//           'dotnet restore Functions/src/StarterFunc/StarterFunc.csproj'
+//           'cd "/go/src/handler"',
+//           'go get ./...',
+//           'golint -set_exit_status',
+//           'go tool vet .',
+//           'go test .'
 //         ]
 //       },
 //       build: {
-//         commands: 'dotnet publish -c release -o ./build_output Functions/src/StarterFunc/StarterFunc.csproj',
+//         commands: [
+//           'mkdir "${CODEBUILD_SRC_DIR}/build-output"',
+//           'go build -o "${CODEBUILD_SRC_DIR}/build-output/main"',
+//         ]
 //       },
 //     },
 //     artifacts: {
-//       'files': 'Functions/src/StarterFunc/build_output/**/*',
+//       'files': 'build-output/**/*',
 //       'discard-paths': 'yes' 
 //     },
 //   },
 // });
-// const lambdaBuildProject = new codebuild.Project(pipelineStack, 'LambdaBuildProject', {
-//   environment: {
-//     buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_NODEJS_10_1_0
-//   },
-//   buildSpec: {
-//     version: '0.2',
-//     phases: {
-//       build: {
-//         commands: [
-//           'cd "${CODEBUILD_SRC_DIR}/Functions/node"',
-//           'npm install'
-//         ]
-//       },
-//       post_build: {
-//         commands: [
-//           'mkdir build-output',
-//           'cp -R Functions/node/hello.js Functions/node_modules/ build-output'
-//         ]
-//       }
-//     },
-//     artifacts: {
-//       'files': 'build-output/**/*',
-//     },
-//   },
+// const lambdaGoBuildOutput = new codepipeline.Artifact();
+// const lambdaGoBuildAction = new codepipeline_actions.CodeBuildAction({
+//   actionName: 'LambdaGo_Build',
+//   project: lambdaGoBuildProject,
+//   input: lambdaGoSourceOutput,
+//   output: lambdaGoBuildOutput,
 // });
-const lambdaBuildOutput = new codepipeline.Artifact();
-const lambdaBuildAction = new codepipeline_actions.CodeBuildAction({
-  actionName: 'Lambda_Build',
-  project: lambdaBuildProject,
-  input: lambdaSourceOutput,
-  output: lambdaBuildOutput,
+
+const lambdaNetBuildProject = new codebuild.Project(pipelineStack, 'LambdaNetBuildProject', {
+  environment: {
+    buildImage: codebuild.LinuxBuildImage.UBUNTU_14_04_DOTNET_CORE_2_1
+  },
+  buildSpec: {
+    version: '0.2',
+    phases: {
+      install: {
+        commands: [
+          'pip install --upgrade awscli'
+        ]
+      },
+      pre_build: {
+        commands: [
+          'dotnet restore Functions/src/StarterFunc/StarterFunc.csproj'
+        ]
+      },
+      build: {
+        commands: 'dotnet publish -c release -o ./build_output Functions/src/StarterFunc/StarterFunc.csproj',
+      },
+    },
+    artifacts: {
+      'files': 'Functions/src/StarterFunc/build_output/**/*',
+      'discard-paths': 'yes' 
+    },
+  },
+});
+const lambdaNetBuildOutput = new codepipeline.Artifact();
+const lambdaNetBuildAction = new codepipeline_actions.CodeBuildAction({
+  actionName: 'LambdaNet_Build',
+  project: lambdaNetBuildProject,
+  input: cdkSourceOutput,
+  output: lambdaNetBuildOutput,
 });
 
-pipeline.addStage({
+// pipelineGo.addStage({
+//   name: 'Build',
+//   actions: [cdkBuildAction, lambdaGoBuildAction],
+// });
+
+pipelineNet.addStage({
   name: 'Build',
-  actions: [cdkBuildAction, lambdaBuildAction],
+  actions: [cdkBuildAction, lambdaNetBuildAction],
 });
 
 // finally, deploy your Lambda Stack
-pipeline.addStage({
+// pipelineGo.addStage({
+//   name: 'Deploy',
+//   actions: [
+//     new codepipeline_actions.CloudFormationCreateUpdateStackAction({
+//       actionName: 'LambdaGo_CFN_Deploy',
+//       templatePath: cdkBuildOutput.atPath('LambdaStack.template.yaml'),
+//       stackName: 'LambdaGoStackDeployedName',
+//       adminPermissions: true,
+//       parameterOverrides: {
+//         ...lambdaCode.assign(lambdaGoBuildOutput.s3Coordinates),
+//       },
+//       extraInputs: [
+//         lambdaGoBuildOutput,
+//       ],
+//     }),
+//   ],
+// });
+
+pipelineNet.addStage({
   name: 'Deploy',
   actions: [
     new codepipeline_actions.CloudFormationCreateUpdateStackAction({
-      actionName: 'Lambda_CFN_Deploy',
+      actionName: 'LambdaNet_CFN_Deploy',
       templatePath: cdkBuildOutput.atPath('LambdaStack.template.yaml'),
-      stackName: 'LambdaStackDeployedName',
+      stackName: 'LambdaNetStackDeployedName',
       adminPermissions: true,
       parameterOverrides: {
-        ...lambdaCode.assign(lambdaBuildOutput.s3Coordinates),
+        ...lambdaCode.assign(lambdaNetBuildOutput.s3Coordinates),
       },
       extraInputs: [
-        lambdaBuildOutput,
+        lambdaNetBuildOutput,
       ],
     }),
   ],
 });
+
+function GitHubRepo(actionName: string, repo: string, output: codepipeline.Artifact) {
+  return new codepipeline_actions.GitHubSourceAction({
+    actionName: actionName,
+    owner: 'msimpsonnz',
+    repo: repo,
+    oauthToken: secret.secretJsonValue('GitHubPAT'),
+    output: output,
+    branch: 'master'
+  });
+}
