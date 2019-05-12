@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
@@ -30,7 +31,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	svc := sns.New(sess)
 
 	message := msg.Body
-	topicPtr := "arn:aws:sns:ap-southeast-2:383358879677:mjsdemosns"
+	topicPtr := os.Getenv("SNS_ARN")
 
 
     result, err := svc.Publish(&sns.PublishInput{
