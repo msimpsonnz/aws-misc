@@ -1,0 +1,11 @@
+{
+    "httpMethod": "POST",
+    "body": "{\"column\":[\"elb_name\",\"request_port\",\"request_ip\"]}",
+    "path": "/query",
+    "resource": "/{proxy+}",
+    "queryStringParameters": {
+        "limit": 5
+    }
+}
+
+curl localhost:3000/query -X POST -H "Content-Type: application/json" --data "{\"column\":[\"elb_name\",\"request_port\",\"request_ip\"]}"
