@@ -1,0 +1,41 @@
+{
+    "paths": [
+        {
+            "name": "/query",
+            "lambdaFunction": "athenaLambda",
+            "privacy": {
+                "private": true,
+                "auth": [
+                    "/POST",
+                    "/GET",
+                    "/PUT",
+                    "/PATCH",
+                    "/DELETE"
+                ]
+            }
+        }
+    ],
+    "resourceName": "athenaProxy",
+    "apiName": "athenaProxy",
+    "functionArns": [
+        {
+            "lambdaFunction": "athenaLambda"
+        }
+    ],
+    "privacy": {
+        "auth": 1,
+        "unauth": 0,
+        "authRoleName": "aws-amplify-vue-prod-20190521185040-authRole",
+        "unAuthRoleName": "aws-amplify-vue-prod-20190521185040-unauthRole"
+    },
+    "dependsOn": [
+        {
+            "category": "function",
+            "resourceName": "athenaLambda",
+            "attributes": [
+                "Name",
+                "Arn"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,5 @@
+{
+    "tableName": "ampDynamo",
+    "partitionKeyName": "user",
+    "partitionKeyType": "S"
+}
