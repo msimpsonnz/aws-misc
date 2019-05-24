@@ -5,20 +5,17 @@ Licensed under the Apache License, Version 2.0 (the "License"). You may not use 
 or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and limitations under the License.
 */
-const AWS = require('aws-sdk')
-const AthenaExpress = require("athena-express"),
-	aws = require("aws-sdk");
 var awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
 var bodyParser = require('body-parser')
 var express = require('express')
-
-//AWS.config.update({ region: process.env.TABLE_REGION });
-AWS.config.update({ region: 'ap-southeast-2' });
+//const sts = require('./sts');
+const AthenaExpress = require("athena-express"),
+	aws = require("aws-sdk")
 
 // declare a new express app
-var app = express()
-app.use(bodyParser.json())
-app.use(awsServerlessExpressMiddleware.eventContext())
+var app = express();
+app.use(bodyParser.json());
+app.use(awsServerlessExpressMiddleware.eventContext());
 
 // Enable CORS for all methods
 app.use(function(req, res, next) {
@@ -26,6 +23,11 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
   next()
 });
+
+// app.use(async function(req, res, next) {
+//   await sts.getSTS()
+//   next()
+// });
 
 const athenaExpressConfig = {
 	aws,
@@ -44,11 +46,7 @@ app.get('/query', (req, res) => {
 app.post('/query', async (req, res) => {
   res.header("Access-Control-Allow-Origin", "*")
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-  //console.log(req.apiGateway)
-  //console.log(req.apiGateway.event)
-  //console.log(req)
   console.log(req.body)
-  //let body = JSON.parse(req.body)
   let queryStart = "SELECT ";
 
   req.body.column.forEach(element => {
