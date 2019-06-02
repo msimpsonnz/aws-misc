@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node bin/cdk.ts",
+  "context": {
+    "test_user": "m.simpson@outlook.com"
+  }
+}
