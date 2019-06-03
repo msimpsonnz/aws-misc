@@ -87,16 +87,3 @@ export class VpcPeerStack extends cdk.Stack {
     
   }
 };
-
-export class WebPeerStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: VpcPeerProps) {
-    super(scope, id, props);
-
-    const vpcPeer = new ec2.CfnVPCPeeringConnection(this, props.peerName, {
-      peerRegion: props.peerRegion,
-      peerVpcId: props.peerVpcId,
-      vpcId: props.vpcId
-    });
-    
-  }
-};
