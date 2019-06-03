@@ -44,7 +44,7 @@ export class AppStreamStack extends cdk.Stack {
         computeCapacity: {
             desiredInstances: 1
         },
-        fleetType: 'ON_DEMAND'
+        fleetType: 'ON_DEMAND',
         instanceType: 'stream.standard.medium',
         vpcConfig: {
             subnetIds: [
