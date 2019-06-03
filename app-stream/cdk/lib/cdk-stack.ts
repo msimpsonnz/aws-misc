@@ -31,7 +31,6 @@ export class AppStreamStack extends cdk.Stack {
 
     this.vpc = new ec2.Vpc(this, 'AppVPC', { cidr: '10.0.0.0/16' });
 
-    //this.output(vpc)
     const user = new appstream.CfnUser(this, 'testUser', {
       authenticationType: 'USERPOOL',
       userName: props.userName
