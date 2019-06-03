@@ -18,24 +18,13 @@ new AppStreamStack(app, 'CdkStack', {
     userName: 'm.simpson@outlook.com'
 });
 
-new VpcPeerStack(app, 'AppPeerStack', { 
+new VpcPeerStack(app, 'VpcPeerStack', { 
     autoDeploy: false,
     env: {
         region: 'ap-southeast-2'
     },
     peerName: 'AppToWebPeer',
     peerRegion: 'ap-southeast-1',
-    peerVpcId: 'ToDo - VPCID',
-    vpcId: 'ToDo - VPCID'
-});
-
-new VpcPeerStack(app, 'WebPeerStack', { 
-    autoDeploy: false,
-    env: {
-        region: 'ap-southeast-1'
-    },
-    peerName: 'WebToAppPeer',
-    peerRegion: 'ap-southeast-2',
     peerVpcId: 'ToDo - VPCID',
     vpcId: 'ToDo - VPCID'
 });
