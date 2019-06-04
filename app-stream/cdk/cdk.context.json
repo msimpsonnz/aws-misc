@@ -8,5 +8,7 @@
     "ap-southeast-1a",
     "ap-southeast-1b",
     "ap-southeast-1c"
-  ]
+  ],
+  "ssm:account=383358879677:parameterName=/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2:region=ap-southeast-1": "ami-03097abf0db1cdff2",
+  "ssm:account=383358879677:parameterName=/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2:region=ap-southeast-1": "ami-0b5a47f8865280111"
 }

@@ -11,7 +11,7 @@ new WebStack(app, 'WebStack', {
     }
 });
 
-new AppStreamStack(app, 'CdkStack', { 
+new AppStreamStack(app, 'AppStack', { 
     env: {
         region: 'ap-southeast-2'
     },
