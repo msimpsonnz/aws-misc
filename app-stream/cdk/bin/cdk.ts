@@ -25,6 +25,6 @@ new VpcPeerStack(app, 'VpcPeerStack', {
     },
     peerName: 'AppToWebPeer',
     peerRegion: 'ap-southeast-1',
-    peerVpcId: 'ToDo - VPCID',
-    vpcId: 'ToDo - VPCID'
+    peerVpcId: 'vpc-07668b8d197994bd2',
+    vpcId: 'vpc-08502e391a04c06dd'
 });
