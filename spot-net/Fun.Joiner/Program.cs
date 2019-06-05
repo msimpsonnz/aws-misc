@@ -2,10 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Fun.Joiner
 {
@@ -13,24 +16,32 @@ namespace Fun.Joiner
     {
         static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
-            var client = new AmazonS3Client(RegionEndpoint.USEast1);
-            using (var eventStream = await GetSelectObjectContentEventStream(client, "nyc-tlc", "trip data/yellow_tripdata_2013-01.csv"))
+            var client = new AmazonS3Client(RegionEndpoint.APSoutheast2);
+            var endWaitHandle = new AutoResetEvent(false);
+            using (var eventStream = await GetSelectObjectContentEventStream(client, "mjsaws-demo-s3", "snip.csv"))
             {
-                var recordResults = eventStream
-                    .Where(ev => ev is RecordsEvent)
-                    .Cast<RecordsEvent>()
-                    .Select(records =>
+                JArray results = new JArray();
+                    using (var reader = new StreamReader(eventStream))
                     {
-                        using (var reader = new StreamReader(records.Payload))
-                        {
-                            return reader.ReadToEnd();
-                        }
-                    }).ToArray();
-                var results = string.Join(Environment.NewLine, recordResults);
-                Console.WriteLine(results);
+                        results.Add(reader.ReadToEnd());
+                        System.Console.WriteLine(results);
+                        await NewMethod(client, results);
+                    }
             }
+        }
 
+        private static async Task NewMethod(AmazonS3Client client, JArray results)
+        {
+            Console.WriteLine(results);
+            var putReq = new PutObjectRequest()
+            {
+                BucketName = "mjsaws-demo-s3",
+                Key = "snip.json",
+                ContentBody = results.ToString(),
+                ContentType = "application/json"
+            };
+            var req = await client.PutObjectAsync(putReq);
+            System.Console.WriteLine(req.HttpStatusCode);
         }
 
         private static async Task<ISelectObjectContentEventStream> GetSelectObjectContentEventStream(AmazonS3Client _client, string _bucketName, string _keyName)
@@ -40,7 +51,7 @@ namespace Fun.Joiner
                 Bucket = _bucketName,
                 Key = _keyName,
                 ExpressionType = ExpressionType.SQL,
-                Expression = "select * from S3Object",
+                Expression = "select VendorID, lpep_pickup_datetime from S3Object",
                 InputSerialization = new InputSerialization()
                 {
                     CSV = new CSVInput()
