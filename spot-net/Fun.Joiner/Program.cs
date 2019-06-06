@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,26 +18,51 @@ namespace Fun.Joiner
         static async Task Main(string[] args)
         {
             var client = new AmazonS3Client(RegionEndpoint.APSoutheast2);
-            var endWaitHandle = new AutoResetEvent(false);
+
+            string res = string.Empty;
             using (var eventStream = await GetSelectObjectContentEventStream(client, "mjsaws-demo-s3", "snip.csv"))
             {
-                JArray results = new JArray();
-                    using (var reader = new StreamReader(eventStream))
+                foreach (var ev in eventStream)
+                {
+                    if (ev is RecordsEvent records)
                     {
-                        results.Add(reader.ReadToEnd());
-                        System.Console.WriteLine(results);
-                        await NewMethod(client, results);
+                        using (var sr = new StreamReader(records.Payload))
+                        {
+                            res = sr.ReadToEnd();
+                        }
                     }
+                }
             }
+            JsonTextReader reader = new JsonTextReader(new StringReader(res));
+            reader.SupportMultipleContent = true;
+            JArray json = new JArray();
+            while (true)
+            {
+                if (!reader.Read())
+                {
+                    break;
+                }
+
+                JsonSerializer serializer = new JsonSerializer();
+                JObject jsonResult = serializer.Deserialize<JObject>(reader);
+
+                json.Add(jsonResult);
+            }
+
+            //System.Console.WriteLine(sb.ToString());
+            //var json = JsonConvert.DeserializeObject(sb.ToString());
+            System.Console.WriteLine(json.ToString());
+            await UploadFile(client, json);
+
         }
 
-        private static async Task NewMethod(AmazonS3Client client, JArray results)
+        private static async Task UploadFile(AmazonS3Client client, JArray results)
         {
             Console.WriteLine(results);
             var putReq = new PutObjectRequest()
             {
                 BucketName = "mjsaws-demo-s3",
-                Key = "snip.json",
+                Key = $"{DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss")}.json",
                 ContentBody = results.ToString(),
                 ContentType = "application/json"
             };
