@@ -6,16 +6,20 @@ using Amazon.SQS.Model;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Linq;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 
 namespace Fun.TaskMaker
 {
     class Program
     {
+        static AmazonCloudFormationClient cfnClient = new AmazonCloudFormationClient(RegionEndpoint.USEast1);
         static AmazonSQSClient client = new AmazonSQSClient(RegionEndpoint.USEast1);
-        static readonly string sqsQueueUrl = "https://sqs.us-east-1.amazonaws.com/383358879677/BatchStack-batchQueue9254F2CB-RK8BYMOKY0R2";
+        static readonly string stackName = "BatchStack";
 
         static async Task Main(string[] args)
         {
+            string sqsQueueUrl = await GetSQSQueueUrl();
             List<SendMessageBatchRequestEntry> masterMessageList = MakeBatch();
 
             System.Console.WriteLine(masterMessageList.Count);
@@ -24,9 +28,33 @@ namespace Fun.TaskMaker
 
             foreach (var list in batchMessageList)
             {
-                await BatchRequests(list);
+                await BatchRequests(list, sqsQueueUrl);
             }
-            
+
+
+        }
+
+        private static async Task<string> GetSQSQueueUrl()
+        {
+            try
+            {
+                var cfnRequest = new DescribeStackResourcesRequest()
+                {
+                    StackName = stackName
+                };
+                var stack = await cfnClient.DescribeStackResourcesAsync(cfnRequest);
+
+                var sqsQueueUrl = stack.StackResources
+                    .Where(x => x.ResourceType == "AWS::SQS::Queue")
+                    .FirstOrDefault().PhysicalResourceId;
+
+                return sqsQueueUrl;
+            }
+            catch (System.Exception ex)
+            {
+                System.Console.WriteLine(ex.Message);
+                throw;
+            }
 
         }
 
@@ -43,7 +71,7 @@ namespace Fun.TaskMaker
             return batchMessageList;
         }
 
-        private static async Task BatchRequests(List<SendMessageBatchRequestEntry> messageList)
+        private static async Task BatchRequests(List<SendMessageBatchRequestEntry> messageList, string sqsQueueUrl)
         {
             var sendMessageBatchRequest = new SendMessageBatchRequest
             {
