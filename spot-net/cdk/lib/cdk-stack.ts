@@ -31,7 +31,16 @@ export class CdkStack extends cdk.Stack {
           new ServicePrincipal('ec2.amazonaws.com'),
           new ServicePrincipal('ecs.amazonaws.com')),
       managedPolicyArns: [
-        'arn:aws:iam::aws:policy/AmazonS3FullAccess'
+        'arn:aws:iam::aws:policy/AmazonS3FullAccess',
+        'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceRole',
+        'arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role',
+      ]
+    });
+
+    new iam.CfnInstanceProfile(this, 'batchInstanceProfile', {
+      instanceProfileName: batchInstanceRole.roleName,
+      roles: [
+        batchInstanceRole.roleName
       ]
     });
 
@@ -84,7 +93,7 @@ export class CdkStack extends cdk.Stack {
           } 
         ]
       }
-    });
+    }); 
 
     new batch.CfnJobQueue(this, 'batchJobQueue', {
       jobQueueName: 'batchJobSpot',
