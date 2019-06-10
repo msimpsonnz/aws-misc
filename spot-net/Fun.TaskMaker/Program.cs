@@ -12,6 +12,8 @@ namespace Fun.TaskMaker
     class Program
     {
         static AmazonSQSClient client = new AmazonSQSClient(RegionEndpoint.USEast1);
+        static readonly string sqsQueueUrl = "https://sqs.us-east-1.amazonaws.com/383358879677/BatchStack-batchQueue9254F2CB-RK8BYMOKY0R2";
+
         static async Task Main(string[] args)
         {
             List<SendMessageBatchRequestEntry> masterMessageList = MakeBatch();
@@ -46,7 +48,7 @@ namespace Fun.TaskMaker
             var sendMessageBatchRequest = new SendMessageBatchRequest
             {
                 Entries = messageList,
-                QueueUrl = "https://sqs.us-east-1.amazonaws.com/383358879677/BatchStack-batchQueue9254F2CB-MBN8URX4MZCF"
+                QueueUrl = sqsQueueUrl
             };
 
             await SendBatch(sendMessageBatchRequest);
@@ -74,7 +76,7 @@ namespace Fun.TaskMaker
         private static List<SendMessageBatchRequestEntry> MakeBatch()
         {
             List<SendMessageBatchRequestEntry> messageList = new List<SendMessageBatchRequestEntry>();
-            for (int year = 2009; year <= 2009; year++)
+            for (int year = 2018; year <= 2018; year++)
             {
                 for (int i = 1; i <= 12; i++)
                 {
