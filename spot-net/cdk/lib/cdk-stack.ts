@@ -70,7 +70,7 @@ export class CdkStack extends cdk.Stack {
       jobDefinitionName: "s3select-dotnet",
       type: "container",
       containerProperties: {
-        image: "383358879677.dkr.ecr.us-east-1.amazonaws.com/mjsdemo-ecr:latest",
+        image: this.accountId + ".dkr.ecr.us-east-1.amazonaws.com/mjsdemo-ecr:latest",
         vcpus: 1,
         memory: 128,
         environment: [
