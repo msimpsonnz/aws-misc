@@ -35,12 +35,12 @@ export class CdkStack extends cdk.Stack {
       ]
     });
 
-    const sqsQueue = new sqs.Queue(this, 'batchQueue')
+    const sqsQueue = new sqs.Queue(this, 'batchQueue');
     sqsQueue.grantConsumeMessages(batchInstanceRole);
 
     const vpc = new ec2.Vpc(this, 'batchVPC', {
       cidr: '10.99.0.0/16'
-    })
+    });
 
     const compEnv = new batch.CfnComputeEnvironment(this, 'batchCompute', {
       type: 'MANAGED',
@@ -64,8 +64,7 @@ export class CdkStack extends cdk.Stack {
           vpc.vpcDefaultSecurityGroup
         ]
       }
-    })
-
+    });
 
     new batch.CfnJobDefinition(this, 'batchJobDef', {
       jobDefinitionName: "s3select-dotnet",
@@ -96,8 +95,7 @@ export class CdkStack extends cdk.Stack {
         }
       ],
       priority: 1     
-    })
+    });
 
-    
   }
 }
