@@ -116,7 +116,7 @@ namespace Fun.TaskMaker
                     Message msg = new Message()
                     {
                         SourceBucketName = "nyc-tlc",
-                        SourceKeyName = $"trip data/yellow_tripdata_{year}-{month}.csv",
+                        SourceKeyName = $"trip data/green_tripdata_{year}-{month}.csv",
                         DestBucketName = "mjsdemo-s3"
                     };
                     System.Console.WriteLine(msg.SourceKeyName);

@@ -138,7 +138,7 @@ namespace Fun.Joiner
                 Bucket = _bucketName,
                 Key = _keyName,
                 ExpressionType = ExpressionType.SQL,
-                Expression = $"select * from S3Object{s3QueryLimit}",
+                Expression = $"select * from S3Object LIMIT 1000",
                 InputSerialization = new InputSerialization()
                 {
                     CSV = new CSVInput()
