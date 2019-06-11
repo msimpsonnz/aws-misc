@@ -1,0 +1,8 @@
+{
+    "Tags": {
+        "Key": "aws:ec2spot:fleet-request-id",
+        "Values": [
+            "sfr-5da6f69d-6e64-4273-a12c-bdfd3f66ff58"
+        ]
+    }
+}

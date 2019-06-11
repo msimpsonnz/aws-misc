@@ -104,7 +104,7 @@ namespace Fun.TaskMaker
         private static List<SendMessageBatchRequestEntry> MakeBatch()
         {
             List<SendMessageBatchRequestEntry> messageList = new List<SendMessageBatchRequestEntry>();
-            for (int year = 2018; year <= 2018; year++)
+            for (int year = 2014; year <= 2018; year++)
             {
                 for (int i = 1; i <= 12; i++)
                 {
