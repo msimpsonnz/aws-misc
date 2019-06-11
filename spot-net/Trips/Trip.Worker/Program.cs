@@ -24,15 +24,13 @@ namespace Trip.Worker
             JobDetail jobDetail = await GetJob();
             jobDetail.AWS_BATCH_JOB_ID = AWS_BATCH_JOB_ID;
 
-            while (jobDetail != null)
-            {
-                //Query S3 and return a stream
-                string transformData = await TransformData(jobDetail);
-                //Save the result back to another bucket
-                await SaveTransform(jobDetail, transformData);
-                //Delete the SQS message as we are done
-                await MarkJobComplete(jobDetail);
-            }
+            //Query S3 and return a stream
+            string transformData = await TransformData(jobDetail);
+            //Save the result back to another bucket
+            await SaveTransform(jobDetail, transformData);
+            //Delete the SQS message as we are done
+            await MarkJobComplete(jobDetail);
+
         }
 
         private static async Task MarkJobComplete(JobDetail jobDetail)
