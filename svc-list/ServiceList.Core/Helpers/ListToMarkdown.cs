@@ -1,3 +1,5 @@
+//Credit jpierson
+//https://github.com/jpierson/to-markdown-table
 using System;
 using System.Collections.Generic;
 using System.Reflection;
