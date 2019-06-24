@@ -1,0 +1,3 @@
+{
+  "app": "dotnet src/ServiceList.Cdk/bin/Debug/netcoreapp2.1/ServiceList.Cdk.dll"
+}
