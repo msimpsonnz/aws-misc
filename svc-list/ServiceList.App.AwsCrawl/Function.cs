@@ -14,7 +14,8 @@ namespace ServiceList.App.AwsCrawl
 {
     public class Function
     {
-        
+        static readonly string sqlQueueUrl = Environment.GetEnvironmentVariable("AWS_SQS_URL");
+
         /// <summary>
         /// A simple function that takes a string and does a ToUpper
         /// </summary>
@@ -28,9 +29,11 @@ namespace ServiceList.App.AwsCrawl
             List<Service> masterServiceList = await DynamoHelper.QueryTable();
             System.Console.WriteLine($"Query online list: {masterServiceList.Count()}");
 
-            var areEqual = (masterServiceList.Count == onlineServiceList.Count) && onlineServiceList.Except(masterServiceList).Any();
-            System.Console.WriteLine(areEqual);
-            return areEqual.ToString();
+            var sendNotifcation = await MessageHelper.SendNotification(onlineServiceList, masterServiceList, sqlQueueUrl);
+            System.Console.WriteLine($"Compare Result: {sendNotifcation}");
+            
+
+            return sendNotifcation;
 
         }
     }
