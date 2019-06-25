@@ -11,7 +11,7 @@ namespace ServiceList.Core
 {
     public class HtmlHelper
     {
-        public static async Task<List<Service>> ParseAwsServices(string url)
+        public static async Task<List<Service>> ParseAwsServices(string url, bool debug = false)
         {
             HtmlDocument pageDocument = await GetHtmlfromSite(url);
 
@@ -32,17 +32,20 @@ namespace ServiceList.Core
             }
             List<Service> orderedServiceList = serviceList.OrderBy(x => x.ShortName).ToList();
 
-            var masterFile = File.ReadAllText("master-svc.json");
-            List<Service> masterList = JsonConvert.DeserializeObject<List<Service>>(masterFile);
-
-            var areEqual = (masterList.Count == serviceList.Count) && orderedServiceList.Except(masterList).Any();
-
-            if (!areEqual)
+            if (debug)
             {
-                System.Console.WriteLine("Service List has changed!");
-                var error = orderedServiceList.Except(masterList).ToList();
-                File.WriteAllText("error.json", JsonConvert.SerializeObject(error));
-                throw new SystemException();
+                var masterFile = File.ReadAllText("master-svc.json");
+                List<Service> masterList = JsonConvert.DeserializeObject<List<Service>>(masterFile);
+
+                var areEqual = (masterList.Count == serviceList.Count) && orderedServiceList.Except(masterList).Any();
+
+                if (!areEqual)
+                {
+                    System.Console.WriteLine("Service List has changed!");
+                    var error = orderedServiceList.Except(masterList).ToList();
+                    File.WriteAllText("error.json", JsonConvert.SerializeObject(error));
+                    throw new SystemException();
+                }
             }
 
             return orderedServiceList;
