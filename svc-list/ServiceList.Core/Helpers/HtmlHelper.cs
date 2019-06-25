@@ -30,7 +30,7 @@ namespace ServiceList.Core
                 serviceList.Add(service);
 
             }
-            List<Service> orderedServiceList = serviceList.OrderBy(x => x.ShortName).ToList();
+            List<Service> orderedServiceList = serviceList.GroupBy(x => x.id).Select(g => g.FirstOrDefault()).OrderBy(x => x.ShortName).ToList();
 
             if (debug)
             {
