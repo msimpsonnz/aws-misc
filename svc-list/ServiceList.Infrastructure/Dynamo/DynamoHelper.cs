@@ -43,7 +43,7 @@ namespace ServiceList.Infrastructure
             }
         }
 
-        public static async Task QueryTable()
+        public static async Task<List<Service>> QueryTable()
         {
             QueryFilter filter = new QueryFilter("ItemType", QueryOperator.Equal, "product#master");
             //filter.AddCondition("ReplyDateTime", QueryOperator.Between, startDate, endDate);
@@ -64,6 +64,7 @@ namespace ServiceList.Infrastructure
             Search search = table.Query(config);
 
             List<Document> documentList = new List<Document>();
+            List<Service> serviceList = new List<Service>();
             try
             {
                 do
@@ -71,9 +72,12 @@ namespace ServiceList.Infrastructure
                     documentList = await search.GetNextSetAsync();
                     foreach (var document in documentList)
                     {
-                        PrintDocument(document);
+                        serviceList.Add(MapService(document));
                     }
                 } while (!search.IsDone);
+
+
+                return serviceList.OrderBy(x => x.ShortName).ToList();
             }
             catch (System.Exception ex)
             {
@@ -82,6 +86,18 @@ namespace ServiceList.Infrastructure
             }
 
         }
+
+        private static Service MapService(Document document)
+        {
+            Service service = new Service();
+            service.id = document["id"].AsPrimitive();
+            service.ShortName = document["ShortName"].AsPrimitive();
+            service.Name = document["Name"].AsPrimitive();
+            service.Description = document["Description"].AsPrimitive();
+            service.Link = document["Link"].AsPrimitive();
+            return service;
+        }
+
         private static void PrintDocument(Document document)
         {
             //   count++;
