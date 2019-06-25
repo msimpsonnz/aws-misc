@@ -11,7 +11,7 @@ namespace ServiceList.Core
 {
     public class HtmlHelper
     {
-        public static async Task<List<Service>> ParseAwsServices(string url, bool debug = false)
+        public static async Task<List<Service>> ParseAwsServices(string url)
         {
             HtmlDocument pageDocument = await GetHtmlfromSite(url);
 
@@ -30,25 +30,8 @@ namespace ServiceList.Core
                 serviceList.Add(service);
 
             }
-            List<Service> orderedServiceList = serviceList.GroupBy(x => x.id).Select(g => g.FirstOrDefault()).OrderBy(x => x.ShortName).ToList();
-
-            if (debug)
-            {
-                var masterFile = File.ReadAllText("master-svc.json");
-                List<Service> masterList = JsonConvert.DeserializeObject<List<Service>>(masterFile);
-
-                var areEqual = (masterList.Count == serviceList.Count) && orderedServiceList.Except(masterList).Any();
-
-                if (!areEqual)
-                {
-                    System.Console.WriteLine("Service List has changed!");
-                    var error = orderedServiceList.Except(masterList).ToList();
-                    File.WriteAllText("error.json", JsonConvert.SerializeObject(error));
-                    throw new SystemException();
-                }
-            }
-
-            return orderedServiceList;
+            
+            return serviceList;
         }
 
         private static async Task<HtmlDocument> GetHtmlfromSite(string url)

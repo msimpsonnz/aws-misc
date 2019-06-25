@@ -22,18 +22,21 @@ export class CdkStack extends cdk.Stack {
       partitionKey: { name: 'ItemType', type: dynamodb.AttributeType.String }
     });
 
-    const sqsNotify = new sqs.Queue(this, 'service-list-queue');
+    const sqsNotify = new sqs.Queue(this, 'service-list-queue', {
+      visibilityTimeoutSec: 500
+    });
 
     const lambdaFnCrawl = new lambda.Function(this, 'service-list-crawl-aws', {
+      runtime: lambda.Runtime.DotNetCore21,
       code: new lambda.AssetCode("../ServiceList.App.AwsCrawl/src/ServiceList.App.AwsCrawl/bin/Release/netcoreapp2.1/ServiceList.App.AwsCrawl.zip"),
       handler: 'ServiceList.App.AwsCrawl::ServiceList.App.AwsCrawl.Function::FunctionHandler',
-      runtime: lambda.Runtime.DotNetCore21,
+      timeout: 300,
       environment: {
         AWS_SQS_URL: sqsNotify.queueUrl
       }
     });
 
-    dynamodbTable.grantReadWriteData(lambdaFnCrawl);
+    dynamodbTable.grantFullAccess(lambdaFnCrawl);
     sqsNotify.grantSendMessages(lambdaFnCrawl);
 
     const rule = new events.Rule(this, 'Rule', {
