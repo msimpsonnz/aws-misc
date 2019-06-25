@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ServiceList.Core;
+using ServiceList.Infrastructure;
 
 using Amazon.Lambda.Core;
 
@@ -22,8 +23,15 @@ namespace ServiceList.App.AwsCrawl
         /// <returns></returns>
         public async Task<string> FunctionHandler(string input, ILambdaContext context)
         {
-            List<Service> orderedServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
-            return orderedServiceList[0].Description;
+            List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
+            System.Console.WriteLine($"Query online list: {onlineServiceList.Count()}");
+            List<Service> masterServiceList = await DynamoHelper.QueryTable();
+            System.Console.WriteLine($"Query online list: {masterServiceList.Count()}");
+
+            var areEqual = (masterServiceList.Count == onlineServiceList.Count) && onlineServiceList.Except(masterServiceList).Any();
+            System.Console.WriteLine(areEqual);
+            return areEqual.ToString();
+
         }
     }
 }

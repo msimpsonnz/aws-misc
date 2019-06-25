@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ServiceList.Core\ServiceList.Core.csproj" />
+    <ProjectReference Include="..\..\..\ServiceList.Infrastructure\ServiceList.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
