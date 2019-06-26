@@ -7,9 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ServiceList.Core\ServiceList.Core.csproj" />
-    <ProjectReference Include="..\ServiceList.Infrastructure\ServiceList.Infrastructure.csproj" />
+    <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.1.0" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.26" />
   </ItemGroup>
 </Project>
