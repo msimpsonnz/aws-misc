@@ -36,7 +36,7 @@ namespace ServiceList.Infrastructure
             List<SendMessageRequest> messageList = new List<SendMessageRequest>();
             if (updateList.Count == 0 && removeList.Count == 0)
             {
-                var request = BuildMessage("no-update", string.Empty, queueUrl);
+                var request = BuildMessage("no-update", "no-update", queueUrl);
                 messageList.Add(request);
             }
             else
