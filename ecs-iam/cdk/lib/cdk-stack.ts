@@ -18,18 +18,23 @@ export class CdkStack extends cdk.Stack {
     });
     
     const ecrRepo = new ecr.Repository(this, "mjs-iam-demo");
-    const ecsImage = this.node.tryGetContext("ecrImage");
+    
 
     // Create a load-balanced Fargate service and make it public
     var fargateSvc = new ecs_patterns.LoadBalancedFargateService(this, "MyFargateService", {
       cluster: cluster, // Required
       cpu: 512, // Default is 256
       desiredCount: 6, // Default is 1
-      image: ecs.ContainerImage.fromRegistry(ecsImage), // Required
+      image: ecs.ContainerImage.fromRegistry(ecrRepo.repositoryUri + ':latest'), // Required
       memoryLimitMiB: 2048, // Default is 512
       publicLoadBalancer: true // Default is false
+      
     });
 
-    //ecrRepo.grantPull(fargateSvc.service.cluster.);
+    //ecrRepo.grantPull(fargateSvc.service.taskDefinition.executionRole);
+
+    fargateSvc.service.taskDefinition.taskRole.addManagedPolicy({
+      managedPolicyArn: "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+    });
   }
 }
