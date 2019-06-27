@@ -16,18 +16,18 @@ namespace ServiceList.Core
                 blogToSvc++;
             }
 
-            var basePost = File.ReadAllText("../../msimpsonnz/_drafts/2019-06-17-AWS-AtoZ.md");
+            var basePost = File.ReadAllText("../../../msimpsonnz/_drafts/2019-06-17-AWS-AtoZ.md");
 
             StringBuilder sb = new StringBuilder();
             sb.Append(basePost);
             sb.AppendLine();
             sb.AppendLine("### Service List");
             sb.AppendLine($"#### Last Updated: {DateTime.Now}");
-            sb.AppendLine($"#### Blogs: {blogToSvc} Services: {tableList.Count}");
+            sb.AppendLine($"#### Services Covered: {blogToSvc} Total Services: {tableList.Count}");
             sb.AppendLine();
             sb.AppendLine(tableList.ToMarkdownTable());
 
-            File.WriteAllText("../../msimpsonnz/_posts/2019-06-17-AWS-AtoZ.md", sb.ToString());
+            File.WriteAllText("../../../msimpsonnz/_posts/2019-06-17-AWS-AtoZ.md", sb.ToString());
         }
 
         public static List<TableEntry> BuildTable(List<Service> orderedServiceList, List<Tags> tagList)

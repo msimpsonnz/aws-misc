@@ -9,15 +9,17 @@ namespace ServiceList.Client
     {
         static async Task Main(string[] args)
         {
-            List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
+            //List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
 
-            List<Service> master = ServiceListHelper.OrderServiceListByShortName(onlineServiceList);
+            //List<Service> master = ServiceListHelper.OrderServiceListByShortName(onlineServiceList);
 
-            //List<Tags> tagList = await HtmlHelper.ParseBlogTags("https://msimpson.co.nz/tags/aws/");
+            List<Service> serviceList = await DynamoHelper.QueryTable();
 
-            //List<TableEntry> tableList = MarkdownHelper.BuildTable(onlineServiceList, tagList);
+            List<Tags> tagList = await HtmlHelper.ParseBlogTags("https://msimpson.co.nz/tags/aws/");
 
-            //MarkdownHelper.BuildMarkdown(tableList);
+            List<TableEntry> tableList = MarkdownHelper.BuildTable(serviceList, tagList);
+
+            MarkdownHelper.BuildMarkdown(tableList);
         }
 
 
