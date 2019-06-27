@@ -2,6 +2,7 @@
 
 const express = require('express');
 const http = require('http');
+const AWS = require('aws-sdk');
 
 //Constants
 const PORT = 80;
@@ -25,12 +26,28 @@ app.get('/', (req, res) => {
       // The whole response has been received. Print out the result.
       resp.on('end', () => {
         console.log(JSON.parse(data));
-        res.send(JSON.stringify(data));
+        res.send(data);
       });
     
     }).on("error", (err) => {
       console.log("Error: " + err.message);
     });
+});
+
+app.get('/s3', (req, res) => {
+  var s3 = new AWS.S3({ params: {Bucket: 'mjsdemo-s3', Key: 'hello.json'}, apiVersion: '2006-03-01' });
+
+s3.getObject(function(err, data) {
+    // Handle any error and exit
+    if (err)
+        return err;
+
+  // No error happened
+  // Convert Body from a Buffer to a String
+
+  let objectData = data.Body.toString('utf-8'); // Use the encoding necessary
+  res.send(objectData);
+});
 });
 
 app.listen(PORT, HOST);
