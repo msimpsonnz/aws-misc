@@ -1,0 +1,19 @@
+{
+    "prod": {
+        "awscloudformation": {
+            "AuthRoleName": "front-prod-20190701105750-authRole",
+            "UnauthRoleArn": "arn:aws:iam::383358879677:role/front-prod-20190701105750-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::383358879677:role/front-prod-20190701105750-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "front-prod-20190701105750-deployment",
+            "UnauthRoleName": "front-prod-20190701105750-unauthRole",
+            "StackName": "front-prod-20190701105750",
+            "StackId": "arn:aws:cloudformation:us-east-1:383358879677:stack/front-prod-20190701105750/7dc86cf0-9b8a-11e9-8bbe-0e27f3a268d6"
+        },
+        "categories": {
+            "auth": {
+                "cognito0a6b9c6d": {}
+            }
+        }
+    }
+}
