@@ -1,0 +1,27 @@
+{
+    "resourceName": "lex52bb5390",
+    "botName": "retail",
+    "intents": [
+        {
+            "slots": [
+                {
+                    "name": "Name",
+                    "type": "AMAZON.Person",
+                    "prompt": "What is your name?",
+                    "required": true,
+                    "customType": false
+                }
+            ],
+            "utterances": [
+                "I would like to open a new account",
+                "open account",
+                "transfer account"
+            ],
+            "intentName": "Join",
+            "newSlotTypes": []
+        }
+    ],
+    "outputVoice": "Joanna",
+    "sessionTimeout": 5,
+    "coppa": false
+}
