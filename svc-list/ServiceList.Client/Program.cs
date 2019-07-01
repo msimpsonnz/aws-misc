@@ -9,17 +9,38 @@ namespace ServiceList.Client
     {
         static async Task Main(string[] args)
         {
-            //List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
+            await GetLatest(false);
 
-            //List<Service> master = ServiceListHelper.OrderServiceListByShortName(onlineServiceList);
+        }
 
-            List<Service> serviceList = await DynamoHelper.QueryTable();
+        private static async Task GetLatest(bool rebuildTable)
+        {
+            if (rebuildTable)
+            {
+                List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
 
-            List<Tags> tagList = await HtmlHelper.ParseBlogTags("https://msimpson.co.nz/tags/aws/");
+                List<Service> master = ServiceListHelper.OrderServiceListByShortName(onlineServiceList);
 
-            List<TableEntry> tableList = MarkdownHelper.BuildTable(serviceList, tagList);
+                await DynamoHelper.UpdateTable(master);
 
-            MarkdownHelper.BuildMarkdown(tableList);
+                List<Service> serviceList = await DynamoHelper.QueryTable();
+
+                List<Tags> tagList = await HtmlHelper.ParseBlogTags("https://msimpson.co.nz/tags/aws/");
+
+                List<TableEntry> tableList = MarkdownHelper.BuildTable(serviceList, tagList);
+
+                MarkdownHelper.BuildMarkdown(tableList);
+            }
+            else
+            {
+                List<Service> serviceList = await DynamoHelper.QueryTable();
+
+                List<Tags> tagList = await HtmlHelper.ParseBlogTags("https://msimpson.co.nz/tags/aws/");
+
+                List<TableEntry> tableList = MarkdownHelper.BuildTable(serviceList, tagList);
+
+                MarkdownHelper.BuildMarkdown(tableList);
+            }
         }
 
 

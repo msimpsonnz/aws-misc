@@ -6,6 +6,7 @@ using ServiceList.Core;
 using ServiceList.Infrastructure;
 
 using Amazon.Lambda.Core;
+using Amazon.Lambda.CloudWatchEvents.ScheduledEvents;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -16,14 +17,9 @@ namespace ServiceList.App.AwsCrawl
     {
         static readonly string sqlQueueUrl = Environment.GetEnvironmentVariable("AWS_SQS_URL");
 
-        /// <summary>
-        /// A simple function that takes a string and does a ToUpper
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        public async Task<string> FunctionHandler(string input, ILambdaContext context)
+        public async Task<string> FunctionHandler(ScheduledEvent cloudWatchEvent, ILambdaContext context)
         {
+            System.Console.WriteLine($"EventId: {cloudWatchEvent.Id}");
             List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
             System.Console.WriteLine($"Query online list: {onlineServiceList.Count()}");
             List<Service> masterServiceList = await DynamoHelper.QueryTable();
