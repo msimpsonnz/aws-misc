@@ -12,9 +12,9 @@
   "region" : "",
   "configuration" : "Release",
   "framework" : "netcoreapp2.2",
-  "function-runtime":"dotnetcore2.1",
+  "function-runtime":"provided",
   "function-memory-size" : 256,
   "function-timeout" : 30,
-  "function-handler" : "lambda-runtime::lambda_runtime.Function::FunctionHandler",
+  "function-handler" : "not_required_for_custom_runtime",  
   "msbuild-parameters": "--self-contained true"
-}
+  }
