@@ -21,9 +21,7 @@ namespace Amazon.Lambda.Serialization.Json
 
         public void Serialize<T>(T response, Stream responseStream)
         {
-            StreamWriter writer = new StreamWriter(responseStream);
-            writer.Write(System.Text.Json.Serialization.JsonSerializer.ToUtf8Bytes<T>(response));
-            writer.Flush();
+            System.Text.Json.Serialization.JsonSerializer.WriteAsync<T>(response, responseStream);
 
         }
     }

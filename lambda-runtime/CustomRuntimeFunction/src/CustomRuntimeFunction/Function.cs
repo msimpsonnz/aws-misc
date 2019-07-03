@@ -20,7 +20,7 @@ namespace CustomRuntimeFunction
         /// <param name="args"></param>
         private static async Task Main(string[] args)
         {
-            Func<ApplicationLoadBalancerRequest, ILambdaContext, ApplicationLoadBalancerResponse> func = FunctionHandler;
+            Func<ApplicationLoadBalancerRequest, ILambdaContext, CustomAlbResponse> func = FunctionHandler;
             using(var handlerWrapper = HandlerWrapper.GetHandlerWrapper(func, new JsonSerializer()))
             using(var bootstrap = new LambdaBootstrap(handlerWrapper))
             {
@@ -42,10 +42,10 @@ namespace CustomRuntimeFunction
         // {
         //     return input?.ToUpper();
         // }
-        public static ApplicationLoadBalancerResponse FunctionHandler(ApplicationLoadBalancerRequest request, ILambdaContext context)
+        public static CustomAlbResponse FunctionHandler(ApplicationLoadBalancerRequest request, ILambdaContext context)
         {
             System.Console.WriteLine(request.Body.ToString());
-            var response = new ApplicationLoadBalancerResponse
+            var response = new CustomAlbResponse
             {
                 StatusCode = 200,
                 StatusDescription = "200 OK",
