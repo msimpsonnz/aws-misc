@@ -16,6 +16,6 @@
         <PackageReference Include="Amazon.Lambda.ApplicationLoadBalancerEvents" Version="1.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Amazon.Lambda.Serialization.Json\Amazon.Lambda.Serialization.Json.csproj" />
+    <ProjectReference Include="..\..\..\Amazon.Lambda.Serialization.Json\Amazon.Lambda.Serialization.Json.csproj" />
   </ItemGroup>
 </Project>
