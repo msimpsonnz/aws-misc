@@ -5,12 +5,14 @@ using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using System.Collections.Generic;
+using FakeResponse;
+using Newtonsoft.Json;
 
 
 [assembly: LambdaSerializer(
 typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace CustomRuntimeFunction
+namespace Net30.Newton
 {
     public class Function
     {
@@ -21,7 +23,7 @@ namespace CustomRuntimeFunction
         private static async Task Main(string[] args)
         {
             Func<ApplicationLoadBalancerRequest, ILambdaContext, ApplicationLoadBalancerResponse> func = FunctionHandler;
-            using (var handlerWrapper = HandlerWrapper.GetHandlerWrapper(func, new JsonSerializer()))
+            using (var handlerWrapper = HandlerWrapper.GetHandlerWrapper(func, new Amazon.Lambda.Serialization.Json.JsonSerializer()))
             using (var bootstrap = new LambdaBootstrap(handlerWrapper))
             {
                 await bootstrap.RunAsync();
@@ -31,7 +33,10 @@ namespace CustomRuntimeFunction
         public static ApplicationLoadBalancerResponse FunctionHandler(ApplicationLoadBalancerRequest request, ILambdaContext context)
         {
             System.Console.WriteLine(request.Body.ToString() ?? "Empty Request");
-            string responseString = @"hello world";
+            
+            List<Dictionary<string, string>> body = FakeResponseMaker.BuildFakeResponse();
+            
+            var responseBody = JsonConvert.SerializeObject(body);
 
             Dictionary<string, string> Headers = new Dictionary<string, string>();
             Headers.Add("Content-Type", "text/html;");
@@ -42,7 +47,7 @@ namespace CustomRuntimeFunction
                 StatusCode = 200,
                 StatusDescription = "200 OK",
                 Headers = Headers,
-                Body = responseString
+                Body = responseBody
             };
 
             return response;

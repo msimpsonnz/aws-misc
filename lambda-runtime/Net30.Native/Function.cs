@@ -5,12 +5,13 @@ using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.ApplicationLoadBalancerEvents;
 using System.Collections.Generic;
-
+using FakeResponse;
+using System.Text.Json.Serialization;
 
 [assembly: LambdaSerializer(
 typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))] 
 
-namespace CustomRuntimeFunction
+namespace Net30.Native
 {
     public class Function
     {
@@ -21,7 +22,7 @@ namespace CustomRuntimeFunction
         private static async Task Main(string[] args)
         {
             Func<ApplicationLoadBalancerRequest, ILambdaContext, CustomAlbResponse> func = FunctionHandler;
-            using(var handlerWrapper = HandlerWrapper.GetHandlerWrapper(func, new JsonSerializer()))
+            using(var handlerWrapper = HandlerWrapper.GetHandlerWrapper(func, new Amazon.Lambda.Serialization.Json.JsonSerializer()))
             using(var bootstrap = new LambdaBootstrap(handlerWrapper))
             {
                 await bootstrap.RunAsync();
@@ -44,38 +45,23 @@ namespace CustomRuntimeFunction
         // }
         public static CustomAlbResponse FunctionHandler(ApplicationLoadBalancerRequest request, ILambdaContext context)
         {
-            System.Console.WriteLine(request.Body.ToString());
-            var response = new CustomAlbResponse
+            System.Console.WriteLine(request.Body.ToString() ?? "Empty Request");
+            
+            List<Dictionary<string, string>> body = FakeResponseMaker.BuildFakeResponse();
+            
+            var responseBody = System.Text.Json.Serialization.JsonSerializer.ToString(body);
+
+            Dictionary<string, string> Headers = new Dictionary<string, string>();
+            Headers.Add("Content-Type", "text/html;");
+
+            CustomAlbResponse response = new CustomAlbResponse()
             {
+                IsBase64Encoded = false,
                 StatusCode = 200,
                 StatusDescription = "200 OK",
-                IsBase64Encoded = false
+                Headers = Headers,
+                Body = responseBody
             };
-
-            // If "Multi value headers" is enabled for the ELB Target Group then use the "response.MultiValueHeaders" property instead of "response.Headers".
-            response.Headers = new Dictionary<string, string>
-            {
-                {"Content-Type", "text/html; charset=utf-8" }
-            };
-
-            response.Body =
-@"
-<html>
-    <head>
-        <title>Hello World!</title>
-        <style>
-            html, body {
-                margin: 0; padding: 0;
-                font-family: arial; font-weight: 700; font-size: 3em;
-                text-align: center;
-            }
-        </style>
-    </head>
-    <body>
-        <p>Hello World from Lambda</p>
-    </body>
-</html>
-";
 
             return response;
         }

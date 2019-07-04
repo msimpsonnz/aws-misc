@@ -1,3 +1,0 @@
-"Method","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"
-"GET","/lambda/net21-newton",121052,74,390,1411,62,60215,353,404.86
-"None","Total",121052,74,390,1411,62,60215,353,404.86
