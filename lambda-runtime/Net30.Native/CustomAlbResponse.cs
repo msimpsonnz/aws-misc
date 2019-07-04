@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace CustomRuntimeFunction
+namespace Net30.Native
 {
     public class CustomAlbResponse
     {
