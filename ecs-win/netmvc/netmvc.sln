@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29102.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netweb462", "netweb462\netweb462.csproj", "{EC3522ED-8BF4-4DD5-B7E2-CE86FB9FC4CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netweb472", "netweb472\netweb472.csproj", "{8A666CCA-B64E-4BAE-998E-F78324B55F77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netweb480", "netweb480\netweb480.csproj", "{60CA7E28-7A04-45BD-9D73-94B7FCC90E0E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EC3522ED-8BF4-4DD5-B7E2-CE86FB9FC4CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC3522ED-8BF4-4DD5-B7E2-CE86FB9FC4CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC3522ED-8BF4-4DD5-B7E2-CE86FB9FC4CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC3522ED-8BF4-4DD5-B7E2-CE86FB9FC4CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A666CCA-B64E-4BAE-998E-F78324B55F77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A666CCA-B64E-4BAE-998E-F78324B55F77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A666CCA-B64E-4BAE-998E-F78324B55F77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A666CCA-B64E-4BAE-998E-F78324B55F77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{60CA7E28-7A04-45BD-9D73-94B7FCC90E0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60CA7E28-7A04-45BD-9D73-94B7FCC90E0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60CA7E28-7A04-45BD-9D73-94B7FCC90E0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60CA7E28-7A04-45BD-9D73-94B7FCC90E0E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5E8DF3D9-C5AB-496F-9E61-A44B99155614}
+	EndGlobalSection
+EndGlobal
