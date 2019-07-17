@@ -49,14 +49,6 @@ echo $EKS_CLUSTER
 ```
 
 ```bash
-cat /dev/zero | ssh-keygen -q -N ""
-```
-
-```bash
-aws ec2 import-key-pair --key-name "eksworkshop-$EKS_CLUSTER" --public-key-material file://~/.ssh/id_rsa.pub
-```
-
-```bash
 curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
 
 sudo mv -v /tmp/eksctl /usr/local/bin
