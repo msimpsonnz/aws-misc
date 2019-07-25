@@ -57,11 +57,66 @@ eksctl version
 ```
 
 ```bash
-eksctl create cluster --version=1.13 --name=eksworkshop-$EKS_CLUSTER --nodes=2 --node-ami=auto --region=${AWS_REGION}
+eksctl create cluster --version=1.13 --name=eksworkshop-$EKS_CLUSTER --nodes=2 --node-ami=auto --node-type m5.large --region=${AWS_REGION}
 ```
 
 ```bash
 aws eks update-kubeconfig --name "eksworkshop-$EKS_CLUSTER"
 
 kubectl get nodes
+```
+
+```
+STACK_NAME=$(eksctl get nodegroup --cluster eksworkshop-$EKS_CLUSTER -o json | jq -r '.[].StackName')
+INSTANCE_PROFILE_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey=="InstanceProfileARN") | .OutputValue')
+ROLE_NAME=$(aws cloudformation describe-stacks --stack-name $STACK_NAME | jq -r '.Stacks[].Outputs[] | select(.OutputKey=="InstanceRoleARN") | .OutputValue' | cut -f2 -d/)
+echo "export ROLE_NAME=${ROLE_NAME}" >> ~/.bash_profile
+echo "export INSTANCE_PROFILE_ARN=${INSTANCE_PROFILE_ARN}" >> ~/.bash_profile
+```
+
+```bash
+cd ~/environment
+
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > get_helm.sh
+
+chmod +x get_helm.sh
+
+./get_helm.sh
+```
+
+```bash
+cat <<EoF > ~/environment/rbac.yaml
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: tiller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: tiller
+    namespace: kube-system
+EoF
+```
+
+```bash
+kubectl apply -f ~/environment/rbac.yaml
+
+helm init --service-account tiller
+```
+
+
+```bash
+STACK_NAME=$(aws cloudformation describe-stacks | jq -r '.Stacks[].StackName' | grep eksctl-eksworkshop-$EKS_CLUSTER-nodegroup)
+SG_ID=$(aws cloudformation describe-stack-resources --stack-name $STACK_NAME --logical-resource-id SG | jq -r '.StackResources[].PhysicalResourceId')
+echo $SG_ID
 ```
