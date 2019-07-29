@@ -118,25 +118,47 @@ namespace ServiceList.Infrastructure
 
 
 
-        public static async Task UpdateTable(List<Service> serviceList)
+        public static async Task RebuildTable(List<Service> serviceList)
         {
 
             var table = Table.LoadTable(client, "service-list");
 
-            foreach (Service svc in serviceList)
+            foreach (Service serviceObj in serviceList)
             {
+                ServiceEntity svc = new ServiceEntity(serviceObj);
+
                 var item = new Document();
 
                 item["id"] = svc.id;
-                item["ItemType"] = "product#master";
+                item["ItemType"] = svc.ItemType;
                 item["Name"] = svc.Name;
                 item["ShortName"] = svc.ShortName;
                 item["Description"] = svc.Description;
                 item["Link"] = svc.Link;
+                item["DateUpdated"] = svc.DateUpdated;
 
-                await table.PutItemAsync(item);
+                await table.UpdateItemAsync(item);
             }
 
+
+        }
+
+        public static async Task UpdateTable(string service)
+        {
+            ServiceEntity svc = new ServiceEntity(service);
+            var table = Table.LoadTable(client, "service-list");
+
+            var item = new Document();
+
+            item["id"] = svc.id;
+            item["ItemType"] = svc.ItemType;
+            item["Name"] = svc.Name;
+            item["ShortName"] = svc.ShortName;
+            item["Description"] = svc.Description;
+            item["Link"] = svc.Link;
+            item["DateUpdated"] = svc.DateUpdated;
+
+            await table.UpdateItemAsync(item);
 
         }
     }

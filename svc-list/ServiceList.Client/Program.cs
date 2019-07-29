@@ -9,7 +9,7 @@ namespace ServiceList.Client
     {
         static async Task Main(string[] args)
         {
-            await GetLatest(false);
+            await GetLatest(true);
 
         }
 
@@ -21,7 +21,7 @@ namespace ServiceList.Client
 
                 List<Service> master = ServiceListHelper.OrderServiceListByShortName(onlineServiceList);
 
-                await DynamoHelper.UpdateTable(master);
+                await DynamoHelper.RebuildTable(master);
 
                 List<Service> serviceList = await DynamoHelper.QueryTable();
 
