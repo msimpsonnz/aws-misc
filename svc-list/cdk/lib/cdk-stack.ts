@@ -2,7 +2,7 @@ import events = require('@aws-cdk/aws-events');
 import targets = require('@aws-cdk/aws-events-targets');
 import cdk = require('@aws-cdk/core');
 import lambda = require('@aws-cdk/aws-lambda');
-import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';
+import { SqsEventSource, SnsEventSource } from '@aws-cdk/aws-lambda-event-sources';
 import dynamodb = require('@aws-cdk/aws-dynamodb');
 import sqs = require('@aws-cdk/aws-sqs');
 import sns = require('@aws-cdk/aws-sns');
@@ -57,7 +57,7 @@ export class CdkStack extends cdk.Stack {
 
     rule.addTarget(new targets.LambdaFunction(lambdaFnCrawl));
 
-    const lambdaFnUpdate = new lambda.Function(this, 'service-list-crawl-notify', {
+    const lambdaFnNotify = new lambda.Function(this, 'service-list-crawl-notify', {
       code: new lambda.AssetCode("../ServiceList.App.Notify/bin/Release/netcoreapp2.1/ServiceList.App.Notify.zip"),
       handler: 'ServiceList.App.Notify::ServiceList.App.Notify.Function::FunctionHandler',
       runtime: lambda.Runtime.DOTNET_CORE_2_1,
@@ -67,9 +67,19 @@ export class CdkStack extends cdk.Stack {
       }
     });
 
-    lambdaFnUpdate.addEventSource(new SqsEventSource(sqsNotify));
-    snsTopic.grantPublish(lambdaFnUpdate);
+    lambdaFnNotify.addEventSource(new SqsEventSource(sqsNotify));
+    snsTopic.grantPublish(lambdaFnNotify);
 
+    const lambdaFnUpdate = new lambda.Function(this, 'service-list-crawl-update', {
+      code: new lambda.AssetCode("../ServiceList.App.Update/bin/Release/netcoreapp2.1/ServiceList.App.Update.zip"),
+      handler: 'ServiceList.App.Notify::ServiceList.App.Notify.Function::FunctionHandler',
+      runtime: lambda.Runtime.DOTNET_CORE_2_1,
+      timeout: cdk.Duration.seconds(300),
+      environment: {
+      }
+    });
+
+    lambdaFnUpdate.addEventSource(new SnsEventSource(snsTopic));
 
   }
 }

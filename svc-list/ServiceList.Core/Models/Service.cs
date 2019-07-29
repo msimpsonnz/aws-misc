@@ -10,9 +10,5 @@ namespace ServiceList.Core
 
     }
 
-    public class ServiceEntity : Service
-    {
-        public string ItemType { get; set; }
 
-    }
 }
