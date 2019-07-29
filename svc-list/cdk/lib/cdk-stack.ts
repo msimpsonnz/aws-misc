@@ -72,7 +72,7 @@ export class CdkStack extends cdk.Stack {
 
     const lambdaFnUpdate = new lambda.Function(this, 'service-list-crawl-update', {
       code: new lambda.AssetCode("../ServiceList.App.Update/bin/Release/netcoreapp2.1/ServiceList.App.Update.zip"),
-      handler: 'ServiceList.App.Notify::ServiceList.App.Notify.Function::FunctionHandler',
+      handler: 'ServiceList.App.Update::ServiceList.App.Update.Function::FunctionHandler',
       runtime: lambda.Runtime.DOTNET_CORE_2_1,
       timeout: cdk.Duration.seconds(300),
       environment: {
@@ -80,6 +80,7 @@ export class CdkStack extends cdk.Stack {
     });
 
     lambdaFnUpdate.addEventSource(new SnsEventSource(snsTopic));
+    dynamodbTable.grantFullAccess(lambdaFnUpdate);
 
   }
 }
