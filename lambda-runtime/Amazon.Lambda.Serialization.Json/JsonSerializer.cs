@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Amazon.Lambda.Core;
+using Serializer = System.Text.Json.Serialization;
 
 namespace Amazon.Lambda.Serialization.Json
 {
@@ -13,7 +14,7 @@ namespace Amazon.Lambda.Serialization.Json
         public T Deserialize<T>(Stream requestStream)
         {
             System.Text.Json.Serialization.JsonSerializerOptions options = new System.Text.Json.Serialization.JsonSerializerOptions() {
-                PropertyNameCaseInsensitive = true
+                PropertyNamingPolicy = System.Text.Json.Serialization.JsonNamingPolicy.CamelCase
             };
             var json = new StreamReader(requestStream).ReadToEnd();
             return System.Text.Json.Serialization.JsonSerializer.Parse<T>(json, options);

@@ -12,4 +12,14 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Amazon.Lambda.Serialization.Json\Amazon.Lambda.Serialization.Json.csproj" />
+  </ItemGroup>
+
 </Project>
