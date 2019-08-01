@@ -1,3 +1,5 @@
+Building a CDK Project to test out the deployment of ALB
+
 # Useful commands
 
  * `npm run build`   compile typescript to js

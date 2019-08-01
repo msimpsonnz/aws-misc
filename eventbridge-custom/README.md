@@ -1,3 +1,6 @@
+For details see this blog
+[Blog](https://msimpson.co.nz/EventBridge-Custom/)
+
 ## Prerequisites
 * Git
 * AWS CDK
