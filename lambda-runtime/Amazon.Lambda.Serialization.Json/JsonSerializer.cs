@@ -14,7 +14,8 @@ namespace Amazon.Lambda.Serialization.Json
         public T Deserialize<T>(Stream requestStream)
         {
             System.Text.Json.Serialization.JsonSerializerOptions options = new System.Text.Json.Serialization.JsonSerializerOptions() {
-                PropertyNamingPolicy = System.Text.Json.Serialization.JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = System.Text.Json.Serialization.JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true
             };
             var json = new StreamReader(requestStream).ReadToEnd();
             return System.Text.Json.Serialization.JsonSerializer.Parse<T>(json, options);
