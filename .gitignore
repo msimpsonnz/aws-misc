@@ -4,7 +4,6 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # User-specific files
-!cdk.ts
 *.rsuser
 *.suo
 *.user
@@ -27,7 +26,8 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
+#[Bb]in/
+![Bb]in/cdk.ts
 [Oo]bj/
 [Ll]og/
 
