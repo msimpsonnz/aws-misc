@@ -1,0 +1,265 @@
+{
+    "modules": [
+        {
+            "id": "1ab1e276-87f4-4fc9-a3d1-e72f482ae96e",
+            "type": "SetLoggingBehavior",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "ead55375-e379-4af5-80bc-527d04131fcc"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "LoggingBehavior",
+                    "value": "Enable"
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 160,
+                    "y": 30
+                }
+            }
+        },
+        {
+            "id": "ead55375-e379-4af5-80bc-527d04131fcc",
+            "type": "PlayPrompt",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "4b7ebbdb-22ed-4cfd-b566-8285daa53cbc"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "Text",
+                    "value": "This flow enables users to enter information secured by an encryption key you provide.",
+                    "namespace": null
+                },
+                {
+                    "name": "TextToSpeechType",
+                    "value": "text"
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 35,
+                    "y": 237
+                },
+                "useDynamic": false
+            }
+        },
+        {
+            "id": "4b7ebbdb-22ed-4cfd-b566-8285daa53cbc",
+            "type": "StoreUserInput",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "b092c9fa-ec2f-48c7-a22a-d46184d4af61"
+                },
+                {
+                    "condition": "Error",
+                    "transition": "e1d99e8e-e457-491b-af02-53d70d90580f"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "Text",
+                    "value": "Please enter your credit card number, press the pound key when complete.",
+                    "namespace": null
+                },
+                {
+                    "name": "TextToSpeechType",
+                    "value": "text"
+                },
+                {
+                    "name": "CustomerInputType",
+                    "value": "Custom"
+                },
+                {
+                    "name": "Timeout",
+                    "value": "6"
+                },
+                {
+                    "name": "MaxDigits",
+                    "value": 20
+                },
+                {
+                    "name": "EncryptEntry",
+                    "value": true
+                },
+                {
+                    "name": "EncryptionKeyId",
+                    "value": "you-key-id-from-step4-here",
+                    "namespace": null
+                },
+                {
+                    "name": "EncryptionKey",
+                    "value": "Paste here the content of the file  blog.connect.certificate.pem",
+                    "namespace": null
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 403,
+                    "y": 208
+                },
+                "useDynamic": false,
+                "useDynamicForEncryptionKeys": false,
+                "countryCodePrefix": "+1"
+            }
+        },
+        {
+            "id": "b092c9fa-ec2f-48c7-a22a-d46184d4af61",
+            "type": "SetAttributes",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "49150234-a10e-430b-81ab-ab47b7c07e5f"
+                },
+                {
+                    "condition": "Error",
+                    "transition": "e1d99e8e-e457-491b-af02-53d70d90580f"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "Attribute",
+                    "value": "Stored customer input",
+                    "key": "EncryptedCreditCard",
+                    "namespace": "System"
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 671,
+                    "y": 11
+                }
+            }
+        },
+        {
+            "id": "49150234-a10e-430b-81ab-ab47b7c07e5f",
+            "type": "InvokeExternalResource",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "3e05fb47-2100-4410-a333-26e12f30429d"
+                },
+                {
+                    "condition": "Error",
+                    "transition": "e1d99e8e-e457-491b-af02-53d70d90580f"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "FunctionArn",
+                    "value": "arn:aws:lambda:us-east-1:098145436134:function:ConnectEncryption"
+                },
+                {
+                    "name": "TimeLimit",
+                    "value": "8"
+                },
+                {
+                    "name": "Parameter",
+                    "key": "EncryptedCreditCard",
+                    "value": "EncryptedCreditCard",
+                    "namespace": "User Defined"
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 953,
+                    "y": 9
+                },
+                "dynamicMetadata": {
+                    "EncryptedCreditCard": true
+                }
+            },
+            "target": "Lambda"
+        },
+        {
+            "id": "3e05fb47-2100-4410-a333-26e12f30429d",
+            "type": "PlayPrompt",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "401a0775-88b3-457f-b9e6-f92f13348853"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "Text",
+                    "value": "The encrypted customer credit card number is now saved and can be passed to the agent as a screenpop or processed using AWS Lambda. You may also want to check out the sample secure input flow with an agent.",
+                    "namespace": null
+                },
+                {
+                    "name": "TextToSpeechType",
+                    "value": "text"
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 1234,
+                    "y": 53
+                },
+                "useDynamic": false
+            }
+        },
+        {
+            "id": "e1d99e8e-e457-491b-af02-53d70d90580f",
+            "type": "PlayPrompt",
+            "branches": [
+                {
+                    "condition": "Success",
+                    "transition": "401a0775-88b3-457f-b9e6-f92f13348853"
+                }
+            ],
+            "parameters": [
+                {
+                    "name": "Text",
+                    "value": "There was a problem gathering the customer's input. Did you specify an encryption key in the Store customer input block?",
+                    "namespace": null
+                },
+                {
+                    "name": "TextToSpeechType",
+                    "value": "text"
+                }
+            ],
+            "metadata": {
+                "position": {
+                    "x": 1233,
+                    "y": 241
+                },
+                "useDynamic": false
+            }
+        },
+        {
+            "id": "401a0775-88b3-457f-b9e6-f92f13348853",
+            "type": "Disconnect",
+            "branches": [],
+            "parameters": [],
+            "metadata": {
+                "position": {
+                    "x": 1555,
+                    "y": 384
+                }
+            }
+        }
+    ],
+    "version": "1",
+    "type": "contactFlow",
+    "start": "1ab1e276-87f4-4fc9-a3d1-e72f482ae96e",
+    "metadata": {
+        "entryPointPosition": {
+            "x": 13,
+            "y": 3
+        },
+        "snapToGrid": false,
+        "name": "blog-secure-ivr",
+        "description": "Enables the customer to enter digits in private. In a real world implementation, enabling encryption is likely preferred.",
+        "type": "contactFlow",
+        "status": "saved",
+        "hash": "8f60934f86e2bfc39b52429a959cd90a8c9a940901cd60e0965b65eb9ce3dd49"
+    }
+}
