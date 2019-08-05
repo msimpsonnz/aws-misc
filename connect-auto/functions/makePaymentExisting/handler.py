@@ -2,12 +2,18 @@
 import os
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
+import stripe
+
+client = boto3.client('ssm')
 
 #start our Lambda runtime here 
 def handler(event,context):
     
     #Retrieve ANI from inbound callerID
     callerID = event["Details"]["ContactData"]["CustomerEndpoint"]["Address"]
+    #Retrieve Ammount
+    amountFloat = float(event["Details"]["Parameters"]["Amount"])
+    print(f"Amount: {amount}")
     
     dynamoTable = os.environ['AWS_DYNAMODB']
     #Establish connection to dynamoDB and retrieve table
@@ -19,13 +25,24 @@ def handler(event,context):
         Key={'phoneNumber': callerID, 'attrib': 'user'}
     )
     
-    try:
-        #Sets Key:Value Pair needed for proper Connect handling
-        filteredNumberReturn = {'userFound' : 'True', 'userName' : response['Item']['firstName'], 'currentBalance' : response['Item']['currentBalance']} 
-        print(f"A call has been filtered:  {callerID}")
-    except:
-        filteredNumberReturn = {'userFound' : 'False'} 
-        print(f"User not found")
-    
+    customer = stripe.Customer.retrieve(response['Item']['stripeId'])
+
+    ssm_response = client.get_parameter(
+        Name='StripeApiKey',
+        WithDecryption=True
+    )
+
+    stripe.api_key = ssm_response['Parameter']['Value']
+
+    charge = stripe.Charge.create(
+        amount=amount,
+        currency="nzd",
+        customer=customer['id'],
+        source=customer['sources']['data'][0]['id'],
+        description=f"Charge for {customer['phone']}"
+    )
+
+    status = {'status': charge['status']}
+    print(status)
     #Return to Connect our key/value combo    
-    return filteredNumberReturn
+    return status
