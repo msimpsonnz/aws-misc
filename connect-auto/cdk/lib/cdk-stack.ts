@@ -1,6 +1,7 @@
 import cdk = require('@aws-cdk/core');
 import dynamodb = require('@aws-cdk/aws-dynamodb')
 import lambda = require('@aws-cdk/aws-lambda')
+import apigateway = require('@aws-cdk/aws-apigateway')
 
 
 export class CdkStack extends cdk.Stack {
@@ -37,7 +38,21 @@ export class CdkStack extends cdk.Stack {
     
     dynamoTable.grantReadData(lambdaMakePaymentExisting);
 
+    const lambdaSrtripeLogging = new lambda.Function(this, 'stripeLogging', {
+      functionName: 'connect-stripeLogging',
+      code: lambda.Code.asset("../functions/stripeLogging/function.zip"),
+      handler: "handler.handler",
+      runtime: lambda.Runtime.PYTHON_3_7,
+      environment:{
+        AWS_DYNAMODB: dynamoTable.tableName
+      }
+    });
+    
+    dynamoTable.grantReadData(lambdaSrtripeLogging);
 
+    const api = new apigateway.LambdaRestApi(this, 'connect-stripe-api', {
+      handler: lambdaSrtripeLogging
+    });
 
   }
 }
