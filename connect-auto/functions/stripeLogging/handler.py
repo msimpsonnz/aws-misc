@@ -10,8 +10,6 @@ ssm_client = boto3.client('ssm')
 
 #start our Lambda runtime here 
 def handler(event,context):
-    
-    
     dynamoTable = os.environ['AWS_DYNAMODB']
     #Establish connection to dynamoDB and retrieve table
     dynamodb = boto3.resource('dynamodb')
@@ -26,18 +24,22 @@ def handler(event,context):
     
     #KeyConditionExpression looks for number that equals ANI of inbound call from a dynamoDB table and saves it to response
     try:
-        event = stripe.Event.construct_from(
-        json.loads(event), stripe.api_key
-        )
-        print(event)
+        #event = stripe.Event.construct_from(
+        #json.loads(event), stripe.api_key
+        #)
+        #print(event)
+        #msg = json.dumps(event.body)
+        s = event['body']
+        print(s)
+        i = json.loads(s)
+        id = i['id']
+        
         now = datetime.now()
         response = table.put_item(
         Item={
-                'phoneNumber': event['phoneNumber'],
+                'phoneNumber': id,
                 'attrib': f"trans#{datetime.timestamp(now)}",
-                'stripe': {
-                    event
-                }
+                'stripe': i
             }
         )
         return {
@@ -47,6 +49,7 @@ def handler(event,context):
     
     except ValueError as e:
         # Invalid payload
+        print(e)
         return {
             "statusCode": 400,
             "body": ""
