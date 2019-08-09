@@ -2,21 +2,21 @@
   <div>
     <p class="error">{{ error }}</p>
 
-    <h1 class="h1">
+    <h4 class="h4">
            <a-note
         v-for="todo in todos"
         :key="todo.id"
         :todo="todo"
         :theme="theme"
       />
-    </h1>
+    </h4>
     <qrcode-stream @decode="onDecode" @init="onInit" />
-    <div>
-      <button class="action" v-on:click="next">Next</button>
-    </div>
-        <h3>
+        <h4>
       Shipment Id: {{id}}
-    </h3>
+    </h4>
+            <h4>
+      QR: {{result}}
+    </h4>
   </div>
 </template>
 
@@ -29,7 +29,7 @@ import { JS } from 'fsts'
 
 import AmplifyStore from '../../store/store'
 
-import  { GetTodo }  from './persist/graphqlActions';
+import  { GetTodo, UpdateTodo }  from './persist/graphqlActions';
 
 import NotesTheme from '../NotesTheme'
 import { scrypt } from 'crypto';
@@ -53,6 +53,7 @@ export default {
       logger: {},
       actions: {
         get: GetTodo,
+        update: UpdateTodo
       }
     }
   },
@@ -75,12 +76,10 @@ export default {
         this.logger.error(`Error listing Todos`, e)
       });
     },
-    scan(id) {
-      this.$Amplify.API.graphql(this.$Amplify.graphqlOperation(this.actions.update, {id: todo.id, scan: this.result}))
-        .then((res) => {
-          todo.done = !todo.done
-          this.logger.info(`Todo ${todo.id} done status toggled`, res);
-        })
+    scan() {
+      this.logger = new this.$Amplify.Logger(`Id: ${this.id}`)
+      this.logger = new this.$Amplify.Logger(`Result: ${this.result}`)
+      this.$Amplify.API.graphql(this.$Amplify.graphqlOperation(this.actions.update, {id: this.id, scan: this.result}))
         .catch((e) => {
           this.logger.error(`Error toggling Todo ${todo.id} done status`, e)
         })
@@ -88,10 +87,10 @@ export default {
     
     onDecode (result) {
       this.result = result
-      scan(this.id)
-    },
-    next: function() {
-    this.$router.push('/notes')
+      this.logger.info(`QR result: ${this.result}`)
+      this.logger = new this.$Amplify.Logger(`Result: ${this.result}`)
+      this.scan()
+      this.$router.push('/notes')
     },
 
     async onInit (promise) {

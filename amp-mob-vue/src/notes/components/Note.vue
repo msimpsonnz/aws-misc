@@ -33,6 +33,7 @@
       </svg>
     </div>
     <div :style="itemStyle.title">{{todo.note}}</div>
+    <div :style="itemStyle.title">Scan ID: {{todo.scan}}</div>
     <div :style="itemStyle.remove" v-on:click="remove">x</div>
   </li>
 </template>

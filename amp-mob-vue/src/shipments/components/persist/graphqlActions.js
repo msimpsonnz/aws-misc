@@ -10,7 +10,6 @@ const ListTodos = `query {
     items {
       id
       note
-      selected
       done
     }
   }
@@ -20,7 +19,6 @@ const UpdateTodo = `mutation updateTodo($id: ID!, $note: String, $done: Boolean)
   updateTodo(input: {id: $id, note: $note, done: $done}) {
     id
     note
-    selected
     done
   }
 }`;

@@ -1,20 +1,3 @@
-const CreateTodo = `mutation createTodo($note: String!) {
-  createTodo(input: {note: $note}) {
-    id
-    note
-  }
-}`;
-
-const ListTodos = `query {
-  listTodos {
-    items {
-      id
-      note
-      done
-    }
-  }
-}`;
-
 const GetTodo = `query getTodo {
   listTodos(filter: {
     done: {
@@ -30,25 +13,14 @@ const GetTodo = `query getTodo {
   }
 }`;
 
-const UpdateTodo = `mutation updateTodo($id: ID!, $note: String, $done: Boolean) {
-  updateTodo(input: {id: $id, note: $note, done: $done}) {
+const UpdateTodo = `mutation updateTodo($id: ID!, $scan: String) {
+  updateTodo(input: {id: $id, scan: $scan}) {
     id
-    note
-    done
+    scan
   }
 }`;
 
-const DeleteTodo = `mutation DeleteTodo($id: ID!) {
-  deleteTodo(input: {id: $id}) {
-    id
-  }
-}
-`
-
 export {
-  CreateTodo,
-  ListTodos,
   GetTodo,
-  UpdateTodo,
-  DeleteTodo
+  UpdateTodo
 }
