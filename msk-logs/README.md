@@ -38,12 +38,13 @@ cd msk-logs/cdk
 cdk deploy
 
 #Build the base image
+$(aws ecr get-login --no-include-email --region $CDK_AWS_REGION)
+
 cd ../src/kafka-base
 curl https://archive.apache.org/dist/kafka/2.2.1/kafka_2.12-2.2.1.tgz -o ./bin/kafka_2.12-2.2.1.tgz
 docker build -t kafka-base .
-
 aws ecr create-repository --repository-name kafka-base
-$(aws ecr get-login --no-include-email --region $CDK_AWS_REGION)
+
 docker tag kafka-base:latest $CDK_AWS_ACCOUNT.dkr.ecr.$CDK_AWS_REGION.amazonaws.com/kafka-base:latest
 docker push $CDK_AWS_ACCOUNT.dkr.ecr.$CDK_AWS_REGION.amazonaws.com/kafka-base:latest
 
@@ -55,7 +56,9 @@ export AWS_MSK_CLUSTER_CONNECTSTRING=$(aws kafka describe-cluster --region $CDK_
 #If you get an error here make sure the cluster is "ACTIVE"
 echo $AWS_MSK_CLUSTER_CONNECTSTRING
 
-aws kafka get-bootstrap-brokers --region $CDK_AWS_REGION --cluster-arn $AWS_MSK_CLUSTER 
+bin/kafka-topics.sh --create --zookeeper $AWS_MSK_CLUSTER_CONNECTSTRING --replication-factor 3 --partitions 1 --topic AWSKafkaTutorialTopic
+
+export AWS_MSK_BOOTSTRAP=$(aws kafka get-bootstrap-brokers --region $CDK_AWS_REGION --cluster-arn $AWS_MSK_CLUSTER)
 
 
 
@@ -66,7 +69,13 @@ kafka-topic.sh < docker run -t kafka-base --env AWS_MSK_CLUSTER_ConnectString=$A
 cd ../kafka-producer
 docker build -t kafka-producer .
 
+aws ecr create-repository --repository-name kafka-producer
+
+docker tag kafka-producer:latest $CDK_AWS_ACCOUNT.dkr.ecr.$CDK_AWS_REGION.amazonaws.com/kafka-producer:latest
+docker push $CDK_AWS_ACCOUNT.dkr.ecr.$CDK_AWS_REGION.amazonaws.com/kafka-producer:latest
 
 
 
+#Get EKS Config
+aws eks --region $CDK_AWS_REGION update-kubeconfig --name mskEKSCluster1 --profile default
 ```

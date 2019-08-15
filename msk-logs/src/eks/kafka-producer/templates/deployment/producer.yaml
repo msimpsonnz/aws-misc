@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-producer
+  labels:
+    app: kafka-producer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-producer
+  template:
+    metadata:
+      labels:
+        app: kafka-producer
+    spec:
+      containers:
+      - image: {{ .Values.producer.image }}:{{ .Values.version }}
+        imagePullPolicy: Always
+        name: kafka-producer
+        ports:
+        - containerPort: 3000
+          protocol: TCP

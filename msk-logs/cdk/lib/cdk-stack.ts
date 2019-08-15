@@ -1,4 +1,5 @@
 import cdk = require('@aws-cdk/core');
+import iam = require('@aws-cdk/aws-iam');
 import ec2 = require('@aws-cdk/aws-ec2');
 import msk = require('@aws-cdk/aws-msk');
 import eks = require('@aws-cdk/aws-eks');
@@ -11,7 +12,7 @@ export class CdkStack extends cdk.Stack {
     super(scope, id, props);
 
     const vpc = new ec2.Vpc(this, 'msk-demo-vpc', {
-      cidr: '10.0.0.0/16'
+      cidr: '172.16.0.0/16'
     });
 
 
@@ -27,19 +28,27 @@ export class CdkStack extends cdk.Stack {
         brokerAzDistribution: 'DEFAULT'
       },
       numberOfBrokerNodes: 3,
-      kafkaVersion: '2.1.0'
+      kafkaVersion: '2.2.1',
+      encryptionInfo: {
+        encryptionInTransit: {
+          clientBroker: 'TLS_PLAINTEXT'
+        }
+      }
     });
 
-    //new cdk.CfnOutput(this, 'MskArn', { value: getmskCluster });
+    const clusterAdmin = new iam.Role(this, 'AdminRole', {
+      assumedBy: new iam.AccountRootPrincipal()
+    });
 
     const eksCluster = new eks.Cluster(this, 'msk-EKSCluster', {
-      clusterName: 'mskEKSClusterB024D504',
-      vpc
-    });
-
-    eksCluster.addCapacity('Nodes', {
-      instanceType: new ec2.InstanceType('t2.medium'),
-      desiredCapacity: 1
+      clusterName: 'msk-EKSCluster',
+      mastersRole: clusterAdmin,
+      vpc: vpc,
+      vpcSubnets: [
+        {
+          subnetType: ec2.SubnetType.PRIVATE
+        }
+      ]
     });
 
     const esCluster = new es.CfnDomain(this, 'msk-es-domain', {
@@ -62,7 +71,7 @@ export class CdkStack extends cdk.Stack {
       runtime: lambda.Runtime.PYTHON_3_7,
       timeout: Duration.seconds(500),
       vpc: vpc,
-      environment:{
+      environment: {
         //AWS_DYNAMODB: dynamoTable.tableName
         AWS_KAFKA_TYPE: 'PRODUCER',
         AWS_KAFKA_TOPIC: 'AWSKafkaTutorialTopic',
@@ -78,7 +87,7 @@ export class CdkStack extends cdk.Stack {
       runtime: lambda.Runtime.PYTHON_3_7,
       timeout: Duration.seconds(500),
       vpc: vpc,
-      environment:{
+      environment: {
         //AWS_DYNAMODB: dynamoTable.tableName
         AWS_KAFKA_TYPE: 'CONSUMER',
         AWS_KAFKA_TOPIC: 'AWSKafkaTutorialTopic',
@@ -86,7 +95,7 @@ export class CdkStack extends cdk.Stack {
 
       }
     });
-    
-    
+
+
   }
 }

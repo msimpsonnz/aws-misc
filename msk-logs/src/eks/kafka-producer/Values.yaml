@@ -1,0 +1,4 @@
+version: 'latest'
+
+producer:
+  image: $CDK_AWS_ACCOUNT.dkr.ecr.$CDK_AWS_REGION.amazonaws.com/kafka-base:latest
