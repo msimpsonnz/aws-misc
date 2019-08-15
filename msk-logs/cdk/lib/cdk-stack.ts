@@ -6,6 +6,7 @@ import eks = require('@aws-cdk/aws-eks');
 import es = require('@aws-cdk/aws-elasticsearch');
 import { CfnOutput, Duration } from '@aws-cdk/core';
 import lambda = require('@aws-cdk/aws-lambda')
+import { ServicePrincipal, ManagedPolicy, PolicyDocument, PolicyStatement } from '@aws-cdk/aws-iam';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -66,35 +67,57 @@ export class CdkStack extends cdk.Stack {
 
     const lambdaProducer = new lambda.Function(this, 'lambdaProducer', {
       functionName: 'msk-lambdaProducer',
-      code: lambda.Code.asset("../src/kafka-lambda/function.zip"),
+      code: lambda.Code.asset("../src/kafka-lambda/producer/function.zip"),
       handler: "handler.handler",
       runtime: lambda.Runtime.PYTHON_3_7,
       timeout: Duration.seconds(500),
       vpc: vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE },
+      //securityGroup: 
       environment: {
-        //AWS_DYNAMODB: dynamoTable.tableName
-        AWS_KAFKA_TYPE: 'PRODUCER',
         AWS_KAFKA_TOPIC: 'AWSKafkaTutorialTopic',
         AWS_MSK_BOOTSTRAP: 'TBC'
 
       }
     });
+
+    const lambdaRole = new iam.Role(this, 'msk-LambdaRole', {
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com')
+    });
+    lambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'));
+    lambdaRole.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole'));
+    lambdaRole.attachInlinePolicy(
+      new iam.Policy(this, "msk-lambdaRolePolicy", {
+        statements: [
+          new iam.PolicyStatement({
+            actions: ["es:ESHttpPut"],
+            resources: ['*']
+          })
+        ]
+      })
+    );
 
     const lambdaConsumer = new lambda.Function(this, 'lambdaConsumer', {
       functionName: 'msk-lambdaConsumer',
-      code: lambda.Code.asset("../src/kafka-lambda/function.zip"),
+      code: lambda.Code.asset("../src/kafka-lambda/consumer/function.zip"),
       handler: "handler.handler",
       runtime: lambda.Runtime.PYTHON_3_7,
       timeout: Duration.seconds(500),
+      role: lambdaRole,
       vpc: vpc,
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE },
+      //securityGroup: vpc.vpcDefaultSecurityGroup,
       environment: {
-        //AWS_DYNAMODB: dynamoTable.tableName
-        AWS_KAFKA_TYPE: 'CONSUMER',
         AWS_KAFKA_TOPIC: 'AWSKafkaTutorialTopic',
-        AWS_MSK_BOOTSTRAP: 'TBC'
+        AWS_MSK_BOOTSTRAP: 'TBC',
+        AWS_ES_DOMAIN: esCluster.attrDomainEndpoint
 
       }
     });
+
+
+
+    
 
 
   }

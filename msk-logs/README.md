@@ -56,9 +56,10 @@ export AWS_MSK_CLUSTER_CONNECTSTRING=$(aws kafka describe-cluster --region $CDK_
 #If you get an error here make sure the cluster is "ACTIVE"
 echo $AWS_MSK_CLUSTER_CONNECTSTRING
 
-bin/kafka-topics.sh --create --zookeeper $AWS_MSK_CLUSTER_CONNECTSTRING --replication-factor 3 --partitions 1 --topic AWSKafkaTutorialTopic
+#bin/kafka-topics.sh --create --zookeeper $AWS_MSK_CLUSTER_CONNECTSTRING --replication-factor 3 --partitions 1 --topic AWSKafkaTutorialTopic
 
-export AWS_MSK_BOOTSTRAP=$(aws kafka get-bootstrap-brokers --region $CDK_AWS_REGION --cluster-arn $AWS_MSK_CLUSTER)
+export AWS_MSK_BOOTSTRAP=$(aws kafka get-bootstrap-brokers --region $CDK_AWS_REGION --cluster-arn $AWS_MSK_CLUSTER | jq -r .BootstrapBrokerString)
+echo $AWS_MSK_BOOTSTRAP
 
 
 
