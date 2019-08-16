@@ -5,8 +5,11 @@ import msk = require('@aws-cdk/aws-msk');
 import eks = require('@aws-cdk/aws-eks');
 import es = require('@aws-cdk/aws-elasticsearch');
 import { CfnOutput, Duration } from '@aws-cdk/core';
-import lambda = require('@aws-cdk/aws-lambda')
+import lambda = require('@aws-cdk/aws-lambda');
 import { ServicePrincipal, ManagedPolicy, PolicyDocument, PolicyStatement } from '@aws-cdk/aws-iam';
+import rds = require('@aws-cdk/aws-rds');
+import { InstanceClass, InstanceSize } from '@aws-cdk/aws-ec2';
+import { DatabaseClusterEngine } from '@aws-cdk/aws-rds';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -44,12 +47,7 @@ export class CdkStack extends cdk.Stack {
     const eksCluster = new eks.Cluster(this, 'msk-EKSCluster', {
       clusterName: 'msk-EKSCluster',
       mastersRole: clusterAdmin,
-      vpc: vpc,
-      vpcSubnets: [
-        {
-          subnetType: ec2.SubnetType.PRIVATE
-        }
-      ]
+      vpc: vpc
     });
 
     const esCluster = new es.CfnDomain(this, 'msk-es-domain', {
@@ -115,10 +113,19 @@ export class CdkStack extends cdk.Stack {
       }
     });
 
-
-
-    
-
+    const auroraCluster = new rds.DatabaseCluster(this, 'msk-aurora', {
+      engine: DatabaseClusterEngine.AURORA,
+      masterUser: {
+        username: 'admin'
+      },
+      instanceProps: {
+        instanceType: ec2.InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.SMALL),
+        vpcSubnets: {
+          subnetType: ec2.SubnetType.PRIVATE,
+        },
+        vpc
+      }
+    });
 
   }
 }

@@ -21,6 +21,7 @@
     "@aws-cdk/aws-elasticsearch": "^1.4.0",
     "@aws-cdk/aws-lambda": "^1.4.0",
     "@aws-cdk/aws-msk": "^1.4.0",
+    "@aws-cdk/aws-rds": "^1.4.0",
     "@aws-cdk/core": "^1.4.0",
     "source-map-support": "^0.5.9"
   }
