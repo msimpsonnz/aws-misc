@@ -49,7 +49,7 @@ namespace Net30.Native
             
             List<Dictionary<string, string>> body = FakeResponseMaker.BuildFakeResponse();
             
-            var responseBody = System.Text.Json.Serialization.JsonSerializer.ToString(body);
+            var responseBody = System.Text.Json.JsonSerializer.Serialize<List<Dictionary<string, string>>>(body);
 
             Dictionary<string, string> Headers = new Dictionary<string, string>();
             Headers.Add("Content-Type", "text/html;");
