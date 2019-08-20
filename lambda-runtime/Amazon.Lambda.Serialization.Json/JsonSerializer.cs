@@ -13,17 +13,18 @@ namespace Amazon.Lambda.Serialization.Json
 
         public T Deserialize<T>(Stream requestStream)
         {
-            System.Text.Json.Serialization.JsonSerializerOptions options = new System.Text.Json.Serialization.JsonSerializerOptions() {
-                PropertyNamingPolicy = System.Text.Json.Serialization.JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
-            };
+            var options = new System.Text.Json.JsonSerializerOptions();
+            options.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            options.PropertyNameCaseInsensitive = true;
             var json = new StreamReader(requestStream).ReadToEnd();
-            return System.Text.Json.Serialization.JsonSerializer.Parse<T>(json, options);
+            return System.Text.Json.JsonSerializer.Deserialize<T>(json, options);
         }
 
         public void Serialize<T>(T response, Stream responseStream)
         {
-            System.Text.Json.Serialization.JsonSerializer.WriteAsync<T>(response, responseStream);
+            var options = new System.Text.Json.JsonSerializerOptions();
+            options.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+            System.Text.Json.JsonSerializer.SerializeAsync<T>(responseStream, response, options);
 
         }
     }
