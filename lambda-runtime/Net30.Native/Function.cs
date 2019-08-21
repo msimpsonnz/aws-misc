@@ -47,9 +47,9 @@ namespace Net30.Native
         {
             System.Console.WriteLine(request.Body.ToString() ?? "Empty Request");
             
-            List<Dictionary<string, string>> body = FakeResponseMaker.BuildFakeResponse();
+            string body = FakeResponseMaker.BuildFakeResponse();
             
-            var responseBody = System.Text.Json.JsonSerializer.Serialize<List<Dictionary<string, string>>>(body);
+            var responseBody = body;
 
             Dictionary<string, string> Headers = new Dictionary<string, string>();
             Headers.Add("Content-Type", "text/html;");

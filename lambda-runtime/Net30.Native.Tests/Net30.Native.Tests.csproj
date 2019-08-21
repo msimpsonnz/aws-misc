@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Amazon.Lambda.Serialization.Json\Amazon.Lambda.Serialization.Json.csproj" />
+    <ProjectReference Include="..\FakeResponse\FakeResponse.csproj" />
   </ItemGroup>
 
 </Project>
