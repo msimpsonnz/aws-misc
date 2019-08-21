@@ -34,9 +34,9 @@ namespace Net30.Newton
         {
             System.Console.WriteLine(request.Body.ToString() ?? "Empty Request");
             
-            List<Dictionary<string, string>> body = FakeResponseMaker.BuildFakeResponse();
+            string body = FakeResponseMaker.BuildFakeResponse();
             
-            var responseBody = JsonConvert.SerializeObject(body);
+            var responseBody = body;
 
             Dictionary<string, string> Headers = new Dictionary<string, string>();
             Headers.Add("Content-Type", "text/html;");
