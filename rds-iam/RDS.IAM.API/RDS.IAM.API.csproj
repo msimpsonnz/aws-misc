@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.RDS" Version="3.3.108.2" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="MySqlConnector" Version="0.56.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+  <Content Include="rds-combined-ca-bundle.pem">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory> 
+  </Content> 
+</ItemGroup>
+
+</Project>
