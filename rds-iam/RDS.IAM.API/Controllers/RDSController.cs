@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MySqlX.XDevAPI;
 using MySql.Data.MySqlClient;
 
 namespace RDS.IAM.API.Controllers
@@ -12,45 +12,42 @@ namespace RDS.IAM.API.Controllers
     {
         // GET api/values
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Employees>>> Get()
+        public ActionResult<IEnumerable<Employees>> Get()
         {
-            System.Console.WriteLine("RDS Get");
+            Console.WriteLine("RDS Get");
             var host = "rd14a7bofg5dr7b.c0dngne2r7ev.ap-southeast-2.rds.amazonaws.com";
             var port = 3306;
             var user = "rds_admin";
 
             var token = GenerateRDSAuth.GenerateRDSToken(host, port, user);
 
-            // var builder = new MySqlConnectionStringBuilder();
-            // builder.Server = host;
-            // builder.Database = "employees";
-            // builder.UserID = user;
-            // builder.Password = token;
-            // builder.SslCa = "rds-combined-ca-bundle.pem";
-            // builder.SslMode = MySqlSslMode.Required;
+            var builder = new MySqlXConnectionStringBuilder();
+            builder.Server = host;
+            builder.Database = "employees";
+            builder.UserID = user;
+            builder.Password = token;
+            builder.SslCa = "rds-combined-ca-bundle.pem";
+            builder.SslMode = MySqlSslMode.Required;
+            builder.Auth = MySqlAuthenticationMode.PLAIN;
 
             List<Employees> list = new List<Employees>();
-var connString = "Server=myserver;User ID=mylogin;Password=mypass;Database=mydatabase";
 
-using (var conn = new MySqlConnection(connString))
-{
-    await conn.OpenAsync();
+            var mySession = MySQLX.GetSession(builder.ConnectionString);
 
-    // Insert some data
-    using (var cmd = new MySqlCommand())
-    {
-        cmd.Connection = conn;
-        cmd.CommandText = "INSERT INTO data (some_field) VALUES (@p)";
-        cmd.Parameters.AddWithValue("p", "Hello world");
-        await cmd.ExecuteNonQueryAsync();
-    }
+            var myDb = mySession.GetSchema("test");
 
-    // Retrieve all rows
-    using (var cmd = new MySqlCommand("SELECT some_field FROM data", conn))
-    using (var reader = await cmd.ExecuteReaderAsync())
-        while (await reader.ReadAsync())
-            Console.WriteLine(reader.GetString(0));
-}
+            // Use the collection "my_collection"
+            var myColl = myDb.GetCollection("my_collection");
+
+            // Specify which document to find with Collection.Find() and
+            // fetch it from the database with .Execute()
+            var myDocs = myColl.Find("name like :param").Limit(1)
+                .Bind("param", "S%").Execute();
+
+            // Print document
+            Console.WriteLine(myDocs.FetchOne());
+
+            mySession.Close();
 
             return list;
 
