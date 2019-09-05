@@ -14,6 +14,7 @@ namespace RDS.IAM.API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Employees>>> Get()
         {
+            System.Console.WriteLine("RDS Get");
             var host = "rd14a7bofg5dr7b.c0dngne2r7ev.ap-southeast-2.rds.amazonaws.com";
             var port = 3306;
             var user = "rds_admin";
