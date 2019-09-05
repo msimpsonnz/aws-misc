@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using MySql.Data.MySqlClient;
 using MySqlConnector;
 
 namespace RDS.IAM.API.Controllers
@@ -13,7 +14,7 @@ namespace RDS.IAM.API.Controllers
     {
         // GET api/values
         [HttpGet]
-        public ActionResult<IEnumerable<Employees>> Get()
+        public async Task<ActionResult<IEnumerable<Employees>>> Get()
         {
             var host = "rd14a7bofg5dr7b.c0dngne2r7ev.ap-southeast-2.rds.amazonaws.com";
             var port = 3306;
