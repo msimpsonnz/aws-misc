@@ -9,7 +9,7 @@
     <PackageReference Include="AWSSDK.RDS" Version="3.3.108.2" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
-    <PackageReference Include="MySqlConnector" Version="0.56.0" />
+    <PackageReference Include="MySql.Data" Version="8.0.17" />
   </ItemGroup>
 
   <ItemGroup>
