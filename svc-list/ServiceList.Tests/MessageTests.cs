@@ -73,5 +73,14 @@ namespace ServiceList.Tests
             Assert.Equal(result, msgList[0].MessageAttributes.FirstOrDefault().Value.StringValue);
             
         }
+
+        [Fact]
+        public async Task TestUpdateDynamo()
+        {
+            var rawUpdate = File.ReadAllText("TestData/update-test.json");
+            await DynamoHelper.UpdateTable(rawUpdate);
+
+
+        }
     }
 }
