@@ -158,8 +158,7 @@ namespace ServiceList.Infrastructure
             item["Link"] = svc.Link;
             item["DateUpdated"] = svc.DateUpdated;
 
-            await table.UpdateItemAsync(item);
-
+            var update = await table.PutItemAsync(item);
         }
     }
 }

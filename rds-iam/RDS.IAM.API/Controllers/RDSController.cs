@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
-using MySqlX.XDevAPI;
 using MySql.Data.MySqlClient;
 
 namespace RDS.IAM.API.Controllers
@@ -21,7 +20,7 @@ namespace RDS.IAM.API.Controllers
 
             var token = GenerateRDSAuth.GenerateRDSToken(host, port, user);
 
-            var builder = new MySqlXConnectionStringBuilder();
+            var builder = new MySqlConnectionStringBuilder();
             builder.Server = host;
             builder.Database = "employees";
             builder.UserID = user;
