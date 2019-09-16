@@ -16,7 +16,7 @@ export class CdkStack extends cdk.Stack {
 
     const vpc = ec2.Vpc.fromLookup(this, 'default', {
       isDefault: true
-    })
+    });
 
     const dbParam = new ParameterGroup(this, 'dms-param-mysql5.7', {
       family: 'mysql5.7',
@@ -58,7 +58,7 @@ export class CdkStack extends cdk.Stack {
 
     const source = new CfnEndpoint(this, 'dms-source', {
       endpointType: 'source',
-      engineName: 'aurora',
+      engineName: 'mysql',
       username: 'admin',
       password: 'Password1',
       serverName: sourcedb.dbInstanceEndpointAddress,
