@@ -1,36 +1,40 @@
 import cdk = require('@aws-cdk/core');
 import { Role, ServicePrincipal, PolicyStatement, PolicyDocument } from '@aws-cdk/aws-iam';
-import { CfnDBCluster, ClusterParameterGroup, CfnDBInstance } from '@aws-cdk/aws-rds';
+import rds = require('@aws-cdk/aws-rds');
+import { DatabaseInstanceEngine, ParameterGroup } from '@aws-cdk/aws-rds';
 import dms = require('@aws-cdk/aws-dms');
 import { CfnEndpoint, CfnReplicationTask } from '@aws-cdk/aws-dms';
 import kinesis = require('@aws-cdk/aws-kinesis');
 import { CfnDeliveryStream } from '@aws-cdk/aws-kinesisfirehose';
 import s3 = require('@aws-cdk/aws-s3');
+import ec2 = require('@aws-cdk/aws-ec2');
+import { InstanceClass, InstanceSize, SubnetType } from '@aws-cdk/aws-ec2';
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const auroraParam = new ClusterParameterGroup(this, 'dms-aurora-mysql5.7', {
-      family: 'aurora-mysql5.7',
+    const vpc = ec2.Vpc.fromLookup(this, 'default', {
+      isDefault: true
+    })
+
+    const dbParam = new ParameterGroup(this, 'dms-param-mysql5.7', {
+      family: 'mysql5.7',
       parameters: {
         binlog_format: 'ROW'
       }
     });
 
-    const auroraCluster = new CfnDBCluster(this, 'tickets-db', {
-      engine: 'aurora-mysql',
-      engineVersion: '5.7.12',
-      snapshotIdentifier: 'tickets-mysql',
-      dbClusterParameterGroupName: auroraParam.parameterGroupName
+    const sourcedb = new rds.DatabaseInstanceFromSnapshot(this, 'dms-rds-source', {
+      engine: DatabaseInstanceEngine.MYSQL,
+      instanceClass: ec2.InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.SMALL),
+      snapshotIdentifier: 'tickets-mysql57',
+      vpc: vpc,
+      vpcPlacement: {
+        subnetType: SubnetType.PUBLIC,
+      },
+      parameterGroup: dbParam
     });
-
-    // new CfnDBInstance(this, 'dms-aurora-instance1', {
-    //   dbInstanceClass: 'db.r5.large',
-    //   allocatedStorage: '100',
-    //   engine: 'aurora-mysql',
-    //   dbClusterIdentifier: auroraCluster.dbClusterIdentifier
-    // });
 
     const dmsRep = new dms.CfnReplicationInstance(this, 'dms-replication', {
       replicationInstanceClass: 'dms.t2.medium',
@@ -57,7 +61,7 @@ export class CdkStack extends cdk.Stack {
       engineName: 'aurora',
       username: 'admin',
       password: 'Password1',
-      serverName: auroraCluster.attrEndpointAddress,
+      serverName: sourcedb.dbInstanceEndpointAddress,
       port: 3306
 
     });
