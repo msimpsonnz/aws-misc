@@ -1,10 +1,13 @@
 import cdk = require('@aws-cdk/core');
+import iam = require('@aws-cdk/aws-iam');
 import { Role, ServicePrincipal, PolicyStatement, PolicyDocument } from '@aws-cdk/aws-iam';
 import rds = require('@aws-cdk/aws-rds');
 import { DatabaseInstanceEngine, ParameterGroup } from '@aws-cdk/aws-rds';
 import dms = require('@aws-cdk/aws-dms');
 import { CfnEndpoint, CfnReplicationTask } from '@aws-cdk/aws-dms';
 import kinesis = require('@aws-cdk/aws-kinesis');
+import analytics = require('@aws-cdk/aws-kinesisanalytics');
+import { CfnApplicationV2, CfnApplicationOutputV2 } from '@aws-cdk/aws-kinesisanalytics';
 import { CfnDeliveryStream } from '@aws-cdk/aws-kinesisfirehose';
 import s3 = require('@aws-cdk/aws-s3');
 import ec2 = require('@aws-cdk/aws-ec2');
@@ -35,6 +38,8 @@ export class CdkStack extends cdk.Stack {
       },
       parameterGroup: dbParam
     });
+
+    sourcedb.connections.allowDefaultPortInternally;
 
     const dmsRep = new dms.CfnReplicationInstance(this, 'dms-replication', {
       replicationInstanceClass: 'dms.t2.medium',
@@ -99,6 +104,69 @@ export class CdkStack extends cdk.Stack {
       tableMappings: JSON.stringify(dmsTableMappings)
     });
 
+    const analyticsRole = new iam.Role(this, 'KinesisAnalyticsRole', {
+      assumedBy: new iam.ServicePrincipal('kinesisanalytics.amazonaws.com')
+    });
+
+    const analyticsApp = new CfnApplicationV2(this, 'KinesisAnalytics', {
+      applicationName: 'dms-stream-analytics',
+      serviceExecutionRole: analyticsRole.roleArn,
+      runtimeEnvironment: 'SQL-1_0',
+      applicationConfiguration: {
+        sqlApplicationConfiguration: {
+          inputs: [
+            {
+              namePrefix: "exampleNamePrefix",
+              inputSchema: {
+                recordColumns: [
+                  {
+                    name: "example",
+                    sqlType: "VARCHAR(16)",
+                    mapping: "$.example"
+                  }
+                ],
+                recordFormat: {
+                  recordFormatType: "JSON",
+                  mappingParameters: {
+                    jsonMappingParameters: {
+                      recordRowPath: "$"
+                    }
+                  }
+                }
+              },
+              kinesisStreamsInput: {
+                resourceArn: stream.streamArn
+              }
+            }
+
+          ]
+        },
+        applicationCodeConfiguration: {
+          codeContent: {
+            textContent: "Example Application Code"
+          },
+          codeContentType: "PLAINTEXT"
+        }
+      }
+    });
+
+    const outputStream = new kinesis.Stream(this, 'dms-stream-output');
+
+    const analyticsOutput = new CfnApplicationOutputV2(this, 'AnalyticsOutput', {
+      applicationName: 'dms-stream-analytics',
+      output: {
+        destinationSchema: {
+          recordFormatType: 'CSV'
+        },
+        kinesisStreamsOutput:
+        {
+          resourceArn: outputStream.streamArn
+        }
+      }
+    });
+
+    analyticsOutput.node.addDependency(analyticsApp);
+
     const firehoseRole = new Role(this, 'dms-stream-firehose-role', {
       assumedBy: new ServicePrincipal('firehose.amazonaws.com'),
       inlinePolicies: {
@@ -121,7 +189,7 @@ export class CdkStack extends cdk.Stack {
     const firehose = new CfnDeliveryStream(this, 'dms-stream-firehose', {
       deliveryStreamType: 'KinesisStreamAsSource',
       kinesisStreamSourceConfiguration: {
-        kinesisStreamArn: stream.streamArn,
+        kinesisStreamArn: outputStream.streamArn,
         roleArn: firehoseRole.roleArn
       },
       s3DestinationConfiguration: {
@@ -134,6 +202,8 @@ export class CdkStack extends cdk.Stack {
         roleArn: firehoseRole.roleArn
       }
     });
+
+
 
   }
 }
