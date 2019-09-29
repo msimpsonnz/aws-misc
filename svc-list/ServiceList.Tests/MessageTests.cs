@@ -82,5 +82,21 @@ namespace ServiceList.Tests
 
 
         }
+
+        [Fact]
+        public async Task IntegrationTest()
+        {
+            List<Service> onlineServiceList = await HtmlHelper.ParseAwsServices("https://aws.amazon.com/products/");
+            System.Console.WriteLine($"Query online list: {onlineServiceList.Count()}");
+            List<Service> masterServiceList = await DynamoHelper.QueryTable();
+            List<Service> orderedOnlineServiceList = ServiceListHelper.OrderServiceListById(onlineServiceList);
+            List<Service> orderedMasterServiceList = ServiceListHelper.OrderServiceListById(masterServiceList);
+            List<string> masterListId = orderedMasterServiceList.Select(x => x.id).ToList();
+            List<string> onlineListId = orderedOnlineServiceList.Select(x => x.id).ToList();
+            List<string> updateList = onlineListId.Except(masterListId).ToList();
+            List<string> removeList = masterListId.Except(onlineListId).ToList();
+            System.Console.WriteLine();
+        }
+        
     }
 }
