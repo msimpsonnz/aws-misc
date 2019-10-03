@@ -1,0 +1,32 @@
+{
+    "description": "Automation Document - SQL VSS Backup Snapshot and Restore",
+    "schemaVersion": "0.3",
+    "assumeRole": "{{ AutomationAssumeRole }}",
+    "parameters": {
+        "InstanceId": {
+            "type": "StringList",
+            "description": "(Required) EC2 Instance(s) to start"
+        },
+        "AutomationAssumeRole": {
+            "type": "String",
+            "description": "(Optional) The ARN of the role that allows Automation to perform the actions on your behalf.",
+            "default": ""
+        }
+    },
+    "mainSteps": [
+        {
+            "name": "installVssComponents",
+            "action": "aws:runCommand",
+            "inputs": {
+                "DocumentName": "AWS-ConfigureAWSPackage",
+                "InstanceIds": [
+                    "{{ InstanceId }}"
+                ],
+                "Parameters": {
+                    "action": "Install",
+                    "name": "AwsVssComponents"
+                }
+            }
+        }
+    ]
+}

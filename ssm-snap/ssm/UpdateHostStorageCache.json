@@ -1,0 +1,25 @@
+{
+    "schemaVersion": "2.2",
+    "description": "Create an application consistent snapshot of all EBS volumes attached to an instance.",
+    "mainSteps": [
+        {
+            "precondition": {
+                "StringEquals": [
+                    "platformType",
+                    "Windows"
+                ]
+            },
+            "action": "aws:runPowerShellScript",
+            "name": "updateHostStorageCache",
+            "inputs": {
+                "runCommand": [
+                    "",
+                    "Update-HostStorageCache",
+                    ""
+                ],
+                "workingDirectory": "",
+                "timeoutSeconds": "400"
+            }
+        }
+    ]
+}

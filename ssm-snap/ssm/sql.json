@@ -1,0 +1,31 @@
+{
+    "schemaVersion": "2.2",
+    "description": "Create an application consistent snapshot of all EBS volumes attached to an instance.",
+    "mainSteps": [
+        {
+            "precondition": {
+                "StringEquals": [
+                    "platformType",
+                    "Windows"
+                ]
+            },
+            "action": "aws:runPowerShellScript",
+            "name": "runSQLScript",
+            "inputs": {
+                "runCommand": [
+                    "# Run SQL EXEC",
+                    "",
+                    "$SQLInstance = \"localhost\"",
+                    "$SQLDatabase = \"master\"",
+                    "$SQLUsername = \"dbadmim\"",
+                    "$SQLPassword = \"Password!\"", 
+                    "$SQLQuery1 = \"EXEC UpdateTickets\"",
+                    "$SQLQuery1Output = Invoke-Sqlcmd -query $SQLQuery1",
+                    ""
+                ],
+                "workingDirectory": "",
+                "timeoutSeconds": "400"
+            }
+        }
+    ]
+}
