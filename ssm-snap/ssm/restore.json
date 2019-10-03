@@ -1,0 +1,175 @@
+{
+    "description": "Sample Automation Document Using AWS API Actions",
+    "schemaVersion": "0.3",
+    "assumeRole": "{{ AutomationAssumeRole }}",
+    "parameters": {
+        "AutomationAssumeRole": {
+            "type": "String",
+            "description": "(Optional) The ARN of the role that allows Automation to perform the actions on your behalf.",
+            "default": ""
+        },
+        "SourceInstanceId": {
+            "type": "String",
+            "description": "Source SQL Server"
+        },
+        "DestInstanceId": {
+            "type": "String",
+            "description": "Destination SQL Server"
+        }
+    },
+    "mainSteps": [
+        {
+            "name": "createVssSnapshot",
+            "action": "aws:runCommand",
+            "inputs": {
+                "DocumentName": "AWSEC2-CreateVssSnapshot",
+                "InstanceIds": [
+                    "{{ SourceInstanceId }}"
+                ],
+                "Parameters": {
+                    "ExcludeBootVolume": "True",
+                    "tags": "Key=Name,Value=VSS Snapshot;Key=BackupId,Value={{ automation:EXECUTION_ID }}"
+                }
+            }
+        },
+        {
+            "name": "getSnapshotId",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeSnapshots",
+                "Filters": [
+                    {
+                        "Name": "tag:BackupId",
+                        "Values": [
+                            "{{ automation:EXECUTION_ID }}"
+                        ]
+                    }
+                ]
+            },
+            "outputs": [
+                {
+                    "Name": "SnapshotId",
+                    "Selector": "$.Snapshots[0].SnapshotId",
+                    "Type": "String"
+                }
+            ]
+        },
+        {
+            "name": "checkSnapshot",
+            "action": "aws:waitForAwsResourceProperty",
+            "timeoutSeconds": 60,
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeSnapshots",
+                "SnapshotIds": [
+                    "{{ getSnapshotId.SnapshotId }}"
+                ],
+                "PropertySelector": "$.Snapshots[0].State",
+                "DesiredValues": [
+                    "completed"
+                ]
+            }
+        },
+        {
+            "name": "createVolume",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "CreateVolume",
+                "AvailabilityZone": "ap-southeast-2a",
+                "SnapshotId": "{{ getSnapshotId.SnapshotId }}"
+            },
+            "outputs": [
+                {
+                    "Name": "VolumeId",
+                    "Selector": "$.VolumeId",
+                    "Type": "String"
+                }
+            ]
+        },
+        {
+            "name": "checkVolume",
+            "action": "aws:waitForAwsResourceProperty",
+            "timeoutSeconds": 60,
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeVolumes",
+                "VolumeIds": [
+                    "{{ createVolume.VolumeId }}"
+                ],
+                "PropertySelector": "$.Volumes[0].State",
+                "DesiredValues": [
+                    "available"
+                ]
+            }
+        },
+        {
+            "name": "attachVolume",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "AttachVolume",
+                "VolumeId": "{{ createVolume.VolumeId }}",
+                "InstanceId": "{{ DestInstanceId }}",
+                "Device": "xvdh"
+            }
+        },
+        {
+            "name": "runDiskScript",
+            "action": "aws:runCommand",
+            "inputs": {
+                "DocumentName": "UpdateHostStorageCache",
+                "InstanceIds": [
+                    "{{ DestInstanceId }}"
+                ]
+            }
+        },
+        {
+            "name": "runSQLScript",
+            "action": "aws:runCommand",
+            "inputs": {
+                "DocumentName": "SSIS",
+                "InstanceIds": [
+                    "{{ DestInstanceId }}"
+                ]
+            }
+        },
+        {
+            "name": "detachVolume",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DetachVolume",
+                "VolumeId": "{{ createVolume.VolumeId }}",
+                "InstanceId": "{{ DestInstanceId }}",
+                "Device": "xvdh"
+            }
+        },
+        {
+            "name": "checkVolumeBeforeDelete",
+            "action": "aws:waitForAwsResourceProperty",
+            "timeoutSeconds": 60,
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeVolumes",
+                "VolumeIds": [
+                    "{{ createVolume.VolumeId }}"
+                ],
+                "PropertySelector": "$.Volumes[0].State",
+                "DesiredValues": [
+                    "available"
+                ]
+            }
+        },
+        {
+            "name": "deleteVolume",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DeleteVolume",
+                "VolumeId": "{{ createVolume.VolumeId }}"
+            }
+        }
+    ]
+}
