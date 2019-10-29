@@ -19,7 +19,7 @@
     },
     "mainSteps": [
         {
-            "name": "createVssSnapshot",
+            "name": "createVssSnapshots",
             "action": "aws:runCommand",
             "inputs": {
                 "DocumentName": "AWSEC2-CreateVssSnapshot",
@@ -33,7 +33,7 @@
             }
         },
         {
-            "name": "getSnapshotId",
+            "name": "getSnapshotIds",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
@@ -49,70 +49,148 @@
             },
             "outputs": [
                 {
-                    "Name": "SnapshotId",
+                    "Name": "SnapshotId0",
                     "Selector": "$.Snapshots[0].SnapshotId",
+                    "Type": "String"
+                },
+                {
+                    "Name": "SnapshotId1",
+                    "Selector": "$.Snapshots[1].SnapshotId",
+                    "Type": "String"
+                },
+                {
+                    "Name": "SnapshotId2",
+                    "Selector": "$.Snapshots[2].SnapshotId",
                     "Type": "String"
                 }
             ]
         },
         {
-            "name": "checkSnapshot",
+            "name": "checkSnapshots",
             "action": "aws:waitForAwsResourceProperty",
-            "timeoutSeconds": 60,
+            "timeoutSeconds": 300,
             "inputs": {
                 "Service": "ec2",
                 "Api": "DescribeSnapshots",
                 "SnapshotIds": [
-                    "{{ getSnapshotId.SnapshotId }}"
+                    "{{ getSnapshotIds.SnapshotId0 }}",
+                    "{{ getSnapshotIds.SnapshotId1 }}",
+                    "{{ getSnapshotIds.SnapshotId2 }}"
                 ],
-                "PropertySelector": "$.Snapshots[0].State",
+                "PropertySelector": [
+                    "$.Snapshots[0].State",
+                    "$.Snapshots[1].State",
+                    "$.Snapshots[2].State"
+                ],
                 "DesiredValues": [
                     "completed"
                 ]
             }
         },
         {
-            "name": "createVolume",
+            "name": "createVolume0",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
                 "Api": "CreateVolume",
                 "AvailabilityZone": "ap-southeast-2a",
-                "SnapshotId": "{{ getSnapshotId.SnapshotId }}"
+                "SnapshotId": "{{ getSnapshotIds.SnapshotId0 }}"
             },
             "outputs": [
                 {
-                    "Name": "VolumeId",
+                    "Name": "VolumeId0",
                     "Selector": "$.VolumeId",
                     "Type": "String"
                 }
             ]
         },
         {
-            "name": "checkVolume",
+            "name": "createVolume1",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "CreateVolume",
+                "AvailabilityZone": "ap-southeast-2a",
+                "SnapshotId": "{{ getSnapshotIds.SnapshotId1 }}"
+            },
+            "outputs": [
+                {
+                    "Name": "VolumeId1",
+                    "Selector": "$.VolumeId",
+                    "Type": "String"
+                }
+            ]
+        },
+        {
+            "name": "createVolume2",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "CreateVolume",
+                "AvailabilityZone": "ap-southeast-2a",
+                "SnapshotId": "{{ getSnapshotIds.SnapshotId2 }}"
+            },
+            "outputs": [
+                {
+                    "Name": "VolumeId2",
+                    "Selector": "$.VolumeId",
+                    "Type": "String"
+                }
+            ]
+        },
+        {
+            "name": "checkVolumes",
             "action": "aws:waitForAwsResourceProperty",
-            "timeoutSeconds": 60,
+            "timeoutSeconds": 300,
             "inputs": {
                 "Service": "ec2",
                 "Api": "DescribeVolumes",
                 "VolumeIds": [
-                    "{{ createVolume.VolumeId }}"
+                    "{{ createVolume0.VolumeId0 }}",
+                    "{{ createVolume1.VolumeId1 }}",
+                    "{{ createVolume2.VolumeId2 }}"
                 ],
-                "PropertySelector": "$.Volumes[0].State",
+                "PropertySelector": [
+                    "$.Volumes[0].State",
+                    "$.Volumes[1].State",
+                    "$.Volumes[2].State"
+                ],
                 "DesiredValues": [
                     "available"
                 ]
             }
         },
         {
-            "name": "attachVolume",
+            "name": "attachVolume0",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
                 "Api": "AttachVolume",
-                "VolumeId": "{{ createVolume.VolumeId }}",
+                "VolumeId": "{{ createVolume0.VolumeId0 }}",
                 "InstanceId": "{{ DestInstanceId }}",
                 "Device": "xvdh"
+            }
+        },
+        {
+            "name": "attachVolume1",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "AttachVolume",
+                "VolumeId": "{{ createVolume1.VolumeId1 }}",
+                "InstanceId": "{{ DestInstanceId }}",
+                "Device": "xvdf"
+            }
+        },
+        {
+            "name": "attachVolume2",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "AttachVolume",
+                "VolumeId": "{{ createVolume2.VolumeId2 }}",
+                "InstanceId": "{{ DestInstanceId }}",
+                "Device": "xvdg"
             }
         },
         {
@@ -128,47 +206,95 @@
         {
             "name": "runSQLScript",
             "action": "aws:runCommand",
+            "timeoutSeconds": 2592000,
             "inputs": {
                 "DocumentName": "SSIS",
                 "InstanceIds": [
                     "{{ DestInstanceId }}"
                 ]
-            }
+            },
+            "isEnd": false
         },
         {
-            "name": "detachVolume",
+            "name": "detachVolume0",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DetachVolume",
-                "VolumeId": "{{ createVolume.VolumeId }}",
+                "VolumeId": "{{ createVolume0.VolumeId0 }}",
                 "InstanceId": "{{ DestInstanceId }}",
                 "Device": "xvdh"
             }
         },
         {
-            "name": "checkVolumeBeforeDelete",
+            "name": "detachVolume1",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DetachVolume",
+                "VolumeId": "{{ createVolume1.VolumeId1 }}",
+                "InstanceId": "{{ DestInstanceId }}",
+                "Device": "xvdf"
+            }
+        },
+        {
+            "name": "detachVolume2",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DetachVolume",
+                "VolumeId": "{{ createVolume2.VolumeId2 }}",
+                "InstanceId": "{{ DestInstanceId }}",
+                "Device": "xvdg"
+            }
+        },
+        {
+            "name": "checkVolumesBeforeDelete",
             "action": "aws:waitForAwsResourceProperty",
-            "timeoutSeconds": 60,
+            "timeoutSeconds": 300,
             "inputs": {
                 "Service": "ec2",
                 "Api": "DescribeVolumes",
                 "VolumeIds": [
-                    "{{ createVolume.VolumeId }}"
+                    "{{ createVolume0.VolumeId0 }}",
+                    "{{ createVolume1.VolumeId1 }}",
+                    "{{ createVolume2.VolumeId2 }}"
                 ],
-                "PropertySelector": "$.Volumes[0].State",
+                "PropertySelector": [
+                    "$.Volumes[0].State",
+                    "$.Volumes[1].State",
+                    "$.Volumes[2].State"
+                ],
                 "DesiredValues": [
                     "available"
                 ]
             }
         },
         {
-            "name": "deleteVolume",
+            "name": "deleteVolume0",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DeleteVolume",
-                "VolumeId": "{{ createVolume.VolumeId }}"
+                "VolumeId": "{{ createVolume0.VolumeId0 }}"
+            }
+        },
+        {
+            "name": "deleteVolume1",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DeleteVolume",
+                "VolumeId": "{{ createVolume1.VolumeId1 }}"
+            }
+        },
+        {
+            "name": "deleteVolume2",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DeleteVolume",
+                "VolumeId": "{{ createVolume2.VolumeId2 }}"
             }
         }
     ]
