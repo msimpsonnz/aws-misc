@@ -77,11 +77,7 @@
                     "{{ getSnapshotIds.SnapshotId1 }}",
                     "{{ getSnapshotIds.SnapshotId2 }}"
                 ],
-                "PropertySelector": [
-                    "$.Snapshots[0].State",
-                    "$.Snapshots[1].State",
-                    "$.Snapshots[2].State"
-                ],
+                "PropertySelector": "$.Snapshots[0].State",
                 "DesiredValues": [
                     "completed"
                 ]
@@ -150,11 +146,7 @@
                     "{{ createVolume1.VolumeId1 }}",
                     "{{ createVolume2.VolumeId2 }}"
                 ],
-                "PropertySelector": [
-                    "$.Volumes[0].State",
-                    "$.Volumes[1].State",
-                    "$.Volumes[2].State"
-                ],
+                "PropertySelector": "$.Volumes..State",
                 "DesiredValues": [
                     "available"
                 ]
@@ -260,11 +252,7 @@
                     "{{ createVolume1.VolumeId1 }}",
                     "{{ createVolume2.VolumeId2 }}"
                 ],
-                "PropertySelector": [
-                    "$.Volumes[0].State",
-                    "$.Volumes[1].State",
-                    "$.Volumes[2].State"
-                ],
+                "PropertySelector": "$.Volumes..State",
                 "DesiredValues": [
                     "available"
                 ]
