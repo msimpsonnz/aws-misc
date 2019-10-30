@@ -1,0 +1,5 @@
+"Method","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"
+"GET","/lambda/net30-native",29457,0,640,634,92,2869,7921,495.33
+"None","Total",29457,0,640,634,92,2869,7921,495.33"Method","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"
+"GET","/lambda/net30-newton",27609,0,670,769,88,4776,7921,456.03
+"None","Total",27609,0,670,769,88,4776,7921,456.03

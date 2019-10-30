@@ -1,0 +1,23 @@
+{
+  "vpc-provider:account=383358879677:filter.isDefault=true:region=ap-southeast-2": {
+    "vpcId": "vpc-4bd0f62c",
+    "availabilityZones": [
+      "ap-southeast-2a",
+      "ap-southeast-2b",
+      "ap-southeast-2c"
+    ],
+    "publicSubnetIds": [
+      "subnet-5dcfc13a",
+      "subnet-2f340f66",
+      "subnet-2117ae79"
+    ],
+    "publicSubnetNames": [
+      "Public"
+    ],
+    "publicSubnetRouteTableIds": [
+      "rtb-c43098a2",
+      "rtb-c43098a2",
+      "rtb-c43098a2"
+    ]
+  }
+}
