@@ -77,7 +77,7 @@
                     "{{ getSnapshotIds.SnapshotId1 }}",
                     "{{ getSnapshotIds.SnapshotId2 }}"
                 ],
-                "PropertySelector": "$.Snapshots[0].State",
+                "PropertySelector": "$.Snapshots..State",
                 "DesiredValues": [
                     "completed"
                 ]
@@ -201,6 +201,18 @@
             "timeoutSeconds": 2592000,
             "inputs": {
                 "DocumentName": "SSIS",
+                "InstanceIds": [
+                    "{{ DestInstanceId }}"
+                ]
+            },
+            "isEnd": false
+        },
+        {
+            "name": "runSQLCleanUpScript",
+            "action": "aws:runCommand",
+            "timeoutSeconds": 2592000,
+            "inputs": {
+                "DocumentName": "DropTable",
                 "InstanceIds": [
                     "{{ DestInstanceId }}"
                 ]

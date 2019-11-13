@@ -20,6 +20,18 @@ export disk=$(aws ssm update-document \
 
 aws ssm update-document-default-version --name "UpdateHostStorageCache" --document-version $disk
 
+aws ssm create-document \
+    --name "DropTable" \
+    --content "file://dropdb.json" \
+    --document-type Command
+
+export drop=$(aws ssm update-document \
+    --name "DropTable" \
+    --content "file://dropdb.json" \
+    --document-version '$LATEST' | jq -r '.DocumentDescription.LatestVersion')
+
+aws ssm update-document-default-version --name "DropTable" --document-version $drop
+
 
 export sql=$(aws ssm update-document \
     --name "SSIS" \

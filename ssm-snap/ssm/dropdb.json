@@ -19,7 +19,7 @@
                     "$SQLDatabase = \"master\"",
                     "$SQLUsername = \"dbadmim\"",
                     "$SQLPassword = \"Password!\"", 
-                    "$SQLQuery1 = \"EXEC UpdateTickets\"",
+                    "$SQLQuery1 = \"EXEC DropTable\"",
                     "$SQLQuery1Output = Invoke-Sqlcmd -query $SQLQuery1 -Querytimeout 0",
                     ""
                 ],
