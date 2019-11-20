@@ -1,0 +1,40 @@
+{
+  "@aws-cdk/core:enableStackNameDuplicates": "true",
+  "vpc-provider:account=383358879677:filter.isDefault=true:region=ap-southeast-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-4bd0f62c",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-5dcfc13a",
+            "availabilityZone": "ap-southeast-2a",
+            "routeTableId": "rtb-c43098a2"
+          },
+          {
+            "subnetId": "subnet-2f340f66",
+            "availabilityZone": "ap-southeast-2b",
+            "routeTableId": "rtb-c43098a2"
+          },
+          {
+            "subnetId": "subnet-2117ae79",
+            "availabilityZone": "ap-southeast-2c",
+            "routeTableId": "rtb-c43098a2"
+          }
+        ]
+      }
+    ]
+  },
+  "availability-zones:account=383358879677:region=ap-southeast-2": [
+    "ap-southeast-2a",
+    "ap-southeast-2b",
+    "ap-southeast-2c"
+  ],
+  "ami:account=383358879677:filters.image-type.0=machine:filters.name.0=amzn-ami-vpc-nat-*:filters.state.0=available:owners.0=amazon:region=ap-southeast-2": "ami-01866304647fb36d8",
+  "hosted-zone:account=383358879677:domainName=devlabnz.net:region=ap-southeast-2": {
+    "Id": "/hostedzone/Z1FS2SRMB6RELV",
+    "Name": "devlabnz.net."
+  }
+}

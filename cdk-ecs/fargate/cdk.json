@@ -1,0 +1,11 @@
+{
+  "app": "npx ts-node bin/ss-api-fargate.ts",
+  "context": {
+    "environment": "staging",
+    "secretUid": "1SZrJB",
+    "imageName": "hello-repository",
+    "defaultVpc": true,
+    "domain": "devlabnz.net",
+    "certId": "9be7bc5c-9f09-4dd8-a091-f50cb7524a1c"
+  }
+}
