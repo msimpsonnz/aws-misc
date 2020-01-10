@@ -19,6 +19,24 @@
     },
     "mainSteps": [
         {
+            "name": "getDestinationAz",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeInstances",
+                "InstanceIds": [
+                    "{{ DestInstanceId }}"
+                ]
+            },
+            "outputs": [
+                {
+                    "Name": "destAvailabilityZone",
+                    "Selector": "$.Reservations[0].Instances[0].Placement.AvailabilityZone",
+                    "Type": "String"
+                }
+            ]
+        },
+        {
             "name": "createVssSnapshots",
             "action": "aws:runCommand",
             "inputs": {
@@ -78,12 +96,50 @@
             }
         },
         {
-            "name": "createVolume0",
+            "name": "enableFastSnapshotRestores",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
+                "Api": "enableFastSnapshotRestores",
+                "AvailabilityZones": [
+                    "{{ getDestinationAz.destAvailabilityZone }}"
+                ],
+                "SourceSnapshotIds": [
+                    "{{ getSnapshotIds.SnapshotId0 }}",
+                    "{{ getSnapshotIds.SnapshotId1 }}"
+                ]
+            }
+        },
+        {
+            "name": "checkSnapshotFSR",
+            "action": "aws:waitForAwsResourceProperty",
+            "timeoutSeconds": 1200,
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeFastSnapshotRestores",
+                "Filters": [
+                    {
+                        "Name": "snapshot-id",
+                        "Values": [
+                            "{{ getSnapshotIds.SnapshotId0 }}",
+                            "{{ getSnapshotIds.SnapshotId1 }}"
+                        ]
+                    }
+                ],
+                "PropertySelector": "$.FastSnapshotRestores..State",
+                "DesiredValues": [
+                    "enabled"
+                ]
+            }
+        },
+        {
+            "name": "createVolume0",
+            "action": "aws:executeAwsApi",
+            "onFailure": "step:disableFastSnapshotRestores",
+            "inputs": {
+                "Service": "ec2",
                 "Api": "CreateVolume",
-                "AvailabilityZone": "ap-southeast-2a",
+                "AvailabilityZone": "{{ getDestinationAz.destAvailabilityZone }}",
                 "SnapshotId": "{{ getSnapshotIds.SnapshotId0 }}"
             },
             "outputs": [
@@ -97,10 +153,11 @@
         {
             "name": "createVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:disableFastSnapshotRestores",
             "inputs": {
                 "Service": "ec2",
                 "Api": "CreateVolume",
-                "AvailabilityZone": "ap-southeast-2a",
+                "AvailabilityZone": "{{ getDestinationAz.destAvailabilityZone }}",
                 "SnapshotId": "{{ getSnapshotIds.SnapshotId1 }}"
             },
             "outputs": [
@@ -131,28 +188,31 @@
         {
             "name": "attachVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:deleteVolume0",
             "inputs": {
                 "Service": "ec2",
                 "Api": "AttachVolume",
                 "VolumeId": "{{ createVolume0.VolumeId0 }}",
                 "InstanceId": "{{ DestInstanceId }}",
-                "Device": "xvdf"
+                "Device": "xvdh"
             }
         },
         {
             "name": "attachVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:deleteVolume0",
             "inputs": {
                 "Service": "ec2",
                 "Api": "AttachVolume",
                 "VolumeId": "{{ createVolume1.VolumeId1 }}",
                 "InstanceId": "{{ DestInstanceId }}",
-                "Device": "xvdg"
+                "Device": "xvdf"
             }
         },
         {
             "name": "runDiskScript",
             "action": "aws:runCommand",
+            "onFailure": "Continue",
             "inputs": {
                 "DocumentName": "UpdateHostStorageCache",
                 "InstanceIds": [
@@ -163,6 +223,7 @@
         {
             "name": "runSQLScript",
             "action": "aws:runCommand",
+            "onFailure": "Continue",
             "timeoutSeconds": 2592000,
             "inputs": {
                 "DocumentName": "SSIS",
@@ -170,33 +231,49 @@
                     "{{ DestInstanceId }}"
                 ]
             },
-            "isEnd": true
+            "isEnd": false
+        },
+        {
+            "name": "runSQLCleanUpScript",
+            "action": "aws:runCommand",
+            "onFailure": "Continue",
+            "timeoutSeconds": 2592000,
+            "inputs": {
+                "DocumentName": "DropTable",
+                "InstanceIds": [
+                    "{{ DestInstanceId }}"
+                ]
+            },
+            "isEnd": false
         },
         {
             "name": "detachVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DetachVolume",
                 "VolumeId": "{{ createVolume0.VolumeId0 }}",
                 "InstanceId": "{{ DestInstanceId }}",
-                "Device": "xvdf"
+                "Device": "xvdh"
             }
         },
         {
             "name": "detachVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DetachVolume",
                 "VolumeId": "{{ createVolume1.VolumeId1 }}",
                 "InstanceId": "{{ DestInstanceId }}",
-                "Device": "xvdg"
+                "Device": "xvdf"
             }
         },
         {
             "name": "checkVolumesBeforeDelete",
             "action": "aws:waitForAwsResourceProperty",
+            "onFailure": "Continue",
             "timeoutSeconds": 300,
             "inputs": {
                 "Service": "ec2",
@@ -214,6 +291,7 @@
         {
             "name": "deleteVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DeleteVolume",
@@ -223,6 +301,7 @@
         {
             "name": "deleteVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DeleteVolume",
@@ -230,8 +309,25 @@
             }
         },
         {
+            "name": "disableFastSnapshotRestores",
+            "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DisableFastSnapshotRestores",
+                "AvailabilityZones": [
+                    "{{ getDestinationAz.destAvailabilityZone }}"
+                ],
+                "SourceSnapshotIds": [
+                    "{{ getSnapshotIds.SnapshotId0 }}",
+                    "{{ getSnapshotIds.SnapshotId1 }}"
+                ]
+            }
+        },
+        {
             "name": "deleteSnapshot0",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DeleteSnapshot",
@@ -245,7 +341,8 @@
                 "Service": "ec2",
                 "Api": "DeleteSnapshot",
                 "SnapshotId": "{{ getSnapshotIds.SnapshotId1 }}"
-            }
+            },
+            "isEnd": true
         }
     ]
 }

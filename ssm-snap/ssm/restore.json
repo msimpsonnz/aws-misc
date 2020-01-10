@@ -19,6 +19,24 @@
     },
     "mainSteps": [
         {
+            "name": "getDestinationAz",
+            "action": "aws:executeAwsApi",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DescribeInstances",
+                "InstanceIds": [
+                    "{{ DestInstanceId }}"
+                ]
+            },
+            "outputs": [
+                {
+                    "Name": "destAvailabilityZone",
+                    "Selector": "$.Reservations[0].Instances[0].Placement.AvailabilityZone",
+                    "Type": "String"
+                }
+            ]
+        },
+        {
             "name": "createVssSnapshots",
             "action": "aws:runCommand",
             "inputs": {
@@ -57,11 +75,6 @@
                     "Name": "SnapshotId1",
                     "Selector": "$.Snapshots[1].SnapshotId",
                     "Type": "String"
-                },
-                {
-                    "Name": "SnapshotId2",
-                    "Selector": "$.Snapshots[2].SnapshotId",
-                    "Type": "String"
                 }
             ]
         },
@@ -74,8 +87,7 @@
                 "Api": "DescribeSnapshots",
                 "SnapshotIds": [
                     "{{ getSnapshotIds.SnapshotId0 }}",
-                    "{{ getSnapshotIds.SnapshotId1 }}",
-                    "{{ getSnapshotIds.SnapshotId2 }}"
+                    "{{ getSnapshotIds.SnapshotId1 }}"
                 ],
                 "PropertySelector": "$.Snapshots..State",
                 "DesiredValues": [
@@ -86,10 +98,11 @@
         {
             "name": "createVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:deleteSnapshot0",
             "inputs": {
                 "Service": "ec2",
                 "Api": "CreateVolume",
-                "AvailabilityZone": "ap-southeast-2a",
+                "AvailabilityZone": "{{ getDestinationAz.destAvailabilityZone }}",
                 "SnapshotId": "{{ getSnapshotIds.SnapshotId0 }}"
             },
             "outputs": [
@@ -103,32 +116,16 @@
         {
             "name": "createVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:deleteSnapshot1",
             "inputs": {
                 "Service": "ec2",
                 "Api": "CreateVolume",
-                "AvailabilityZone": "ap-southeast-2a",
+                "AvailabilityZone": "{{ getDestinationAz.destAvailabilityZone }}",
                 "SnapshotId": "{{ getSnapshotIds.SnapshotId1 }}"
             },
             "outputs": [
                 {
                     "Name": "VolumeId1",
-                    "Selector": "$.VolumeId",
-                    "Type": "String"
-                }
-            ]
-        },
-        {
-            "name": "createVolume2",
-            "action": "aws:executeAwsApi",
-            "inputs": {
-                "Service": "ec2",
-                "Api": "CreateVolume",
-                "AvailabilityZone": "ap-southeast-2a",
-                "SnapshotId": "{{ getSnapshotIds.SnapshotId2 }}"
-            },
-            "outputs": [
-                {
-                    "Name": "VolumeId2",
                     "Selector": "$.VolumeId",
                     "Type": "String"
                 }
@@ -143,8 +140,7 @@
                 "Api": "DescribeVolumes",
                 "VolumeIds": [
                     "{{ createVolume0.VolumeId0 }}",
-                    "{{ createVolume1.VolumeId1 }}",
-                    "{{ createVolume2.VolumeId2 }}"
+                    "{{ createVolume1.VolumeId1 }}"
                 ],
                 "PropertySelector": "$.Volumes..State",
                 "DesiredValues": [
@@ -155,6 +151,7 @@
         {
             "name": "attachVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:deleteVolume0",
             "inputs": {
                 "Service": "ec2",
                 "Api": "AttachVolume",
@@ -166,6 +163,7 @@
         {
             "name": "attachVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "step:deleteVolume1",
             "inputs": {
                 "Service": "ec2",
                 "Api": "AttachVolume",
@@ -175,19 +173,9 @@
             }
         },
         {
-            "name": "attachVolume2",
-            "action": "aws:executeAwsApi",
-            "inputs": {
-                "Service": "ec2",
-                "Api": "AttachVolume",
-                "VolumeId": "{{ createVolume2.VolumeId2 }}",
-                "InstanceId": "{{ DestInstanceId }}",
-                "Device": "xvdg"
-            }
-        },
-        {
             "name": "runDiskScript",
             "action": "aws:runCommand",
+            "onFailure": "step:detachVolume0",
             "inputs": {
                 "DocumentName": "UpdateHostStorageCache",
                 "InstanceIds": [
@@ -198,6 +186,7 @@
         {
             "name": "runSQLScript",
             "action": "aws:runCommand",
+            "onFailure": "step:detachVolume0",
             "timeoutSeconds": 2592000,
             "inputs": {
                 "DocumentName": "SSIS",
@@ -209,6 +198,7 @@
         },
         {
             "name": "runSQLCleanUpScript",
+            "onFailure": "step:detachVolume0",
             "action": "aws:runCommand",
             "timeoutSeconds": 2592000,
             "inputs": {
@@ -222,6 +212,7 @@
         {
             "name": "detachVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DetachVolume",
@@ -233,6 +224,7 @@
         {
             "name": "detachVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DetachVolume",
@@ -242,27 +234,16 @@
             }
         },
         {
-            "name": "detachVolume2",
-            "action": "aws:executeAwsApi",
-            "inputs": {
-                "Service": "ec2",
-                "Api": "DetachVolume",
-                "VolumeId": "{{ createVolume2.VolumeId2 }}",
-                "InstanceId": "{{ DestInstanceId }}",
-                "Device": "xvdg"
-            }
-        },
-        {
             "name": "checkVolumesBeforeDelete",
             "action": "aws:waitForAwsResourceProperty",
+            "onFailure": "Continue",
             "timeoutSeconds": 300,
             "inputs": {
                 "Service": "ec2",
                 "Api": "DescribeVolumes",
                 "VolumeIds": [
                     "{{ createVolume0.VolumeId0 }}",
-                    "{{ createVolume1.VolumeId1 }}",
-                    "{{ createVolume2.VolumeId2 }}"
+                    "{{ createVolume1.VolumeId1 }}"
                 ],
                 "PropertySelector": "$.Volumes..State",
                 "DesiredValues": [
@@ -273,6 +254,7 @@
         {
             "name": "deleteVolume0",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DeleteVolume",
@@ -282,6 +264,7 @@
         {
             "name": "deleteVolume1",
             "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
             "inputs": {
                 "Service": "ec2",
                 "Api": "DeleteVolume",
@@ -289,13 +272,24 @@
             }
         },
         {
-            "name": "deleteVolume2",
+            "name": "deleteSnapshot0",
+            "action": "aws:executeAwsApi",
+            "onFailure": "Continue",
+            "inputs": {
+                "Service": "ec2",
+                "Api": "DeleteSnapshot",
+                "SnapshotId": "{{ getSnapshotIds.SnapshotId0 }}"
+            }
+        },
+        {
+            "name": "deleteSnapshot1",
             "action": "aws:executeAwsApi",
             "inputs": {
                 "Service": "ec2",
-                "Api": "DeleteVolume",
-                "VolumeId": "{{ createVolume2.VolumeId2 }}"
-            }
+                "Api": "DeleteSnapshot",
+                "SnapshotId": "{{ getSnapshotIds.SnapshotId1 }}"
+            },
+            "isEnd": true
         }
     ]
 }

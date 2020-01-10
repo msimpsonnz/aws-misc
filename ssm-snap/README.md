@@ -47,21 +47,21 @@ export doc=$(aws ssm update-document \
 
 aws ssm update-document-default-version --name "Restore-SQL-Run-SSIS" --document-version $doc
 
-aws ssm start-automation-execution --document-name "Restore-SQL-Run-SSIS" --parameters "SourceInstanceId=i-0f58cd1e250ffdb02,DestInstanceId=i-0fe7c7fdbc3e86877"
+aws ssm start-automation-execution --document-name "Restore-SQL-Run-SSIS" --parameters "SourceInstanceId=i-04dd6af80036ecb8d,DestInstanceId=i-0665c7ea82b5d35a0"
 
 #########################
 
 aws ssm create-document \
-    --name "Restore-SQL-Run-SSIS-v2" \
-    --content "file://restore_v2.json" \
+    --name "Restore-SQL-Run-SSIS-FSR" \
+    --content "file://restoreFSR.json" \
     --document-type Automation
 
 
 export doc=$(aws ssm update-document \
-    --name "Restore-SQL-Run-SSIS-v2" \
-    --content "file://restore_v2.json" \
+    --name "Restore-SQL-Run-SSIS-FSR" \
+    --content "file://restoreFSR.json" \
     --document-version '$LATEST' | jq -r '.DocumentDescription.LatestVersion')
 
-aws ssm update-document-default-version --name "Restore-SQL-Run-SSIS-v2" --document-version $doc
+aws ssm update-document-default-version --name "Restore-SQL-Run-SSIS-FSR" --document-version $doc
 
-aws ssm start-automation-execution --document-name "Restore-SQL-Run-SSIS-v2" --parameters "SourceInstanceId=i-0f5a86e2612ea4bed,DestInstanceId=i-07393b2b066059856"
+aws ssm start-automation-execution --document-name "Restore-SQL-Run-SSIS-FSR" --parameters "SourceInstanceId=i-04dd6af80036ecb8d,DestInstanceId=i-0665c7ea82b5d35a0"
