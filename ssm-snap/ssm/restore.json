@@ -81,7 +81,7 @@
         {
             "name": "checkSnapshots",
             "action": "aws:waitForAwsResourceProperty",
-            "timeoutSeconds": 300,
+            "timeoutSeconds": 3000,
             "inputs": {
                 "Service": "ec2",
                 "Api": "DescribeSnapshots",
