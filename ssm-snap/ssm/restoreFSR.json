@@ -231,7 +231,7 @@
                     "{{ DestInstanceId }}"
                 ]
             },
-            "isEnd": false
+            "isEnd": true
         },
         {
             "name": "runSQLCleanUpScript",

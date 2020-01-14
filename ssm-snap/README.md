@@ -49,6 +49,8 @@ aws ssm update-document-default-version --name "Restore-SQL-Run-SSIS" --document
 
 aws ssm start-automation-execution --document-name "Restore-SQL-Run-SSIS" --parameters "SourceInstanceId=i-04dd6af80036ecb8d,DestInstanceId=i-0665c7ea82b5d35a0"
 
+aws ssm start-automation-execution --document-name "Restore-SQL-Run-SSIS" --parameters "SourceInstanceId=i-04dd6af80036ecb8d,DestInstanceId=i-0665c7ea82b5d35a0" --document-version 51
+
 #########################
 
 aws ssm create-document \
