@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<meta http-equiv="Access-Control-Allow-Origin" content="null">
+    </head>
+    <body>
+
+    	<h2>AppStream 2 Embed Sample</h2>
+    	<br>
+
+        <!-- Import the AppStream Embed Interface JS -->
+        <script type="text/javascript" src="./appstream_embed.js"> </script>
+
+        <script type="text/javascript">
+
+            var appstreamEmbed;
+
+            function launchAppStreamSession() {
+                
+                destroyAppStreamFrame();
+
+                if(document.getElementById("iframe-hidden").checked) {
+                    document.getElementById("appstream-container").style.visibility = 'hidden'; //hide while loading if there is an app ID
+                } else {
+                    document.getElementById("appstream-container").style.visibility = 'visible';
+                }
+                
+                const streamingURL = getStreamingURL();
+                const hiddenItems = getHiddenElements();
+                var userInterfaceConfig = {};
+                userInterfaceConfig[AppStream.Embed.Options.HIDDEN_ELEMENTS] = hiddenItems;
+
+                if (streamingURL && streamingURL.length > 0) {
+                    var appstreamOptions = {
+                        sessionURL: streamingURL,
+                        userInterfaceConfig: userInterfaceConfig
+                    };
+                    appstreamEmbed = new AppStream.Embed("appstream-container", appstreamOptions);
+                    appstreamEmbed.addEventListener(AppStream.Embed.Events.SESSION_STATE_CHANGE, updateSessionStateCallback);
+                    appstreamEmbed.addEventListener(AppStream.Embed.Events.SESSION_INTERFACE_STATE_CHANGE, updateUserInterfaceStateCallback);
+                    appstreamEmbed.addEventListener(AppStream.Embed.Events.SESSION_ERROR, errorCallback);
+                    
+                } else {
+                    alert("Invalid URL");
+                }
+            }
+
+            function destroyAppStreamFrame() {
+                if (appstreamEmbed) {
+                    appstreamEmbed.destroy();
+                    appstreamEmbed = null;
+                    delete appstreamEmbed;
+                }
+
+                document.getElementById("appstream-url-form").style.visibility = 'visible';
+                document.getElementById("appstream-url-form").style.display = 'block';
+                document.getElementById("in-stream-functions").style.visibility = 'collapse';
+                document.getElementById("in-stream-functions").style.display = 'none';
+            }
+
+            function updateSessionStateCallback(event) {
+                let status = event[AppStream.Embed.EventParams.STATUS];
+                switch(AppStream.Embed.SessionStatus[status]) {
+                    case AppStream.Embed.SessionStatus.Unknown:
+                        break;
+                    case AppStream.Embed.SessionStatus.Started:
+                        document.getElementById("appstream-url-form").style.visibility = 'collapse';
+                        document.getElementById("appstream-url-form").style.display = 'none';
+                        document.getElementById("in-stream-functions").style.visibility = 'visible';
+                        document.getElementById("appstream-container").style.visibility = 'visible';
+                        document.getElementById("in-stream-functions").style.display = 'block';
+                        document.getElementById("keyboard-events").addEventListener("keypress", sendKeyboardEvent);
+                        document.getElementById("keyboard-events").addEventListener("keydown", sendKeyboardEvent);
+                        document.getElementById("keyboard-events").addEventListener("keyup", sendKeyboardEvent);
+                        break;
+                    default:
+                        break;
+                }
+                console.log("embed-sample.html listened to updateSessionState event: " + JSON.stringify(event));
+            }
+
+            function updateUserInterfaceStateCallback(event) {
+                console.log("embed-sample.html listened to updateUserInterfaceState event: " + JSON.stringify(event));
+            }
+
+            function errorCallback(event) {
+                console.log("embed-sample.html listened to appstreamEmbedError event: " + JSON.stringify(event));
+            }
+
+            function getStreamingURL() {
+                return document.getElementById("appstream-url").value;
+            }
+
+            function getHiddenElements() {
+                var hiddenItems = [];
+                if (document.getElementById("toolbar-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.TOOLBAR);
+                }
+
+                if (document.getElementById("catalog-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.CATALOG_BUTTON);
+                }
+
+                if (document.getElementById("windowswitcher-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.WINDOW_SWITCHER_BUTTON);
+                }
+
+                if (document.getElementById("files-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.FILES_BUTTON);
+                }
+
+                if (document.getElementById("clipboard-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.CLIPBOARD_BUTTON);
+                }
+
+                if (document.getElementById("copy-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.COPY_LOCAL_BUTTON);
+                }
+
+                if (document.getElementById("paste-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.PASTE_REMOTE_BUTTON);
+                }
+
+                if (document.getElementById("settings-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.SETTINGS_BUTTON);
+                }
+
+                if (document.getElementById("microphone-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.ENABLE_MICROPHONE_BUTTON);
+                }
+
+                if (document.getElementById("streamingmode-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.STREAMING_MODE_BUTTON);
+                }
+
+                if (document.getElementById("screenresolution-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.SCREEN_RESOLUTION_BUTTON);
+                }
+
+                if (document.getElementById("regionalsettings-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.REGIONAL_SETTINGS_BUTTON);
+                }
+
+                if (document.getElementById("fullscreen-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.FULLSCREEN_BUTTON);
+                }
+
+                if(document.getElementById("end-session-hidden").checked) {
+                    hiddenItems.push(AppStream.Embed.Elements.END_SESSION_BUTTON);
+                }
+
+                return hiddenItems;
+            }
+
+            function as2LaunchAppSwitcher() {
+                appstreamEmbed.launchAppSwitcher();
+            }
+
+            function as2EndSession() {
+                appstreamEmbed.endSession();
+            }
+
+            function as2LaunchApp() {
+                const appId = getAppId();
+                appstreamEmbed.launchApp(appId);
+            }
+
+            function as2SendSampleKeys() {
+                let TEst = [{key:'T', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD},
+                {key:'E', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}, 
+                {key: 's', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}, 
+                {key: 't', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}];
+                appstreamEmbed.sendKeys(TEst);
+            }
+
+            function as2SendCtrlA() {
+                let ctrlA = [{key:'Control', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_LEFT},
+                {key:'a', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}];
+                appstreamEmbed.sendKeys(ctrlA);
+            }
+
+            function as2SendCtrlX() {
+                let ctrlX = [{key:'Control', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_LEFT},
+                {key:'X', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}];
+                appstreamEmbed.sendKeys(ctrlX);
+            }
+
+            function as2SendCtrlV() {
+                let ctrlV = [{key:'Control', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_LEFT},
+                {key:'v', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}];
+                appstreamEmbed.sendKeys(ctrlV);
+            }
+
+            function as2SendInvalidKey() {
+                let invalidKey = [{key:'sdfsd', location:AppStream.Embed.KeyboardLocation.DOM_KEY_LOCATION_STANDARD}];
+                appstreamEmbed.sendKeys(invalidKey);
+            }
+
+            function sendKeyboardEvent(event) {
+                appstreamEmbed.sendKeyboardEvent(event);
+            }
+
+            function getAppId() {
+                return document.getElementById("app-id-input").value;
+            }
+        </script>
+
+
+        <div id="appstream-url-form" style='visibility: visible'>
+            <label>Streaming URL:</label> <input id="appstream-url" type="text" \> <br> <br>
+            <input type="checkbox" id="iframe-hidden">Hide iFrame before session starts (do not use this without App ID in the url)<br> <br>
+            <div id="embed-options">
+                <label>Hide UI Elements: </label> <br>
+                <input type="checkbox" id="toolbar-hidden">Toolbar <br>
+                <input type="checkbox" id="catalog-hidden">Catalog <br>
+                <input type="checkbox" id="windowswitcher-hidden">Window Switcher <br>
+                <input type="checkbox" id="files-hidden">Files <br>
+                <input type="checkbox" id="clipboard-hidden">Clipboard <br>
+                <input type="checkbox" id="copy-hidden">Copy to local <br>
+                <input type="checkbox" id="paste-hidden">Paste to remote <br>
+                <input type="checkbox" id="settings-hidden">Settings <br>
+                <input type="checkbox" id="microphone-hidden">Microphone <br>
+                <input type="checkbox" id="streamingmode-hidden">Streaming Mode <br>
+                <input type="checkbox" id="screenresolution-hidden">Screen Resolution <br>
+                <input type="checkbox" id="regionalsettings-hidden">Regional Settings <br>
+                <input type="checkbox" id="fullscreen-hidden">Fullscreen <br>
+                <input type="checkbox" id="end-session-hidden">End Session <br>
+            </div> <br>
+            <button id="stream-button" type="button" onclick="launchAppStreamSession()">Start Session</button> <br> <br>
+        </div>
+
+        <div id="in-stream-functions" style='visibility: hidden; display: none'> 
+            <input id="app-id-input" type="text" \> <button type="button" onclick="as2LaunchApp()">Launch App</button> <br><br>
+            <button type="button" onclick="as2LaunchAppSwitcher()">Launch App Switcher</button> <br><br>
+
+            <label>Keyboard Items</label> <br>
+            <button type="button" onclick="as2SendSampleKeys()">Send Sample TEst Keys</button> <br>
+            <button type="button" onclick="as2SendCtrlA()">Control A</button> <br>
+            <button type="button" onclick="as2SendCtrlX()">Control X</button> <br>
+            <button type="button" onclick="as2SendCtrlV()">Control V</button> <br>
+            <button type="button" onclick="as2SendInvalidKey()">Send invalid</button> <br>
+            <input id="keyboard-events" type="text" \> <br> <br>
+            <button type="button" onclick="as2EndSession()">End Session</button> <br>
+            <br> <br> <br>
+        </div>
+        <button type="button" onclick="destroyAppStreamFrame()">Destroy Frame</button>
+        
+        <!-- Create an empty div for the iframe to be injected -->
+        <div id="appstream-container" style="visibility:hidden; width: 640px; height: 525px; margin:auto; min-width: 640px; min-height:525;"> </div>
+
+    	<br>
+
+    </body>
+</html>
