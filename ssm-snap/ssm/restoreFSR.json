@@ -218,7 +218,8 @@
                 "InstanceIds": [
                     "{{ DestInstanceId }}"
                 ]
-            }
+            },
+            "isEnd": true
         },
         {
             "name": "runSQLScript",
@@ -231,7 +232,7 @@
                     "{{ DestInstanceId }}"
                 ]
             },
-            "isEnd": true
+            "isEnd": false
         },
         {
             "name": "runSQLCleanUpScript",

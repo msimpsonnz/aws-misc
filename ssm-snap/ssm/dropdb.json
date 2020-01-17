@@ -16,10 +16,10 @@
                     "# Run SQL EXEC",
                     "",
                     "$SQLInstance = \"localhost\"",
-                    "$SQLDatabase = \"master\"",
-                    "$SQLUsername = \"dbadmim\"",
+                    "$SQLDatabase = \"dw\"",
+                    "$SQLUsername = \"dbadmin\"",
                     "$SQLPassword = \"Password!\"", 
-                    "$SQLQuery1 = \"EXEC DropTable\"",
+                    "$SQLQuery1 = \"EXEC [dw].[dbo].[DropTable]\"",
                     "$SQLQuery1Output = Invoke-Sqlcmd -query $SQLQuery1 -Querytimeout 0",
                     ""
                 ],

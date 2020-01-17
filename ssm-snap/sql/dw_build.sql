@@ -80,7 +80,7 @@ CREATE DATABASE SnapDMS
 DECLARE @lastmodifieddate DATETIME=null    
 SET @lastmodifieddate = (SELECT MAX([dw].[dbo].[order_line].ol_delivery_d) FROM [dw].[dbo].[order_line])
 
-INSERT INTO [dw].[dbo].[order_line]
+INSERT INTO [dw].[dbo].[order_line] WITH (TABLOCK)
 SELECT [ol_o_id]
       ,[ol_d_id]
       ,[ol_w_id]
@@ -118,7 +118,7 @@ BEGIN
 DECLARE @lastmodifieddate DATETIME=null    
 SET @lastmodifieddate = (SELECT MAX([dw_test].[dbo].[order_line].ol_delivery_d) FROM [dw_test].[dbo].[order_line])
 
-INSERT INTO [dw_test].[dbo].[order_line]
+INSERT INTO [dw_test].[dbo].[order_line] WITH (TABLOCK)
 SELECT [ol_o_id]
       ,[ol_d_id]
       ,[ol_w_id]
