@@ -1,0 +1,84 @@
+{
+  "@aws-cdk/core:enableStackNameDuplicates": "true",
+  "vpc-provider:account=383358879677:filter.isDefault=true:region=ap-southeast-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-4bd0f62c",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-5dcfc13a",
+            "availabilityZone": "ap-southeast-2a",
+            "routeTableId": "rtb-c43098a2"
+          },
+          {
+            "subnetId": "subnet-2f340f66",
+            "availabilityZone": "ap-southeast-2b",
+            "routeTableId": "rtb-c43098a2"
+          },
+          {
+            "subnetId": "subnet-2117ae79",
+            "availabilityZone": "ap-southeast-2c",
+            "routeTableId": "rtb-c43098a2"
+          }
+        ]
+      }
+    ]
+  },
+  "availability-zones:account=383358879677:region=ap-southeast-2": [
+    "ap-southeast-2a",
+    "ap-southeast-2b",
+    "ap-southeast-2c"
+  ],
+  "ami:account=383358879677:filters.image-type.0=machine:filters.name.0=amzn-ami-vpc-nat-*:filters.state.0=available:owners.0=amazon:region=ap-southeast-2": "ami-01866304647fb36d8",
+  "hosted-zone:account=383358879677:domainName=devlabnz.net:region=ap-southeast-2": {
+    "Id": "/hostedzone/Z1FS2SRMB6RELV",
+    "Name": "devlabnz.net."
+  },
+  "hosted-zone:account=300058909224:domainName=squawksquad.co.nz:region=ap-southeast-2": {
+    "Id": "/hostedzone/Z1AWA0SE2Z20BA",
+    "Name": "squawksquad.co.nz."
+  },
+  "vpc-provider:account=300058909224:filter.isDefault=true:region=ap-southeast-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-2df58d49",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "Public",
+        "type": "Public",
+        "subnets": [
+          {
+            "subnetId": "subnet-7286b704",
+            "availabilityZone": "ap-southeast-2a",
+            "routeTableId": "rtb-a2dec8c6"
+          },
+          {
+            "subnetId": "subnet-43cac927",
+            "availabilityZone": "ap-southeast-2b",
+            "routeTableId": "rtb-a2dec8c6"
+          },
+          {
+            "subnetId": "subnet-5d1f6b04",
+            "availabilityZone": "ap-southeast-2c",
+            "routeTableId": "rtb-a2dec8c6"
+          }
+        ]
+      }
+    ]
+  },
+  "teststaging:secretName": "staging/ss-api-mjAgzy",
+  "teststaging:imageName": "ss-ts",
+  "teststaging:defaultVpc": true,
+  "teststaging:domain": "squawksquad.co.nz",
+  "teststaging:certId": "03281aba-9a34-4b14-9d1b-87141000402b",
+  "teststaging:fargateMB": 256,
+  "teststaging:fargateCPU": 256,
+  "teststaging:fargateReplica": 1,
+  "teststaging:fargatePort": 80,
+  "teststaging:albPort": 443,
+  "teststaging:albDelay": 60,
+  "teststaging:albHealthPath": "/statistics",
+  "teststaging:albHealthInterval": 60
+}

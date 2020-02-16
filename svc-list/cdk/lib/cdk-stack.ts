@@ -37,7 +37,7 @@ export class CdkStack extends cdk.Stack {
     });
 
     const lambdaFnCrawl = new lambda.Function(this, 'service-list-crawl-aws', {
-      runtime: lambda.Runtime.DOTNET_CORE_2_1,
+      runtime: lambda.Runtime.N,
       code: new lambda.AssetCode("../ServiceList.App.AwsCrawl/bin/Release/netcoreapp2.1/ServiceList.App.AwsCrawl.zip"),
       handler: 'ServiceList.App.AwsCrawl::ServiceList.App.AwsCrawl.Function::FunctionHandler',
       timeout: cdk.Duration.seconds(300),
