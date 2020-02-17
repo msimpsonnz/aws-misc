@@ -4,4 +4,9 @@ import * as cdk from '@aws-cdk/core';
 import { CdkStack } from '../lib/cdk-stack';
 
 const app = new cdk.App();
-new CdkStack(app, 'cwl-embedded-stack');
+new CdkStack(app, 'cwl-embedded-stack', {
+    env: {
+        account: process.env.CDK_DEFAULT_ACCOUNT,
+        region: process.env.CDK_DEFAULT_REGION
+    }   
+});
