@@ -1,0 +1,39 @@
+{ "version": "0",
+    "id": "17f87ccb-5407-618f-4688-f500fdfc1d14",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.ecr",
+    "account": "383358879677",
+    "time": "2020-02-18T19:51:24Z",
+    "region": "ap-southeast-2",
+    "resources": [],
+    "detail":
+     { "eventVersion": "1.05",
+       "userIdentity":
+        { "type": "IAMUser",
+          "principalId": "AIDAVSQPYI66Y4GXSKMHF",
+          "arn": "arn:aws:iam::383358879677:user/sls",
+          "accountId": "383358879677",
+          "accessKeyId": "ASIAIKIPJUOXZIUSZ65A",
+          "userName": "sls",
+          "sessionContext": "[Object]",
+          "invokedBy": "AWS Internal" },
+       "eventTime": "2020-02-18T19:51:24Z",
+       "eventSource": "ecr.amazonaws.com",
+       "eventName": "BatchGetImage",
+       "awsRegion": "ap-southeast-2",
+       "sourceIPAddress": "AWS Internal",
+       "userAgent": "AWS Internal",
+       "requestParameters":
+        { "registryId": "383358879677",
+          "repositoryName": "apline-demo",
+          "imageIds": [
+            {
+              "imageTag": "latest"
+            }
+          ],
+          "acceptedMediaTypes": "[Array]" },
+       "responseElements": null,
+       "requestID": "2fcd25d0-4b7c-4f0f-8117-e4960a16a531",
+       "eventID": "a3d50669-a416-48b7-84ba-b563bee8d35c",
+       "resources": "[ [Object] ]",
+       "eventType": "AwsApiCall" } }
