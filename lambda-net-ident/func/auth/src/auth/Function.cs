@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
+using Microsoft.IdentityModel.Tokens;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -27,15 +30,16 @@ namespace auth
         /// </summary>
         /// <param name="request"></param>
         /// <returns>The list of blogs</returns>
-        public APIGatewayProxyResponse Get(APIGatewayProxyRequest request, ILambdaContext context)
+        public APIGatewayProxyResponse Get(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
         {
             context.Logger.LogLine("Get Request\n");
 
-            var TokenValidationParameters = new TokenValidationParameters
+            var TokenValidationParams = new TokenValidationParameters
             {
-                ValidateIssuer=true,
-                ValidIssuer=SecurityConstants.Issuer,
+                // ValidateIssuer=true,
+                // ValidIssuer="http://localhost:5000",
                 ValidateAudience=true,
+                ValidAudience="api",
                 ClockSkew=TimeSpan.FromMinutes(5),
                
             };
@@ -45,20 +49,17 @@ namespace auth
             JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
             bool authorized = false;
 
-            if (!string.IsNullOrWhiteSpace(apigAuthRequest.AuthorizationToken))
+            try
             {
-                try
-                {
-                    var user = handler.ValidateToken(apigAuthRequest.AuthorizationToken, TokenValidationParameters, out validatedToken);
-                    var claim = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name);
-                    if (claim != null)
-                        authorized = claim.Value == SecurityConstants.ClaimName; // Ensure that the claim value matches the assertion
-                }
-                catch (Exception ex)
-                {
-                    context.Logger.LogLine($"Error occurred validating token: {ex.Message}");
-                }
+                var token = handler.ValidateToken(request.AuthorizationToken, TokenValidationParams, out validatedToken);
+                context.Logger.LogLine($"{token.ToString()}");
             }
+            catch (Exception ex)
+            {
+                context.Logger.LogLine($"Error occurred validating token: {ex.Message}");
+            }
+        
+            context.Logger.LogLine($"{authorized}");
 
             var response = new APIGatewayProxyResponse
             {

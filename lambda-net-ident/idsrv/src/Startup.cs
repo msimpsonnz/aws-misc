@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Security.Cryptography.X509Certificates;
+using System.IO;
 
 namespace IdentityServer4Demo
 {
@@ -26,6 +28,8 @@ namespace IdentityServer4Demo
             // cookie policy to deal with temporary browser incompatibilities
             services.AddSameSiteCookiePolicy();
 
+            var certPath = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location), "idsrv.pfx");
+
             services.AddIdentityServer(options =>
             {
                 options.Events.RaiseErrorEvents = true;
@@ -37,38 +41,9 @@ namespace IdentityServer4Demo
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryClients(Config.GetClients())
                 .AddTestUsers(TestUsers.Users)
-                .AddDeveloperSigningCredential(persistKey: false);
+                .AddSigningCredential(new X509Certificate2(certPath, "P@ssword!!1122"));
 
             services.AddAuthentication()
-                // .AddGoogle("Google", options =>
-                // {
-                //     options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-
-                //     options.ClientId = Configuration["Secret:GoogleClientId"];
-                //     options.ClientSecret = Configuration["Secret:GoogleClientSecret"];
-                // })
-                // .AddOpenIdConnect("aad", "Sign-in with Azure AD", options =>
-                // {
-                //     options.Authority = "https://login.microsoftonline.com/common";
-                //     options.ClientId = "https://leastprivilegelabs.onmicrosoft.com/38196330-e766-4051-ad10-14596c7e97d3";
-
-                //     options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-                //     options.SignOutScheme = IdentityServerConstants.SignoutScheme;
-
-                //     options.ResponseType = "id_token";
-                //     options.CallbackPath = "/signin-aad";
-                //     options.SignedOutCallbackPath = "/signout-callback-aad";
-                //     options.RemoteSignOutPath = "/signout-aad";
-
-                //     options.TokenValidationParameters = new TokenValidationParameters
-                //     {
-                //         ValidateIssuer = false,
-                //         ValidAudience = "165b99fd-195f-4d93-a111-3e679246e6a9",
-
-                //         NameClaimType = "name",
-                //         RoleClaimType = "role"
-                //     };
-                // })
                 .AddLocalApi(options =>
                 {
                     options.ExpectedScope = "api";
