@@ -5,6 +5,9 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
+using System.Reflection;
 
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
@@ -33,14 +36,18 @@ namespace auth
         public APIGatewayProxyResponse Get(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
         {
             context.Logger.LogLine("Get Request\n");
+            X509Certificate2 cert = new X509Certificate2("idsrv.pfx", "");
+            SecurityKey key = new X509SecurityKey(cert);
 
             var TokenValidationParams = new TokenValidationParameters
             {
+                IssuerSigningKey=key,
                 // ValidateIssuer=true,
                 // ValidIssuer="http://localhost:5000",
                 ValidateAudience=true,
                 ValidAudience="api",
                 ClockSkew=TimeSpan.FromMinutes(5),
+                
                
             };
 

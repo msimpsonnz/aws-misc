@@ -41,7 +41,7 @@ namespace IdentityServer4Demo
                 .AddInMemoryIdentityResources(Config.GetIdentityResources())
                 .AddInMemoryClients(Config.GetClients())
                 .AddTestUsers(TestUsers.Users)
-                .AddSigningCredential(new X509Certificate2(certPath, "P@ssword!!1122"));
+                .AddSigningCredential(new X509Certificate2(certPath, ""));
 
             services.AddAuthentication()
                 .AddLocalApi(options =>
