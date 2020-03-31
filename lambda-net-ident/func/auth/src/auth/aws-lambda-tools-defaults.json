@@ -11,7 +11,7 @@
   "profile":"",
   "region" : "",
   "configuration": "Release",
-  "framework": "netcoreapp2.1",
+  "framework": "dotnetcore3.1",
   "s3-prefix": "auth/",
   "template": "serverless.template",
   "template-parameters": ""
