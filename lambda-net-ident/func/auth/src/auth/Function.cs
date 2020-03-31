@@ -42,8 +42,8 @@ namespace auth
             var TokenValidationParams = new TokenValidationParameters
             {
                 IssuerSigningKey=key,
-                // ValidateIssuer=true,
-                // ValidIssuer="http://localhost:5000",
+                ValidateIssuer=true,
+                ValidIssuer="http://localhost:8080",
                 ValidateAudience=true,
                 ValidAudience="api",
                 ClockSkew=TimeSpan.FromMinutes(5),

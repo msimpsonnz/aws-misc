@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
-WORKDIR /app
 
+COPY ./idsrv.pfx /certs/idsrv.pfx
+
+WORKDIR /app
 COPY ./src/*.csproj ./
 RUN dotnet restore
 
