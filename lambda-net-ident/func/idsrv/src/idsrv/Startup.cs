@@ -40,6 +40,7 @@ namespace IdentityServer4Demo
                 .AddInMemoryClients(Config.GetClients())
                 .AddTestUsers(TestUsers.Users)
                 .AddSigningCredential(new X509Certificate2("idsrv.pfx", ""));
+                //.AddDeveloperSigningCredential(persistKey: false);
 
             services.AddAuthentication()
                 .AddLocalApi(options =>
@@ -67,7 +68,7 @@ namespace IdentityServer4Demo
         public void Configure(IApplicationBuilder app)
         {
             app.UseCookiePolicy();
-            app.UseSerilogRequestLogging();
+            //app.UseSerilogRequestLogging();
             app.UseDeveloperExceptionPage();
 
             app.UseCors("api");

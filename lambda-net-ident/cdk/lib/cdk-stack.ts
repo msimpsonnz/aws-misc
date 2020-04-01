@@ -1,98 +1,93 @@
-import * as cdk from '@aws-cdk/core';
-import { Vpc, SubnetType } from '@aws-cdk/aws-ec2';
-import { Repository } from '@aws-cdk/aws-ecr';
-import { ApplicationLoadBalancer } from '@aws-cdk/aws-elasticloadbalancingv2';
-import { Cluster, FargateTaskDefinition, ContainerImage, FargateService } from '@aws-cdk/aws-ecs';
-
+import * as cdk from "@aws-cdk/core";
+import { Function, Runtime, AssetCode } from "@aws-cdk/aws-lambda";
+import {
+  RestApi,
+  TokenAuthorizer,
+  LambdaIntegration
+} from "@aws-cdk/aws-apigateway";
+import elbv2 = require("@aws-cdk/aws-elasticloadbalancingv2");
+import targets = require("@aws-cdk/aws-elasticloadbalancingv2-targets");
+import { Vpc, SubnetType } from "@aws-cdk/aws-ec2";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const ecrRepo = Repository.fromRepositoryName(this, 'mjs-ecr', 'idsrv');
+    const idSrvFn = new Function(this, "idSrvFn", {
+      runtime: Runtime.DOTNET_CORE_2_1,
+      code: new AssetCode(
+        "../func/idsrv/src/idsrv/bin/Release/netcoreapp3.1/idsrv.zip"
+      ),
+      handler:
+        "IdentityServer4Demo::IdentityServer4Demo.LambdaEntryPoint::FunctionHandlerAsync",
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {}
+    });
 
-    //We need a VPC - this will use the default VPC but can overide to create a new dedicated VPC
-    const vpc = new Vpc(this, 'idsrv-vpc', {
-        cidr: '10.0.0.0/16',
-        maxAzs: 2,
-        subnetConfiguration: [
-          {
-            cidrMask: 24,
-            name: 'publicSubnet',
-            subnetType: SubnetType.PUBLIC,
-          }
-        ],
-        natGateways: 0
-      });
+    const vpc = new Vpc(this, "idsrv-vpc", {
+      cidr: "10.0.0.0/16",
+      maxAzs: 2,
+      subnetConfiguration: [
+        {
+          cidrMask: 24,
+          name: "publicSubnet",
+          subnetType: SubnetType.PUBLIC
+        }
+      ],
+      natGateways: 0
+    });
 
-    //Application load balancer will be the public entry point the the application
-    //Deployed in the VPC from above and configured as internet facing with public IP
-    const appLoadBalancer = new ApplicationLoadBalancer(this, 'idsrv-api-alb', {
+    const lb = new elbv2.ApplicationLoadBalancer(this, "LB", {
       vpc,
-      internetFacing: true,
-    });
-    //We need a listener for the public side this is then bound to the imported certificate
-    const albListener = appLoadBalancer.addListener('ss-api-alb-listener', {
-      port: 80,
-      open: true
+      internetFacing: true
     });
 
-    //Create a ECS cluster in the VPC provided
-    const ecsCluster = new Cluster(this, "idsrv-api-ecs", {
-      vpc: vpc
+    const listener = lb.addListener("Listener", { port: 80 });
+    listener.addTargets("Targets", {
+      targets: [new targets.LambdaTarget(idSrvFn)]
     });
 
-    //Create Fargate Task Definition
-    const fargateTaskDefinition = new FargateTaskDefinition(this, 'ss-fargate-task-def', {
-      memoryLimitMiB: 512,
-      cpu: 512
-    });
-
-    //Create Fargate Task Definition
-    //Use image from ECR, setup logging to CloudWatch with custom prefix, get config.environment  variables from Secret Mgr
-    const fargateTask = fargateTaskDefinition.addContainer('idsrv-container', {
-      image: ContainerImage.fromEcrRepository(ecrRepo, 'idsrv4'),
-      // logging: ecs.LogDrivers.awsLogs({
-      //   streamPrefix: `$idsrv-api-${config.environment}-logs`,
-      // }),
+    const authFn = new Function(this, "authFn", {
+      runtime: Runtime.DOTNET_CORE_2_1,
+      code: new AssetCode(
+        "../func/auth/src/auth/bin/Release/netcoreapp3.1/auth.zip"
+      ),
+      handler: "auth::auth.Functions::Get",
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
       environment: {
-      },
-      secrets: {
+        AWS_ALB_URL: `http://${lb.loadBalancerDnsName}`
       }
     });
 
-    //Add a port mapping to the container this exposes the port for the ALB to use
-    fargateTask.addPortMappings({
-      containerPort: 80
+    const storageFn = new Function(this, "storageFn", {
+      runtime: Runtime.DOTNET_CORE_2_1,
+      code: new AssetCode(
+        "../func/auth/src/auth/bin/Release/netcoreapp3.1/auth.zip"
+      ),
+      handler: "auth::auth.Functions::Get",
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 256,
+      environment: {}
     });
 
-    //Crearte a Fargate service to run the Task Def
-    //Add to ECS, cluster with task def, no# of replicas
-    //Deployed in VPC and assigned public IP to access ECR without need for NAT
-    const fargateService = new FargateService(this, 'ss-api-fargate-svc', {
-      cluster: ecsCluster,
-      taskDefinition: fargateTaskDefinition,
-      desiredCount: 1,
-      vpcSubnets: vpc.selectSubnets({
-        subnetType: SubnetType.PUBLIC
-      }),
-      assignPublicIp: true
+    const apiIdSrv = new LambdaIntegration(idSrvFn);
+
+    const api = new RestApi(this, "api");
+
+    const apiIdSrvResource = api.root.addResource("id");
+
+    apiIdSrvResource.addMethod("GET", new LambdaIntegration(idSrvFn));
+
+    const apiAuth = new TokenAuthorizer(this, "storageAuthorizer", {
+      handler: authFn
     });
 
-    //Add the Fargate service as a target for the ALB
-    //Deregistration delay for draining connections during CD and provide health check
-    const albTarget = albListener.addTargets('idsrv-api-alb-target', {
-      port: 80,
-      //hostHeader: apiFqdn,
-      //pathPattern: '/*',
-      //priority: (config.environment === 'prod') ? 0 : config.environment.length,
-      targets: [fargateService],
-      deregistrationDelay: cdk.Duration.seconds(60),
-      healthCheck: {
-        path: "/",
-        interval: cdk.Duration.seconds(30),
-      }
-    });
+    const apiStorageResource = api.root.addResource("storage");
 
+    apiStorageResource.addMethod("GET", new LambdaIntegration(idSrvFn), {
+      authorizer: apiAuth
+    });
   }
 }

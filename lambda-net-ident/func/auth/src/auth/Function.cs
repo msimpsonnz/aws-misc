@@ -20,6 +20,9 @@ namespace auth
 {
     public class Functions
     {
+
+        static readonly string ablUrl = Environment.GetEnvironmentVariable("AWS_ALB_URL");
+
         /// <summary>
         /// Default constructor that Lambda will invoke.
         /// </summary>
@@ -34,16 +37,24 @@ namespace auth
         /// <param name="request"></param>
         /// <returns>The list of blogs</returns>
         public APIGatewayProxyResponse Get(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
-        {
+        {          
             context.Logger.LogLine("Get Request\n");
-            X509Certificate2 cert = new X509Certificate2("idsrv.pfx", "");
+            context.Logger.LogLine(request.AuthorizationToken.ToString());
+            // var pwd = Directory.GetFiles(Directory.GetCurrentDirectory());
+            // foreach (var item in pwd)
+            // {
+            //     context.Logger.LogLine(item);
+            // }
+            var accessToken = request.AuthorizationToken.Substring("Bearer ".Length).Trim();
+
+            X509Certificate2 cert = new X509Certificate2("/var/task/idsrv.pfx", "");
             SecurityKey key = new X509SecurityKey(cert);
 
             var TokenValidationParams = new TokenValidationParameters
             {
                 IssuerSigningKey=key,
                 ValidateIssuer=true,
-                ValidIssuer="http://localhost:8080",
+                ValidIssuer=ablUrl,
                 ValidateAudience=true,
                 ValidAudience="api",
                 ClockSkew=TimeSpan.FromMinutes(5),
@@ -58,7 +69,7 @@ namespace auth
 
             try
             {
-                var token = handler.ValidateToken(request.AuthorizationToken, TokenValidationParams, out validatedToken);
+                var token = handler.ValidateToken(accessToken, TokenValidationParams, out validatedToken);
                 context.Logger.LogLine($"{token.ToString()}");
             }
             catch (Exception ex)
