@@ -36,24 +36,21 @@ namespace auth
         /// </summary>
         /// <param name="request"></param>
         /// <returns>The list of blogs</returns>
-        public APIGatewayProxyResponse Get(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
+        public APIGatewayCustomAuthorizerResponse Get(APIGatewayCustomAuthorizerRequest request, ILambdaContext context)
         {          
             context.Logger.LogLine("Get Request\n");
             context.Logger.LogLine(request.AuthorizationToken.ToString());
-            // var pwd = Directory.GetFiles(Directory.GetCurrentDirectory());
-            // foreach (var item in pwd)
-            // {
-            //     context.Logger.LogLine(item);
-            // }
+            context.Logger.LogLine(ablUrl);
             var accessToken = request.AuthorizationToken.Substring("Bearer ".Length).Trim();
-
-            X509Certificate2 cert = new X509Certificate2("/var/task/idsrv.pfx", "");
+            string certPath = File.Exists("/var/task/idsrv.pfx") ? "/var/task/idsrv.pfx" : "idsrv.pfx";
+            context.Logger.LogLine(certPath);
+            X509Certificate2 cert = new X509Certificate2(certPath, "");
             SecurityKey key = new X509SecurityKey(cert);
 
             var TokenValidationParams = new TokenValidationParameters
             {
                 IssuerSigningKey=key,
-                ValidateIssuer=true,
+                ValidateIssuer=false,
                 ValidIssuer=ablUrl,
                 ValidateAudience=true,
                 ValidAudience="api",
@@ -70,7 +67,14 @@ namespace auth
             try
             {
                 var token = handler.ValidateToken(accessToken, TokenValidationParams, out validatedToken);
-                context.Logger.LogLine($"{token.ToString()}");
+                foreach (Claim claim in token.Claims){
+                    context.Logger.LogLine($"CLAIM TYPE: {claim.Type} CLAIM VALUE: {claim.Value}");  
+                }  
+                var getClaimIss = token.Claims.FirstOrDefault(c => c.Type == "iss");
+                context.Logger.LogLine($"{getClaimIss}");  
+                if (getClaimIss != null){
+                    authorized = true;
+                }
             }
             catch (Exception ex)
             {
@@ -79,14 +83,31 @@ namespace auth
         
             context.Logger.LogLine($"{authorized}");
 
-            var response = new APIGatewayProxyResponse
+            APIGatewayCustomAuthorizerPolicy policy = new APIGatewayCustomAuthorizerPolicy
             {
-                StatusCode = (int)HttpStatusCode.OK,
-                Body = "Hello AWS Serverless",
-                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+                Version = "2012-10-17",
+                Statement = new List<APIGatewayCustomAuthorizerPolicy.IAMPolicyStatement>()
             };
 
-            return response;
+            policy.Statement.Add(new APIGatewayCustomAuthorizerPolicy.IAMPolicyStatement
+            {
+                Action = new HashSet<string>(new string[] { "execute-api:Invoke" }),
+                Effect = authorized ? "Allow" : "Deny",
+                Resource = new HashSet<string>(new string[] { request.MethodArn })
+              
+            });
+
+           
+            APIGatewayCustomAuthorizerContextOutput contextOutput = new APIGatewayCustomAuthorizerContextOutput();
+            contextOutput["User"] = "User";
+            contextOutput["Path"] = request.MethodArn;
+
+            return new APIGatewayCustomAuthorizerResponse
+            {
+                PrincipalID = "User",
+                Context = contextOutput,
+                PolicyDocument = policy
+            };
         }
     }
 }
