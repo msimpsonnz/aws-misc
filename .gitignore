@@ -350,7 +350,4 @@ healthchecksdb
 MigrationBackup/
 *.zip
 media-cvt-transcode/app/.env
-lambda-net-ident/.DS_Store
-lambda-net-ident/.DS_Store
-lambda-net-ident/certs/.DS_Store
-lambda-net-ident/.DS_Store
+.DS_Store

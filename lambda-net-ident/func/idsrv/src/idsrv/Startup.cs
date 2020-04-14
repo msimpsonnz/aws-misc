@@ -71,7 +71,7 @@ namespace IdentityServer4Demo
             //app.UseSerilogRequestLogging();
             app.UseDeveloperExceptionPage();
 
-            app.UseCors("api");
+            //app.UseCors("api");
 
             app.UseStaticFiles();
 

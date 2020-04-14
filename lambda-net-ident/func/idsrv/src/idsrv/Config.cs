@@ -306,7 +306,7 @@ namespace IdentityServer4Demo
                     AllowAccessTokensViaBrowser = true,
                     RequireConsent = false,
 
-                    RedirectUris = { "https://notused" },
+                    RedirectUris = { "http://localhost:5000/signin-oidc" },
                     PostLogoutRedirectUris = { "https://notused" },
                     FrontChannelLogoutUri = "http://localhost:5000/signout-idsrv", // for testing identityserver on localhost
 

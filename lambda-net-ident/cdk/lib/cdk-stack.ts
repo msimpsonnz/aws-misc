@@ -5,6 +5,7 @@ import { BucketDeployment, Source } from "@aws-cdk/aws-s3-deployment";
 import { Function, Runtime, AssetCode } from "@aws-cdk/aws-lambda";
 import {
   RestApi,
+  LambdaRestApi,
   TokenAuthorizer,
   LambdaIntegration
 } from "@aws-cdk/aws-apigateway";
@@ -39,28 +40,28 @@ export class CdkStack extends cdk.Stack {
       environment: {}
     });
 
-    const vpc = new Vpc(this, "idsrv-vpc", {
-      cidr: "10.0.0.0/16",
-      maxAzs: 2,
-      subnetConfiguration: [
-        {
-          cidrMask: 24,
-          name: "publicSubnet",
-          subnetType: SubnetType.PUBLIC
-        }
-      ],
-      natGateways: 0
-    });
+    // const vpc = new Vpc(this, "idsrv-vpc", {
+    //   cidr: "10.0.0.0/16",
+    //   maxAzs: 2,
+    //   subnetConfiguration: [
+    //     {
+    //       cidrMask: 24,
+    //       name: "publicSubnet",
+    //       subnetType: SubnetType.PUBLIC
+    //     }
+    //   ],
+    //   natGateways: 0
+    // });
 
-    const lb = new elbv2.ApplicationLoadBalancer(this, "LB", {
-      vpc,
-      internetFacing: true
-    });
+    // const lb = new elbv2.ApplicationLoadBalancer(this, "LB", {
+    //   vpc,
+    //   internetFacing: true
+    // });
 
-    const listener = lb.addListener("Listener", { port: 80 });
-    listener.addTargets("Targets", {
-      targets: [new targets.LambdaTarget(idSrvFn)]
-    });
+    // const listener = lb.addListener("Listener", { port: 80 });
+    // listener.addTargets("Targets", {
+    //   targets: [new targets.LambdaTarget(idSrvFn)]
+    // });
 
     const authFn = new Function(this, "authFn", {
       runtime: Runtime.DOTNET_CORE_2_1,
@@ -71,7 +72,7 @@ export class CdkStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(30),
       memorySize: 256,
       environment: {
-        AWS_ALB_URL: `http://${lb.loadBalancerDnsName}`
+        //AWS_ALB_URL: `http://${lb.loadBalancerDnsName}`
       }
     });
 
@@ -96,6 +97,10 @@ export class CdkStack extends cdk.Stack {
         environment: {
           AWS_S3_BUCKET_NAME: demoBucket.bucketName
         }
+    });
+
+    new LambdaRestApi(this, 'myapi', {
+      handler: idSrvFn,
     });
 
     const api = new RestApi(this, "api");
