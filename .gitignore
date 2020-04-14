@@ -353,3 +353,4 @@ media-cvt-transcode/app/.env
 .DS_Store
 .DS_Store
 **/images/*
+textract-lambda/func/processFunction/index.ts
