@@ -47,7 +47,8 @@ export class TextractLambdaStack extends cdk.Stack {
       runtime: Runtime.NODEJS_12_X,
       environment: {
         TEXTRACT_PUBLISH_TO_SNS_IAM_ROLE_ARN: textractServiceRole.roleArn,
-        TEXTRACT_PUBLISH_SNS_TOPIC_ARN: jobCompletionTopic.topicArn
+        TEXTRACT_PUBLISH_SNS_TOPIC_ARN: jobCompletionTopic.topicArn,
+        REQUEST_SQS_QUEUE_URL: asyncJobsQueue.queueUrl
       }
     });
 
@@ -65,6 +66,7 @@ export class TextractLambdaStack extends cdk.Stack {
     );
 
     asyncProcessor.addEventSource(new SqsEventSource(asyncJobsQueue));
+    bucket.grantReadWrite(asyncProcessor);
 
   }
 }

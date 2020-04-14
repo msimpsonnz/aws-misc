@@ -1,5 +1,5 @@
 {
-  "name": "processfunction",
+  "name": "queueload",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,9 +10,11 @@
   "license": "ISC",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.48",
-    "@types/node": "^13.11.1"
+    "@types/node": "^13.11.1",
+    "@types/uuid": "^7.0.2"
   },
   "dependencies": {
-    "aws-sdk": "^2.656.0"
+    "aws-sdk": "^2.656.0",
+    "uuid": "^7.0.3"
   }
 }
