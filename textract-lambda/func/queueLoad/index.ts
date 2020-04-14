@@ -88,6 +88,7 @@ async function sqsLoad() {
   if (debug) {
     let sqsSingleList: SQS.SendMessageBatchRequestEntry[] = [];
     sqsSingleList.push(batches[0][0]);
+    sqsSingleList.push(batches[0][1]);
     const sqsSingle: SQS.SendMessageBatchRequest = {
       QueueUrl: "https://sqs.ap-southeast-2.amazonaws.com/383358879677/TextractLambdaStack-AsyncJobsE9347181-V5GDJK2ZHH00",
       Entries: sqsSingleList

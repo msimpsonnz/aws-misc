@@ -10,7 +10,7 @@ import {
 import { Queue } from '@aws-cdk/aws-sqs';
 import { NodejsFunction } from '@aws-cdk/aws-lambda-nodejs';
 import { Runtime } from '@aws-cdk/aws-lambda';
-import { SqsEventSource } from '@aws-cdk/aws-lambda-event-sources';
+import { SqsEventSource, SnsEventSource } from '@aws-cdk/aws-lambda-event-sources';
 
 export class TextractLambdaStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -67,6 +67,16 @@ export class TextractLambdaStack extends cdk.Stack {
 
     asyncProcessor.addEventSource(new SqsEventSource(asyncJobsQueue));
     bucket.grantReadWrite(asyncProcessor);
+
+
+    const snsProcessor = new NodejsFunction(this, 'snsProcessor', {
+      entry: './func/processNotify/index.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_12_X,
+      environment: {
+      }
+    });
+    snsProcessor.addEventSource(new SnsEventSource(jobCompletionTopic));
 
   }
 }
