@@ -351,3 +351,5 @@ MigrationBackup/
 *.zip
 media-cvt-transcode/app/.env
 .DS_Store
+/textract-lambda/func/queueLoad/index.ts
+**/images/
