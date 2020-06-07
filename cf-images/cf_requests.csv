@@ -1,0 +1,3 @@
+"Method","Name","# requests","# failures","Median response time","Average response time","Min response time","Max response time","Average Content Size","Requests/s"
+"GET","/1.jpg",513,0,120,166,57,656,251513,8.66
+"None","Total",513,0,120,166,57,656,251513,8.66
