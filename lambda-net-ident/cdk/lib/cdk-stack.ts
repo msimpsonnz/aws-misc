@@ -29,7 +29,7 @@ export class CdkStack extends cdk.Stack {
     });
 
     const idSrvFn = new Function(this, "idSrvFn", {
-      runtime: Runtime.DOTNET_CORE_2_1,
+      runtime: Runtime.DOTNET_CORE_3_1,
       code: new AssetCode(
         "../func/idsrv/src/idsrv/bin/Release/netcoreapp3.1/idsrv.zip"
       ),
@@ -40,31 +40,8 @@ export class CdkStack extends cdk.Stack {
       environment: {}
     });
 
-    // const vpc = new Vpc(this, "idsrv-vpc", {
-    //   cidr: "10.0.0.0/16",
-    //   maxAzs: 2,
-    //   subnetConfiguration: [
-    //     {
-    //       cidrMask: 24,
-    //       name: "publicSubnet",
-    //       subnetType: SubnetType.PUBLIC
-    //     }
-    //   ],
-    //   natGateways: 0
-    // });
-
-    // const lb = new elbv2.ApplicationLoadBalancer(this, "LB", {
-    //   vpc,
-    //   internetFacing: true
-    // });
-
-    // const listener = lb.addListener("Listener", { port: 80 });
-    // listener.addTargets("Targets", {
-    //   targets: [new targets.LambdaTarget(idSrvFn)]
-    // });
-
     const authFn = new Function(this, "authFn", {
-      runtime: Runtime.DOTNET_CORE_2_1,
+      runtime: Runtime.DOTNET_CORE_3_1,
       code: new AssetCode(
         "../func/auth/src/auth/bin/Release/netcoreapp3.1/auth.zip"
       ),

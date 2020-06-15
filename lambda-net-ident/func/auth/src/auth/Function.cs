@@ -12,6 +12,7 @@ using System.Reflection;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -42,44 +43,66 @@ namespace auth
             context.Logger.LogLine(request.AuthorizationToken.ToString());
             context.Logger.LogLine(ablUrl);
             var accessToken = request.AuthorizationToken.Substring("Bearer ".Length).Trim();
-            string certPath = File.Exists("/var/task/idsrv.pfx") ? "/var/task/idsrv.pfx" : "idsrv.pfx";
-            context.Logger.LogLine(certPath);
-            X509Certificate2 cert = new X509Certificate2(certPath, "");
-            SecurityKey key = new X509SecurityKey(cert);
+            context.Logger.LogLine(accessToken);
+            RSA publicRsa = RSA.Create();  
+            publicRsa.FromXmlString("<RSAKeyValue><Modulus>niwszppYY81jN+LO9riMlDVFXCuChYK4NpmnhV7SjRksFfs397jYu07fcGNVWEBppeJ1WZEFILypPjRRfARgwKa4Lu0633cPYG+amyKRYgTGyvbEjvWJ/yvyqimuPrbrI8Bv6FemwCrOoxYIST0pwEHPx6f8SMxKAE9nXP5xcshrudNUZkK9/B17T1HLk9uAzg52cPIM0SChrhfsklcToaycrUQgtFLYWdVEacaSXNo4q1G2ItgHqhM6vHQ5SMcrQ7O+7hlyD5dXkIXItHY4KlHx6yhBp6o0C2237cjIpP1bJaaarFYkHIyWnJ4BET5JXhgVx8j4N6T4S5cNsuy0Rw==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>");
+            RsaSecurityKey signingKey = new RsaSecurityKey(publicRsa);
+            bool authorized = false;
+            var tokenHandler = new JwtSecurityTokenHandler();
+            	try
+	{
+		tokenHandler.ValidateToken(accessToken, new TokenValidationParameters
+		{
+			ValidateIssuerSigningKey = true,
+			ValidateIssuer = false,
+			ValidateAudience = true,
+            ValidAudience="api",
+			IssuerSigningKey = signingKey,
+            ClockSkew=TimeSpan.FromMinutes(5),
+		}, out SecurityToken validatedToken);
+        authorized = true;
+	}
+	catch (Exception ex)
+	{
+		context.Logger.LogLine(ex.Message);
+	}
+	
 
-            var TokenValidationParams = new TokenValidationParameters
-            {
-                IssuerSigningKey=key,
-                ValidateIssuer=false,
-                ValidIssuer=ablUrl,
-                ValidateAudience=true,
-                ValidAudience="api",
-                ClockSkew=TimeSpan.FromMinutes(5),
+
+
+            // var TokenValidationParams = new TokenValidationParameters
+            // {
+            //     //IssuerSigningKey=signingKey,
+            //     ValidateIssuer=false,
+            //     ValidIssuer=ablUrl,
+            //     ValidateAudience=false,
+            //     ValidAudience="api",
+            //     ClockSkew=TimeSpan.FromMinutes(5),
                 
                
-            };
+            // };
 
-            SecurityToken validatedToken;
+            // SecurityToken validatedToken;
 
-            JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
-            bool authorized = false;
+            // JwtSecurityTokenHandler handler = new JwtSecurityTokenHandler();
+            
 
-            try
-            {
-                var token = handler.ValidateToken(accessToken, TokenValidationParams, out validatedToken);
-                foreach (Claim claim in token.Claims){
-                    context.Logger.LogLine($"CLAIM TYPE: {claim.Type} CLAIM VALUE: {claim.Value}");  
-                }  
-                var getClaimIss = token.Claims.FirstOrDefault(c => c.Type == "iss");
-                context.Logger.LogLine($"{getClaimIss}");  
-                if (getClaimIss != null){
-                    authorized = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                context.Logger.LogLine($"Error occurred validating token: {ex.Message}");
-            }
+            // try
+            // {
+            //     var token = handler.ValidateToken(accessToken, TokenValidationParams, out validatedToken);
+            //     foreach (Claim claim in token.Claims){
+            //         context.Logger.LogLine($"CLAIM TYPE: {claim.Type} CLAIM VALUE: {claim.Value}");  
+            //     }  
+            //     var getClaimIss = token.Claims.FirstOrDefault(c => c.Type == "iss");
+            //     context.Logger.LogLine($"{getClaimIss}");  
+            //     if (getClaimIss != null){
+            //         authorized = true;
+            //     }
+            // }
+            // catch (Exception ex)
+            // {
+            //     context.Logger.LogLine($"Error occurred validating token: {ex.Message}");
+            // }
         
             context.Logger.LogLine($"{authorized}");
 

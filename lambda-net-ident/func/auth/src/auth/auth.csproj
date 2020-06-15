@@ -11,10 +11,10 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.5.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="../../../../certs/idsrv.pfx">
+  <!-- <ItemGroup>
+    <Content Include="../../../../certs/idsrv.crt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>  
-  </ItemGroup>
+  </ItemGroup> -->
 
 </Project>

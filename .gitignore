@@ -353,3 +353,5 @@ media-cvt-transcode/app/.env
 .DS_Store
 .DS_Store
 **/images/*
+.DS_Store
+lambda-net-ident/.DS_Store

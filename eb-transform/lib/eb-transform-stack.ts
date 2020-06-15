@@ -75,7 +75,7 @@ export class EbTransformStack extends cdk.Stack {
         handler: 'handler',
         runtime: Runtime.NODEJS_12_X,
         memorySize: 512,
-        timeout: cdk.Duration.seconds(30),
+        timeout: cdk.Duration.seconds(60),
         role: role_fnGetData,
         environment: {
           DB_HOST: database.dbInstanceEndpointAddress,
@@ -115,6 +115,19 @@ export class EbTransformStack extends cdk.Stack {
       })
 
     processEvents.addTarget(new LambdaFunction(logger))
+
+    processEvents.addTarget(
+      new AddTargetWithInput(
+        "T2",
+        logger.functionArn,
+        RuleTargetInput.fromObject({
+          id: EventField.fromPath("$.id"),
+          deployment_time: EventField.fromPath("$.detail.deployment_time"),
+          version: EventField.fromPath("$.detail.version"),
+        })
+      )
+    );
+
 
     processEvents.addTarget(
       new AddTargetWithInput(
@@ -159,14 +172,6 @@ export class EbTransformStack extends cdk.Stack {
       )
     );
 
-    role_fnWriteData.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [eventBus.eventBusArn],
-        actions: ['events:PutEvents'],
-      })
-    );
-
     const fnWriteData = new lambda.NodejsFunction(
       this,
       'fnWriteData',
@@ -175,9 +180,9 @@ export class EbTransformStack extends cdk.Stack {
         handler: 'handler',
         runtime: Runtime.NODEJS_12_X,
         timeout: cdk.Duration.seconds(10),
-        role: role_fnGetData,
+        role: role_fnWriteData,
         environment: {
-          AWS_RDS_ENDPOINT: database.dbInstanceEndpointAddress,
+          AWS_S3_BUCKET: bucket.bucketName,
         },
       }
     );

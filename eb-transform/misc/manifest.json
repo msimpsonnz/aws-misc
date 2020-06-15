@@ -1,0 +1,12 @@
+{
+    "fileLocations": [
+        {
+            "URIPrefixes": [
+                "https://ebtransformstack-bucket43879c71-ehl3coyqb2by.s3-ap-southeast-2.amazonaws.com/events/"
+            ]
+        }
+    ],
+    "globalUploadSettings": {
+        "format": "JSON"
+    }
+}

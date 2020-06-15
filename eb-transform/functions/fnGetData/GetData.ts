@@ -2,6 +2,7 @@ import { Database } from './database';
 import { Connection } from 'typeorm';
 import { Events } from './Events';
 import { EventBridge } from 'aws-sdk';
+import { url } from 'inspector';
 
 const eventbridge = new EventBridge();
 
@@ -11,6 +12,22 @@ export const GetRecords = async (id: string) => {
   let dbConn: Connection = await database.getConnection();
 
   const records = await dbConn.getRepository(Events).find();
+
+  if (records.length == 0) {
+    for (let index = 0; index < 10; index++) {
+    const eventData: Events = {
+        project_name: 'demo-project',
+        version: Math.floor(Math.random() * Math.floor(10)).toString(),
+        deployment_time: new Date().toISOString(),
+        deployment_user: `deployment_user_${index}`,
+        url: 'url',
+        merge_hash: 'merge_hash'
+      }
+    
+      const events = await dbConn.getRepository(Events).save(eventData);
+    }
+  }
+
   const batches = await batchEvents(records);
 
   for await (let batch of batches) {
@@ -31,7 +48,7 @@ export const GetRecords = async (id: string) => {
       Entries: entries,
     };
     const req = await eventbridge.putEvents(params).promise();
-    console.log(JSON.stringify(req))
+    console.log(JSON.stringify(req));
   }
 };
 

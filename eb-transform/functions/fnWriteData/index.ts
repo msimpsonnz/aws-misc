@@ -1,9 +1,9 @@
-import { Handler, Context } from 'aws-lambda';
+import { Handler, Context, SQSEvent } from 'aws-lambda';
 import { PutRecords } from './PutData'
 
-export const handler: Handler = async (event: any, context: Context) => {
+export const handler: Handler = async (event: SQSEvent, context: Context) => {
   try {
-      await PutRecords(event.id)
+      await PutRecords(event)
     return {
       statusCode: 200,
     };

@@ -24,17 +24,16 @@ namespace auth.Tests
         {
             TestLambdaContext context;
             APIGatewayCustomAuthorizerRequest request;
-            APIGatewayProxyResponse response;
+            APIGatewayCustomAuthorizerResponse response;
 
             Functions functions = new Functions();
 
 
             request = new APIGatewayCustomAuthorizerRequest();
-            request.AuthorizationToken = "Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IkFoMTQ4VjFTYk9sakdldmhoN1paMnciLCJ0eXAiOiJhdCtqd3QifQ.eyJuYmYiOjE1ODU2NDY3MDMsImV4cCI6MTU4NTY1MDMwMywiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiYXVkIjoiYXBpIiwiY2xpZW50X2lkIjoiY2xpZW50Iiwic2NvcGUiOlsiYXBpIl19.mim50XzNVBHCd-KjBj2-plUGI6o4xWZ1bkiNUK0CzSoyjr8vi-pNSslZDfH6spYzrAuAmnnIn3b75Te-BbKZfcV-ZYhoQDtN88XIi0Ri1AEVQ-5OLAs24PoAXox020heohsfqixGUsXkVbF7exU-RztDj-bMFtHi8-hv6JGomEZCvX29AUV1vHKc2R7-SHD8XPcblLObgCOWEv9WyCqkQ-iC6AWyjhMpnV8V3cr-Ugc_1LLL3jadGHDmwnAIl7UQJrYY0zwF262khaB3c_V1Rs-B4Amnwa_qQejAUFpD5rAMDzpefzsNzZ71oHUawgXCDc2YtcbcOhaNxh-MZBC6FA";
+            request.AuthorizationToken = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE1OTIyMTUyNTksImV4cCI6MTU5MjIxODg1OSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiYXVkIjoiYXBpIiwiY2xpZW50X2lkIjoiY2xpZW50Iiwic2NvcGUiOlsiYXBpIl19.ThkNwMdNwVIPhdipNQE3Oh7VPjdJSFF_VdXbPEs97oNy_d1NfYSSa_VbItiqQiTJzvGn2KxqtbvSZVZ6VlvIjnsTApKJcdMEKHYYeEqicZ0ZPbpXEwZFNW5LpGa4qf_hk7ia50zfijxK44w6NVRbdQmVZJJyZwP_wcDfrB6gKx_Hcm6nDsPBiOlSXZaQw47FolGv7MM80IuB7kEydxaqOuBIG3YTz4ir9eGB_llQJXmtBZ5MfLjjFjfyw_KpqyipHGgwEOtBDtzCiLJlW1f00rx8aZFRYfTl-2auFBc7Y8AeolVq0X-yap89-ar7VTakl_vHNI9Y1DQ139r1yYiSPw";
             context = new TestLambdaContext();
             response = functions.Get(request, context);
-            Assert.Equal(200, response.StatusCode);
-            Assert.Equal("Hello AWS Serverless", response.Body);
+            Assert.Equal("", response.PolicyDocument.Version);
         }
     }
 }
