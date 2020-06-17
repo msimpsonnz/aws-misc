@@ -30,7 +30,7 @@ namespace auth.Tests
 
 
             request = new APIGatewayCustomAuthorizerRequest();
-            request.AuthorizationToken = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE1OTIyMTUyNTksImV4cCI6MTU5MjIxODg1OSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo1MDAwIiwiYXVkIjoiYXBpIiwiY2xpZW50X2lkIjoiY2xpZW50Iiwic2NvcGUiOlsiYXBpIl19.ThkNwMdNwVIPhdipNQE3Oh7VPjdJSFF_VdXbPEs97oNy_d1NfYSSa_VbItiqQiTJzvGn2KxqtbvSZVZ6VlvIjnsTApKJcdMEKHYYeEqicZ0ZPbpXEwZFNW5LpGa4qf_hk7ia50zfijxK44w6NVRbdQmVZJJyZwP_wcDfrB6gKx_Hcm6nDsPBiOlSXZaQw47FolGv7MM80IuB7kEydxaqOuBIG3YTz4ir9eGB_llQJXmtBZ5MfLjjFjfyw_KpqyipHGgwEOtBDtzCiLJlW1f00rx8aZFRYfTl-2auFBc7Y8AeolVq0X-yap89-ar7VTakl_vHNI9Y1DQ139r1yYiSPw";
+            request.AuthorizationToken = "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE1OTIyMTY3MzMsImV4cCI6MTU5MjIyMDMzMywiaXNzIjoiaHR0cHM6Ly91ZDg1Y3JzOTM5LmV4ZWN1dGUtYXBpLmFwLXNvdXRoZWFzdC0yLmFtYXpvbmF3cy5jb20vcHJvZCIsImF1ZCI6ImFwaSIsImNsaWVudF9pZCI6ImNsaWVudCIsInNjb3BlIjpbImFwaSJdfQ.bGKaVK1V9M2kGPyK3EFaaNG2h3ceLQJ-1SNv6CZr9y0TUSDaTiNsCcXLVbxVrB2tzXzDn3fBG313uO-T35TlVhGy4EwfZaz2yY0Oh5_mIMvKlYSqA9PjoFQklTZCOsMwX30nVeXh6LPlbuRIA2gvnSEhLOXKr0ydtXA_KQROHGKbimQwbZAuCdPL6LPHX7mffw4nYfBCfZ7J0HL6_-LW8JRccoubsTa6ESnTNoQvoXxKSL2-HA96vku3E9u5kJEgT_BTuPrQ2F4z_s40HSC4iQHY3SMlmpzLVnwrlWD_wBPNO28yCqxY5TjpVv23Q6zHEAIkVwOyiVyhwX6Dz9FRbA";
             context = new TestLambdaContext();
             response = functions.Get(request, context);
             Assert.Equal("", response.PolicyDocument.Version);

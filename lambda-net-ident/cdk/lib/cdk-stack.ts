@@ -40,18 +40,28 @@ export class CdkStack extends cdk.Stack {
       environment: {}
     });
 
-    const authFn = new Function(this, "authFn", {
-      runtime: Runtime.DOTNET_CORE_3_1,
-      code: new AssetCode(
-        "../func/auth/src/auth/bin/Release/netcoreapp3.1/auth.zip"
-      ),
-      handler: "auth::auth.Functions::Get",
-      timeout: cdk.Duration.seconds(30),
-      memorySize: 256,
+    // const authFn = new Function(this, "authFn", {
+    //   runtime: Runtime.DOTNET_CORE_3_1,
+    //   code: new AssetCode(
+    //     "../func/auth/src/auth/bin/Release/netcoreapp3.1/auth.zip"
+    //   ),
+    //   handler: "auth::auth.Functions::Get",
+    //   timeout: cdk.Duration.seconds(30),
+    //   memorySize: 256,
+    //   environment: {
+    //     //AWS_ALB_URL: `http://${lb.loadBalancerDnsName}`
+    //   }
+    // });
+
+    const authFn = new NodejsFunction(this, 'authFn', {
+      entry: '../func/ValidateJWT/index.ts',
+      handler: 'handler',
+      runtime: Runtime.NODEJS_12_X,
       environment: {
-        //AWS_ALB_URL: `http://${lb.loadBalancerDnsName}`
       }
-    });
+  });
+
+
 
     const getSignedUrlRole = new iam.Role(this, "getSignedUrlRole", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com")
