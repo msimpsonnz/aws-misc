@@ -355,3 +355,5 @@ media-cvt-transcode/app/.env
 **/images/*
 .DS_Store
 lambda-net-ident/.DS_Store
+.DS_Store
+iot-sub/localAPI/certs/

@@ -1,0 +1,6 @@
+version: '3.3'
+services:
+  web:
+    image: 383358879677.dkr.ecr.ap-southeast-2.amazonaws.com/aws-cdk/assets:latest
+    ports:
+      - "5000:5000"

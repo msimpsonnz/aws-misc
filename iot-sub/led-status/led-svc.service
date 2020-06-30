@@ -1,0 +1,13 @@
+[Unit]
+Description=LED.Status
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u main.py
+WorkingDirectory=/src/
+StandardOutput=inherit
+StandardError=inherit
+ExecStop=/usr/bin/python3 -c 'import unicornhat; unicornhat.off()'
+
+[Install]
+WantedBy=multi-user.target
