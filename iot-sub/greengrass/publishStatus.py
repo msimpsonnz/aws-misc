@@ -16,13 +16,14 @@ def get_input_topic(context):
 
 def function_handler(event, context):
     try:
+        logging.info(json.dumps(event))
         input_topic = get_input_topic(context)
         if event['action'] == 'Remove':
             print('Stop Unicorn')
-            os.system("cd /src && ./stop.sh")
+            os.system("pkill -f /src/app.py && /usr/bin/python3 -c 'import unicornhat as unicorn;unicorn.clear();unicorn.off()'")
         if event['action'] == 'Created':
             print('Start Unicorn')
-            os.system("cd /src && ./start.sh")
+            os.system("/usr/bin/python3 /src/app.py &")
         msg = json.dumps(event)
         response = 'Invoked on topic "%s" with message "%s"' % (input_topic, msg)
         logging.info(response)
