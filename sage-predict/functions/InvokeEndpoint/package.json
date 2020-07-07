@@ -1,0 +1,22 @@
+{
+  "name": "invokeendpoint",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.710.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.58",
+    "@types/jest": "^26.0.4",
+    "@types/node": "^14.0.18",
+    "jest": "^26.1.0",
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.9.6"
+  }
+}
