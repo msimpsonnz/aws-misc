@@ -357,3 +357,6 @@ media-cvt-transcode/app/.env
 lambda-net-ident/.DS_Store
 .DS_Store
 iot-sub/localAPI/certs/
+
+
+**/.parcel-cache/*

@@ -1,0 +1,1 @@
+docker run -e AWS_SQS_QUEUE_URL=https://sqs.ap-southeast-2.amazonaws.com/383358879677/SagePredictInfraStack-queue276F7297-REGVSVKWOX76 -e AWS_DEFAULT_REGION=ap-southeast-2 scikit

@@ -1,18 +1,16 @@
 import os
 import json
+import numpy as np
 import boto3
+from joblib import load
 
-ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
-runtime= boto3.client('runtime.sagemaker')
-
-def invoke_endpoint(payload):
-    response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME, ContentType='text/csv', Body=payload)
-    return response
-
-def process_req(event):
-    data = json.loads(json.dumps(event))
-    payload = data['data']
-    result = invoke_endpoint(payload)
-    print(result)
+clf = load('/app/model.joblib')
+client = boto3.client('sqs', region_name=os.environ['AWS_DEFAULT_REGION'])
 
 
+response = client.receive_message(QueueUrl=os.environ['AWS_SQS_QUEUE_URL'])
+
+for message in response:
+    arr = np.array([message['body']])
+    res = clf.predict(arr)
+    print(res)
