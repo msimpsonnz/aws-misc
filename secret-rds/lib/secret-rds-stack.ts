@@ -148,8 +148,8 @@ export class SecretRdsStack extends Stack {
     // Account and region may different from the pipeline's.
     pipeline.addApplicationStage(new SecretRdsPipelineStack(this, 'Prod', {
       env: {
-        account: process.env.AWS_CDK_DEFAULT_ACCOUNT_ID,
-        region: process.env.AWS_CDK_DEFAULT_REGION,
+        account: '383358879677',
+        region: 'ap-southeast-2',
       }
     }));
   }
