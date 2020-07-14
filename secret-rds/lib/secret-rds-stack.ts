@@ -1,5 +1,6 @@
 // Forked from https://github.com/cdk-patterns/serverless/tree/master/the-rds-proxy
-import * as cdk from '@aws-cdk/core';
+import { CfnOutput, Construct, RemovalPolicy, Stack, StackProps, Stage, StageProps } from '@aws-cdk/core';
+import { CdkPipeline, SimpleSynthAction } from '@aws-cdk/pipelines';
 import {
   InstanceClass,
   InstanceType,
@@ -13,9 +14,13 @@ import { Secret } from '@aws-cdk/aws-secretsmanager';
 import { StringParameter } from '@aws-cdk/aws-ssm';
 import * as lambda from '@aws-cdk/aws-lambda';
 import apigw = require('@aws-cdk/aws-apigatewayv2');
+import codepipeline = require('@aws-cdk/aws-codepipeline')
+import codepipeline_actions = require('@aws-cdk/aws-codepipeline-actions')
+import codecommit = require('@aws-cdk/aws-codecommit')
 
-export class SecretRdsStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+
+class RDSProxyStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     // Setup networking
@@ -52,7 +57,7 @@ export class SecretRdsStack extends cdk.Stack {
         InstanceSize.SMALL
       ),
       vpc,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: RemovalPolicy.DESTROY,
       deletionProtection: false,
       securityGroups: [sgProxy2RDS],
     });
@@ -92,6 +97,60 @@ export class SecretRdsStack extends cdk.Stack {
       defaultIntegration: new apigw.LambdaProxyIntegration({
         handler: rdsLambda,
       }),
+      createDefaultStage: true,
+    });
+
+    const apiURL = new CfnOutput(this, 'apiURL', {
+      value: api.url ?? 'ERROR with deployment'
     });
   }
 }
+
+class SecretRdsPipelineStack extends Stage {
+  constructor(scope: Construct, id: string, props?: StageProps) {
+    super(scope, id, props);
+
+    const rdsProxyStack = new RDSProxyStack(this, 'rdsProxyStack');
+  }
+}
+
+export class SecretRdsStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    const sourceRepo = codecommit.Repository.fromRepositoryName(this, 'sourceRepo', 'rds-secret-demo')
+
+    const sourceArtifact = new codepipeline.Artifact();
+    const cloudAssemblyArtifact = new codepipeline.Artifact();
+
+    const pipeline = new CdkPipeline(this, 'Pipeline', {
+      pipelineName: 'SecretRdsPipelineStack',
+      cloudAssemblyArtifact,
+      sourceAction: new codepipeline_actions.CodeCommitSourceAction({
+        actionName: 'CodeCommit',
+        repository: sourceRepo,
+        output: sourceArtifact,
+      }),
+      synthAction: SimpleSynthAction.standardNpmSynth({
+        sourceArtifact,
+        cloudAssemblyArtifact,
+
+        // Use this if you need a build step (if you're not using ts-node
+        // or if you have TypeScript Lambdas that need to be compiled).
+        buildCommand: 'cd ./secret-rds && npm run build',
+      }),
+
+
+
+    });
+
+    // Do this as many times as necessary with any account and region
+    // Account and region may different from the pipeline's.
+    pipeline.addApplicationStage(new SecretRdsPipelineStack(this, 'Prod', {
+      env: {
+        account: process.env.AWS_CDK_DEFAULT_ACCOUNT_ID,
+        region: process.env.AWS_CDK_DEFAULT_REGION,
+      }
+    }));
+  }
+}  
