@@ -11,6 +11,9 @@ import {
 import * as rds from '@aws-cdk/aws-rds';
 import { Secret } from '@aws-cdk/aws-secretsmanager';
 import { StringParameter } from '@aws-cdk/aws-ssm';
+import * as lambda from '@aws-cdk/aws-lambda';
+import * as nodejs from '@aws-cdk/aws-lambda-nodejs';
+import apigw = require('@aws-cdk/aws-apigatewayv2');
 
 
 export class RDSProxyStack extends Stack {
@@ -75,6 +78,34 @@ export class RDSProxyStack extends Stack {
       value: secretRDS.secretArn ?? 'ERROR with deployment',
       exportName: 'rds-secretArn'
     });
+
+        // Lambda to Interact with RDS Proxy
+        const rdsLambda = new nodejs.NodejsFunction(this, 'rdsProxyHandler', {
+          runtime: lambda.Runtime.NODEJS_12_X,
+          entry: './functions/rds/index.ts',
+          handler: 'index.handler',
+          vpc: vpc,
+          securityGroups: [sgLambda2Proxy],
+          environment: {
+            PROXY_ENDPOINT: proxy.endpoint,
+            RDS_SECRET_NAME: `${id}-rds-credentials`,
+          },
+        });
+    
+        secretRDS.grantRead(rdsLambda);
+    
+        // defines an API Gateway Http API resource backed by our "rdsLambda" function.
+        const api = new apigw.HttpApi(this, 'Endpoint', {
+          defaultIntegration: new apigw.LambdaProxyIntegration({
+            handler: rdsLambda,
+          }),
+          createDefaultStage: true,
+        });
+    
+        const apiURL = new CfnOutput(this, 'apiURL', {
+          value: api.url ?? 'ERROR with deployment',
+          exportName: 'rds-proxy-api-url'
+        });
 
   }
 }
