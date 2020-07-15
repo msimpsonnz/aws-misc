@@ -110,7 +110,12 @@ class SecretRdsPipelineStack extends Stage {
   constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
 
-    const rdsProxyStack = new RDSProxyStack(this, 'rdsProxyStack');
+    new RDSProxyStack(this, 'rdsProxyStack', {
+      env: {
+        account: '383358879677',
+        region: 'ap-southeast-2',
+      }
+    });
   }
 }
 
@@ -139,6 +144,7 @@ export class SecretRdsStack extends Stack {
         // or if you have TypeScript Lambdas that need to be compiled).
         buildCommand: 'cd ./secret-rds && npm run build',
       }),
+      
 
 
 
