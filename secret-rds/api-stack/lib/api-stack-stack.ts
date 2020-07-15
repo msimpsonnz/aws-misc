@@ -1,3 +1,13 @@
+import * as cdk from '@aws-cdk/core';
+
+export class ApiStackStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+    super(scope, id, props);
+
+    // The code that defines your stack goes here
+  }
+}
+
 // Forked from https://github.com/cdk-patterns/serverless/tree/master/the-rds-proxy
 import { CfnOutput, Construct, RemovalPolicy, Stack, StackProps, Stage, StageProps } from '@aws-cdk/core';
 import { CdkPipeline, SimpleSynthAction } from '@aws-cdk/pipelines';
@@ -19,63 +29,17 @@ import codepipeline_actions = require('@aws-cdk/aws-codepipeline-actions')
 import codecommit = require('@aws-cdk/aws-codecommit')
 
 
-class RDSProxyStack extends Stack {
+export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // Setup networking
-    const vpc = new Vpc(this, 'Vpc');
-    // Add Security Groups
-    const sgLambda2Proxy = new SecurityGroup(this, 'sgLambda2Proxy', { vpc });
-    const sgProxy2RDS = new SecurityGroup(this, 'sgProxy2RDS', { vpc });
-    sgProxy2RDS.addIngressRule(sgProxy2RDS, Port.tcp(3306));
-    sgProxy2RDS.addIngressRule(sgLambda2Proxy, Port.tcp(3306));
-
-    const secretRDS = new Secret(this, 'secretRDS', {
-      secretName: id + '-rds-credentials',
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({
-          username: 'rdsuser',
-        }),
-        excludePunctuation: true,
-        includeSpace: false,
-        generateStringKey: 'password',
-      },
-    });
-
-    new StringParameter(this, 'ssmParamSecretRDSArn', {
-      parameterName: 'demo-secret-rds',
-      stringValue: secretRDS.secretArn,
-    });
-
-    const rdsInstance = new rds.DatabaseInstance(this, 'DBInstance', {
-      engine: rds.DatabaseInstanceEngine.MYSQL,
-      masterUsername: secretRDS.secretValueFromJson('username').toString(),
-      masterUserPassword: secretRDS.secretValueFromJson('password'),
-      instanceType: InstanceType.of(
-        InstanceClass.BURSTABLE2,
-        InstanceSize.SMALL
-      ),
-      vpc,
-      removalPolicy: RemovalPolicy.DESTROY,
-      deletionProtection: false,
-      securityGroups: [sgProxy2RDS],
-    });
-
-    // Create an RDS Proxy
-    const proxy = rdsInstance.addProxy(id + '-proxy', {
-      secret: secretRDS,
-      debugLogging: true,
-      vpc,
-      securityGroups: [sgProxy2RDS],
-    });
-
-    // Workaround for bug where TargetGroupName is not set but required
-    let targetGroup = proxy.node.children.find((child: any) => {
-      return child instanceof rds.CfnDBProxyTargetGroup;
-    }) as rds.CfnDBProxyTargetGroup;
-
-    targetGroup.addPropertyOverride('TargetGroupName', 'default');
+    // Import Secret
+    const rdsSecretArn = cdk.Fn.importValue("rds-secretArn");
+    const rdsSecret =Secret.fromSecretArn(
+      this,
+      "rds-secretArn",
+      rdsSecretArn
+    );
 
     // Lambda to Interact with RDS Proxy
     const rdsLambda = new lambda.Function(this, 'rdsProxyHandler', {
@@ -86,7 +50,7 @@ class RDSProxyStack extends Stack {
       securityGroups: [sgLambda2Proxy],
       environment: {
         PROXY_ENDPOINT: proxy.endpoint,
-        RDS_SECRET_NAME: id + '-rds-credentials',
+        RDS_SECRET_NAME: 'RDSProxyStack-rds-credentials',
       },
     });
 
@@ -119,7 +83,7 @@ class SecretRdsPipelineStack extends Stage {
   }
 }
 
-export class SecretRdsStack extends Stack {
+export class ApiStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -142,7 +106,7 @@ export class SecretRdsStack extends Stack {
 
         // Use this if you need a build step (if you're not using ts-node
         // or if you have TypeScript Lambdas that need to be compiled).
-        buildCommand: 'cd ./secret-rds && npm run build',
+        buildCommand: 'npm run build',
       }),
       
 
