@@ -5,7 +5,7 @@ import unicornhat as unicorn
 import fonts
 
 unicorn.set_layout(unicorn.HAT)
-unicorn.rotation(0)
+unicorn.rotation(180)
 unicorn.brightness(0.5)
 
 r = 255

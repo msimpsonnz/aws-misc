@@ -15,17 +15,82 @@ export class PipelineStackStack extends cdk.Stack {
       'rds-proxy-repo'
     );
 
-    const project = new codebuild.PipelineProject(this, 'MyProject', {
+    const cdkOut = new codepipeline.Artifact('cdkOut');
+
+    const buildProject = new codebuild.PipelineProject(this, 'buildProject', {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
+        env: {
+          'exported-variables': [
+            'APIURL',
+          ],
+        },
         phases: {
           install: {
-            commands: 'npm install',
+            commands: [
+              'apt install jq',
+              'npm install -g aws-cdk',
+              'npm install',
+              'npm --prefix ./functions/rds install ./functions/rds'
+            ]
           },
           build: {
             commands: [
               'npm run build',
-              'npm run cdk deploy --require-approval never',
+              'echo $ENVIRONMENT',
+              'cdk deploy --context environment=$ENVIRONMENT --require-approval=never --verbose --outputs-file cdkout.json',
+              'cat cdkout.json',
+              "export APIURL=$(cat cdkout.json | jq -r '..| select(type != \"null\")' | grep \"^https\")",
+              "echo $APIURL"
+            ],
+          },
+        },
+      }),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
+      },
+    });
+
+    const destroyTestProject = new codebuild.PipelineProject(this, 'destroyTestProject', {
+      buildSpec: codebuild.BuildSpec.fromObject({
+        version: '0.2',
+        env: {
+          'exported-variables': [
+            'APIURL',
+          ],
+        },
+        phases: {
+          install: {
+            commands: [
+              'npm install -g aws-cdk',
+              'npm install',
+            ]
+          },
+          build: {
+            commands: [
+              'echo $ENVIRONMENT',
+              'cdk destroy --context environment=$ENVIRONMENT --force --verbose',
+            ],
+          },
+        },
+      }),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_2_0,
+      },
+    });
+
+    const testProject = new codebuild.PipelineProject(this, 'testProject', {
+      buildSpec: codebuild.BuildSpec.fromObject({
+        version: '0.2',
+        phases: {
+          install: {
+            commands: [
+            ]
+          },
+          build: {
+            commands: [
+              "echo $APIURL",
+              "curl --silent --show-error --fail $APIURL/$COMMIT_ID"
             ],
           },
         },
@@ -42,16 +107,52 @@ export class PipelineStackStack extends cdk.Stack {
       output: sourceOutput,
     });
     const buildAction = new codepipeline_actions.CodeBuildAction({
-      actionName: 'CodeBuild',
-      project,
+      actionName: 'DeployTest',
+      project: buildProject,
       input: sourceOutput,
+      environmentVariables: {
+        ENVIRONMENT: {
+          value: 'TEST',
+        },
+      },
     });
-
-    // const validatAction = new codepipeline_actions.LambdaInvokeAction({
-    //   actionName: 'CodeBuild',
-    //   project,
-    //   input: sourceOutput
-    // });
+    const testAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'Test',
+      type: codepipeline_actions.CodeBuildActionType.TEST,
+      project: testProject,
+      input: sourceOutput,
+      environmentVariables: {
+        COMMIT_ID: {
+          value: sourceAction.variables.commitId,
+        },
+        APIURL: {
+          value: buildAction.variable('APIURL'),
+        },
+      },
+    });
+    const destroyTest = new codepipeline_actions.CodeBuildAction({
+      actionName: 'DestroyTest',
+      project: destroyTestProject,
+      input: sourceOutput,
+      environmentVariables: {
+        ENVIRONMENT: {
+          value: 'TEST',
+        }
+      }
+    });
+    const approval = new codepipeline_actions.ManualApprovalAction({
+      actionName: 'Approval'
+    })
+    const deployProd = new codepipeline_actions.CodeBuildAction({
+      actionName: 'DeployProd',
+      project: buildProject,
+      input: sourceOutput,
+      environmentVariables: {
+        ENVIRONMENT: {
+          value: 'PROD',
+        },
+      },
+    });
 
     const pipeline = new codepipeline.Pipeline(this, 'MyPipeline', {
       stages: [
@@ -60,18 +161,41 @@ export class PipelineStackStack extends cdk.Stack {
           actions: [sourceAction],
         },
         {
-          stageName: 'Build',
+          stageName: 'DeployTest',
           actions: [buildAction],
+        },
+        {
+          stageName: 'TestTest',
+          actions: [testAction],
+        },
+        {
+          stageName: 'ApprovalDestroyTest',
+          actions: [approval],
+        },
+        // {
+        //   stageName: 'DestroyTest',
+        //   actions: [destroyTest],
+        // },
+        {
+          stageName: 'ApprovalDeployProd',
+          actions: [approval],
+        },
+        {
+          stageName: 'DeployProd',
+          actions: [deployProd],
+        },
+        {
+          stageName: 'TestProd',
+          actions: [testAction],
         },
       ],
     });
 
-    pipeline.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: ['*'],
-        actions: ['*'],
-      })
-    );
+    pipeline.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+
+    buildProject.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+    destroyTestProject.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+
+
   }
 }
