@@ -9,6 +9,11 @@ exports.handler = async function(event:any) {
   console.log("request:", JSON.stringify(event, undefined, 2));
   console.log(`Getting secret for ${process.env.RDS_SECRET_NAME}`);
   
+  // // Break code for demo
+  // if(event.rawQueryString === ''){
+  //   return sendRes(500, 'I made this error!');
+  // }
+
   // All requests get routed to this function, when opened via browser it looks for a favicon.
   if(event.rawPath === '/favicon.ico'){
     return sendRes(404, 'no favicon here');

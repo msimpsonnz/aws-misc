@@ -65,19 +65,7 @@ export class RDSProxyStack extends Stack {
       });
 
       rdsSecret = myUserSecret
-    }
-
-    // Create Secret for RDS Proxy
-    const secretRDSProxy = new Secret(this, 'secretRDSProxy', {
-      generateSecretString: {
-        secretStringTemplate: JSON.stringify({
-          username: 'rdsproxyuser',
-        }),
-        excludePunctuation: true,
-        includeSpace: false,
-        generateStringKey: 'password',
-      },
-    });    
+    }  
 
     // Create an RDS Proxy
     const proxy = rdsInstance.addProxy(`${environment}-rds-proxy`, {
@@ -103,11 +91,11 @@ export class RDSProxyStack extends Stack {
       securityGroups: [sgLambda2Proxy],
       environment: {
         PROXY_ENDPOINT: proxy.endpoint,
-        RDS_SECRET_NAME: secretRDSProxy.secretArn
+        RDS_SECRET_NAME: rdsSecret.secretArn
       },
     });
 
-    secretRDSProxy.grantRead(rdsLambda);
+    rdsSecret.grantRead(rdsLambda);
 
     // defines an API Gateway Http API resource backed by our "rdsLambda" function.
     const api = new apigw.HttpApi(this, 'Endpoint', {

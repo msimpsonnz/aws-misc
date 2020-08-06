@@ -17,7 +17,7 @@ export class PipelineStackStack extends cdk.Stack {
 
     const cdkOut = new codepipeline.Artifact('cdkOut');
 
-    const buildProject = new codebuild.PipelineProject(this, 'buildProject', {
+    const deployProject = new codebuild.PipelineProject(this, 'buildProject', {
       buildSpec: codebuild.BuildSpec.fromObject({
         version: '0.2',
         env: {
@@ -106,9 +106,9 @@ export class PipelineStackStack extends cdk.Stack {
       repository,
       output: sourceOutput,
     });
-    const buildAction = new codepipeline_actions.CodeBuildAction({
+    const deployTestAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'DeployTest',
-      project: buildProject,
+      project: deployProject,
       input: sourceOutput,
       environmentVariables: {
         ENVIRONMENT: {
@@ -116,21 +116,7 @@ export class PipelineStackStack extends cdk.Stack {
         },
       },
     });
-    const testAction = new codepipeline_actions.CodeBuildAction({
-      actionName: 'Test',
-      type: codepipeline_actions.CodeBuildActionType.TEST,
-      project: testProject,
-      input: sourceOutput,
-      environmentVariables: {
-        COMMIT_ID: {
-          value: sourceAction.variables.commitId,
-        },
-        APIURL: {
-          value: buildAction.variable('APIURL'),
-        },
-      },
-    });
-    const destroyTest = new codepipeline_actions.CodeBuildAction({
+    const destroyTestAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'DestroyTest',
       project: destroyTestProject,
       input: sourceOutput,
@@ -143,13 +129,41 @@ export class PipelineStackStack extends cdk.Stack {
     const approval = new codepipeline_actions.ManualApprovalAction({
       actionName: 'Approval'
     })
-    const deployProd = new codepipeline_actions.CodeBuildAction({
+    const deployProdAction = new codepipeline_actions.CodeBuildAction({
       actionName: 'DeployProd',
-      project: buildProject,
+      project: deployProject,
       input: sourceOutput,
       environmentVariables: {
         ENVIRONMENT: {
           value: 'PROD',
+        },
+      },
+    });
+    const testTestAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'TestTest',
+      type: codepipeline_actions.CodeBuildActionType.TEST,
+      project: testProject,
+      input: sourceOutput,
+      environmentVariables: {
+        COMMIT_ID: {
+          value: sourceAction.variables.commitId,
+        },
+        APIURL: {
+          value: deployTestAction.variable('APIURL'),
+        },
+      },
+    });
+    const testProdAction = new codepipeline_actions.CodeBuildAction({
+      actionName: 'TestProd',
+      type: codepipeline_actions.CodeBuildActionType.TEST,
+      project: testProject,
+      input: sourceOutput,
+      environmentVariables: {
+        COMMIT_ID: {
+          value: sourceAction.variables.commitId,
+        },
+        APIURL: {
+          value: deployProdAction.variable('APIURL'),
         },
       },
     });
@@ -162,38 +176,38 @@ export class PipelineStackStack extends cdk.Stack {
         },
         {
           stageName: 'DeployTest',
-          actions: [buildAction],
+          actions: [deployTestAction],
         },
         {
           stageName: 'TestTest',
-          actions: [testAction],
+          actions: [testTestAction],
         },
         {
           stageName: 'ApprovalDestroyTest',
           actions: [approval],
         },
-        // {
-        //   stageName: 'DestroyTest',
-        //   actions: [destroyTest],
-        // },
+        {
+          stageName: 'DestroyTest',
+          actions: [destroyTestAction],
+        },
         {
           stageName: 'ApprovalDeployProd',
           actions: [approval],
         },
         {
           stageName: 'DeployProd',
-          actions: [deployProd],
+          actions: [deployProdAction],
         },
         {
           stageName: 'TestProd',
-          actions: [testAction],
+          actions: [testProdAction],
         },
       ],
     });
 
     pipeline.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
 
-    buildProject.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
+    deployProject.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
     destroyTestProject.role?.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'));
 
 
