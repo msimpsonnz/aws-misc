@@ -1,0 +1,1 @@
+python3 jobs.py --endpoint a30maggwfrw5zh-ats.iot.ap-southeast-2.amazonaws.com --root-ca /greengrass/certs/root.ca.pem --cert /greengrass/certs/0ae7aae037.cert.pem --key /greengrass/certs/0ae7aae037.private.key --thing-name mjs_demo_iot_group_Core

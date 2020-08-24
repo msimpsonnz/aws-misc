@@ -4,52 +4,8 @@ import DynamoDB from 'aws-sdk/clients/dynamodb';
 const DocumentClient = new DynamoDB.DocumentClient();
 
 const AWS_DYNAMODB_TABLE = process.env.AWS_DYNAMODB_TABLE || '';
-const MyTable = new Table({
-    name: AWS_DYNAMODB_TABLE,
-    partitionKey: 'pk',
-    sortKey: 'sk',
-    DocumentClient,
-  });
 
-const Job = new Entity({
-    name: 'Job',
-    attributes: {
-      id: { partitionKey: true }, // flag as partitionKey
-      sk: { hidden: true, sortKey: true }, // flag as sortKey and mark hidden
-      jobDescription: { type: 'string' },
-      jobDetail: { type: 'string' },
-      jobStatus: ['sk',0],
-      jobId: ['sk',1],
-    },
-    table: MyTable,
-});
-let item = {
-    id: 123,
-    jobDescription: 'jobDescription',
-    jobDetail: 'jobDetail',
-    jobStatus: 'active',
-    jobId: 'someGUID1',
-  }
-  
-  // Use the 'put' method of Customer
-  //Job.put(item)
-
-
-const GetJobForDevice = async (clientId: string) => {
-    
-    let result = await MyTable.query(
-        clientId, // partition key
-        {
-          beginsWith: 'active#'
-        }
-    );
-    console.log(JSON.stringify(result))
-    return result;
-}
-
-
-
-const evt = {
+const evtConnect = {
   "clientId": "mjs_demo_iot_group_Core",
   "timestamp": 1597997722480,
   "eventType": "connected",
@@ -59,9 +15,33 @@ const evt = {
   "versionNumber": 12
 }
 
+const evt = {
+    "eventType": "JOB",
+    "eventId": "7364ffd1-8b65-4824-85d5-6c14686c97c6",
+    "timestamp": 1234567890,
+    "operation": "completed",
+    "jobId": "01EGFX728RCY6RS28527DD5N0M",
+    "status": "COMPLETED",
+    "targetSelection": "SNAPSHOT|CONTINUOUS",
+    "targets": [
+      "arn:aws:iot:ap-southeast-2:383358879677:thing/mjs_demo_iot_group_Core",
+    ],
+    "description": "My Job Description",
+    "completedAt": 1234567890123,
+    "createdAt": 1234567890123,
+    "lastUpdatedAt": 1234567890123,
+    "jobProcessDetails": {
+      "numberOfCanceledThings": 0,
+      "numberOfRejectedThings": 0,
+      "numberOfFailedThings": 0,
+      "numberOfRemovedThings": 0,
+      "numberOfSucceededThings": 3
+    }
+  }
+
 test('Test runner', async () => {
   //expect.assertions(1);
-  let result1 = await Job.put(item)
+  //let result1 = await Job.put(item)
   const result: any = await iot.handler(evt)
   console.log(JSON.stringify(result));
   expect(result[0].imageUrl).toContain("https://d32rdprv3mabi2.cloudfront.net/images/1111/");
