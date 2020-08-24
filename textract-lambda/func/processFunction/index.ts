@@ -1,5 +1,5 @@
-import { Handler, Context } from "aws-lambda";
-import { SQS, Textract } from "aws-sdk";
+import { Handler, Context } from 'aws-lambda';
+import { SQS, Textract } from 'aws-sdk';
 
 const sqs = new SQS();
 const textract = new Textract();
@@ -11,9 +11,10 @@ export const handler: Handler = async (event: any, context: Context) => {
   //   await processRequest(event.Records[i]);
   // }
 
-  const promises = event.Records.map((record: any) => startDocumentTextDetection(record));
-  await Promise.all(promises)
-
+  const promises = event.Records.map((record: any) =>
+    startDocumentTextDetection(record)
+  );
+  await Promise.all(promises);
 };
 
 // const processRequest = async function (record: any) {
@@ -21,7 +22,7 @@ export const handler: Handler = async (event: any, context: Context) => {
 //     let msg = JSON.parse(record.body);
 //     console.log(JSON.stringify(msg));
 //     await startDocumentTextDetection(msg);
-    
+
 //   } catch (err) {
 //     console.warn(err);
 //     if (record.receiptHandle) {
@@ -36,32 +37,32 @@ const startDocumentTextDetection = async function (record: any) {
     let msg = JSON.parse(record.body);
     console.log(JSON.stringify(msg));
     //await startDocumentTextDetection(msg);
-  
 
-  const startDocumentTextDetectionRequestParams = {
-    DocumentLocation: {
-      S3Object: {
-        Bucket: msg.payload.bucket,
-        Name: msg.payload.key,
+    const startDocumentTextDetectionRequestParams = {
+      DocumentLocation: {
+        S3Object: {
+          Bucket: msg.payload.bucket,
+          Name: msg.payload.key,
+        },
       },
-    },
-    NotificationChannel: {
-      RoleArn:
-        process.env.AWS_TEXTRACT_PUBLISH_TO_SNS_IAM_ROLE_ARN ||
-        "AWS_TEXTRACT_PUBLISH_TO_SNS_IAM_ROLE_ARN",
-      SNSTopicArn:
-        process.env.AWS_TEXTRACT_PUBLISH_SNS_TOPIC_ARN ||
-        "AWS_TEXTRACT_PUBLISH_SNS_TOPIC_ARN",
-    },
-  };
+      NotificationChannel: {
+        RoleArn:
+          process.env.AWS_TEXTRACT_PUBLISH_TO_SNS_IAM_ROLE_ARN ||
+          'AWS_TEXTRACT_PUBLISH_TO_SNS_IAM_ROLE_ARN',
+        SNSTopicArn:
+          process.env.AWS_TEXTRACT_PUBLISH_SNS_TOPIC_ARN ||
+          'AWS_TEXTRACT_PUBLISH_SNS_TOPIC_ARN',
+      },
+    };
 
-  return await textract.startDocumentTextDetection(startDocumentTextDetectionRequestParams).promise();
-
+    return await textract
+      .startDocumentTextDetection(startDocumentTextDetectionRequestParams)
+      .promise();
   } catch (err) {
     console.warn(err);
     if (record.receiptHandle) {
       await resetSQS(record);
-  }
+    }
     throw err;
   }
 
@@ -80,14 +81,15 @@ const startDocumentTextDetection = async function (record: any) {
 };
 
 const resetSQS = async function (record: any) {
+  let sqsRetryParam: SQS.ChangeMessageVisibilityRequest = {
+    QueueUrl:
+      process.env.AWS_REQUEST_SQS_QUEUE_URL || 'AWS_REQUEST_SQS_QUEUE_URL',
+    ReceiptHandle: record.receiptHandle,
+    VisibilityTimeout: 0,
+  };
 
-let sqsRetryParam: SQS.ChangeMessageVisibilityRequest = {
-  QueueUrl: process.env.AWS_REQUEST_SQS_QUEUE_URL || "AWS_REQUEST_SQS_QUEUE_URL",
-  ReceiptHandle: record.receiptHandle,
-  VisibilityTimeout: 0
-}
-
-sqsRetryParam.VisibilityTimeout = requestWithRetry(5,
+  sqsRetryParam.VisibilityTimeout = requestWithRetry(
+    5,
     record.attributes.ApproximateReceiveCount
   );
 

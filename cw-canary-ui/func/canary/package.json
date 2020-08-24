@@ -1,0 +1,24 @@
+{
+  "name": "canary",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.61",
+    "@types/jest": "^26.0.10",
+    "@types/node": "^14.6.0",
+    "jest": "^26.4.0",
+    "ts-jest": "^26.2.0",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.735.0",
+    "cypress": "^4.12.1"
+  }
+}
