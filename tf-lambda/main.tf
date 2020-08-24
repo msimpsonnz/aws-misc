@@ -6,6 +6,11 @@ resource "aws_sqs_queue" "terraform_queue" {
   name = "terraform-example-queue"
 }
 
+resource "aws_s3_bucket" "test_event_bucket" {
+  bucket = "mjs-demo-2508-bucket"
+  acl    = "private"
+}
+
 resource "aws_iam_role" "iam_for_lambda" {
   name = "test_lambda_getter"
 
@@ -96,3 +101,27 @@ resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
   source_arn    = "${aws_cloudwatch_event_rule.every_day.arn}"
 }
 
+resource "aws_lambda_function" "store_lambda" {
+  filename      = "./storeFunc/store_function.zip"
+  function_name = "store_lambda"
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "main"
+
+  # The filebase64sha256() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the base64sha256() function and the file() function:
+  # source_code_hash = "${base64sha256(file("lambda_function_payload.zip"))}"
+  source_code_hash = filebase64sha256("./storeFunc/store_function.zip")
+
+  runtime = "go1.x"
+
+  environment {
+    variables = {
+      AWS_S3_BUCKET = aws_s3_bucket.test_event_bucket.id
+    }
+  }
+}
+
+resource "aws_lambda_event_source_mapping" "sqs_to_store" {
+  event_source_arn = aws_sqs_queue.terraform_queue.arn
+  function_name = aws_lambda_function.store_lambda.arn
+}
