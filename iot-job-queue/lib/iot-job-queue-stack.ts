@@ -54,6 +54,8 @@ export class IotJobQueueStack extends cdk.Stack {
       environment: {
         AWS_DYNAMODB_TABLE: table.tableName,
         AWS_IOT_ENDPOINT: 'iot.ap-southeast-2.amazonaws.com'
+        AWS_SECRET_MGR_PS: 
+        AWS_SQS_NAME: 
       }
     });
     table.grantReadWriteData(fnIotJobProcessor);

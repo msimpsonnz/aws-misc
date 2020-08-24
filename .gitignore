@@ -360,3 +360,7 @@ iot-sub/localAPI/certs/
 
 
 **/.parcel-cache/*
+tf-lambda/terraform.tfstate
+tf-lambda/terraform.tfstate*
+.terraform/
+.terraform.tfstate.**
