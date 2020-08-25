@@ -26,7 +26,7 @@ func Handler(ctx context.Context, sqsEvent events.SQSEvent) {
 
 		myBucket := os.Getenv("AWS_S3_BUCKET")
 		reader := strings.NewReader(record.Body)
-		key := fmt.Sprintf("%s.json", record.MessageId)
+		key := fmt.Sprintf("test/folder/%s.json", record.MessageId)
 
 		// Upload the file to S3.
 		_, err := uploader.Upload(&s3manager.UploadInput{

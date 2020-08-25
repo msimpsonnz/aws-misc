@@ -364,3 +364,5 @@ tf-lambda/terraform.tfstate
 tf-lambda/terraform.tfstate*
 .terraform/
 .terraform.tfstate.**
+tf-lambda/storeFunc/main
+tf-lambda/schedFunc/main
