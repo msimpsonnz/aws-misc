@@ -1,14 +1,8 @@
 {
-  "name": "iotjobprocessor",
+  "name": "iotjobupdater",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "main": "jest.config.js",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.61",
     "@types/jest": "^26.0.10",
@@ -20,5 +14,11 @@
   "dependencies": {
     "aws-sdk": "^2.738.0",
     "dynamodb-toolbox": "^0.2.0-beta.1"
-  }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

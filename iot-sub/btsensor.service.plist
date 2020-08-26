@@ -15,7 +15,7 @@
          <false/>
      </dict>
     <key>Label</key>
-    <string>SomeNameHere</string>
+    <string>com.github.msimpsonnz</string>
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
@@ -23,5 +23,9 @@
     </array>
     <key>RunAtLoad</key>
     <true/>
+    <key>StandardErrorPath</key>
+<string>/tmp/mycommand.err</string>
+<key>StandardOutPath</key>
+<string>/tmp/mycommand.out</string>
 </dict>
 </plist>

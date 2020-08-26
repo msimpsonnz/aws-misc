@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@aws-cdk/aws-dynamodb": "^1.60.0",
+    "@aws-cdk/aws-iot": "^1.60.0",
     "@aws-cdk/aws-lambda-nodejs": "^1.60.0",
     "@aws-cdk/core": "1.60.0",
     "source-map-support": "^0.5.16"

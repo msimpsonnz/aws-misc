@@ -366,3 +366,4 @@ tf-lambda/terraform.tfstate*
 .terraform.tfstate.**
 tf-lambda/storeFunc/main
 tf-lambda/schedFunc/main
+.DS_Store

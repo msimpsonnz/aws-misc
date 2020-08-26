@@ -25,13 +25,7 @@ const FunctionRunner = async (event: any) => {
             await CreateJobForDevice(job.jobId, thingArn);
         }
     }
-    else if (event.eventType === 'JOB' && event.status === 'COMPLETED') {
-        for await (const target of event.targets) {
-            const update = await GetJobForDevice(target, event.jobId)
-            console.log(`Job Status: ${JSON.stringify(update)}`);
-        }
-    } 
-    else{
+    else {
         return new Error('Failed to determine event type')
     } 
 }
@@ -69,26 +63,6 @@ const GetActiveJobsForDevice = async (clientId: string) => {
     return result;
 }
 
-const GetJobForDevice = async (clientId: string, jobId: string) => {
-    const thingId = clientId.split('/')[1];
-    const key = {
-        id: thingId,
-        jobStatus: 'active',
-        jobId: jobId
-    }
-    console.log(`Request: ${JSON.stringify(key)}`)
-    let result = await Job.get(
-        key
-    );
-    console.log(`Get Result: ${JSON.stringify(result)}`)
-    result.Item.jobStatus = 'completed'
-    const upsert = await Job.update(result.Item);
-    console.log(`Upsert Result: ${JSON.stringify(upsert)}`);
-    const remove = await Job.delete(
-        key
-    );
-}
-
 const GetThingArn = async (id: string) => {
     const params = {
         thingName: id,
@@ -113,6 +87,3 @@ const CreateJobForDevice = async (jobId: string, thingArn: string) => {
     const jobResult = await IotClient.createJob(params).promise()
     console.log(jobResult)
 }
-
-
-
