@@ -111,5 +111,9 @@ export class IotJobQueueStack extends cdk.Stack {
       ruleName: 'iotRuleJobCompleted'
     });
 
+    new cdk.CfnOutput(this, 'output-table', {
+      value: table.tableName
+    })
+
   }
 }

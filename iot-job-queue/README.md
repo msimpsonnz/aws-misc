@@ -1,14 +1,35 @@
-# Welcome to your CDK TypeScript project!
+# IoT Job Processor
 
-This is a blank project for TypeScript development with CDK.
+This solution creates the following
+DynamoDB Table
+IoT Rule => Lambda Job Processor
+    * This creates an IoT job based on "active" records in the DDB table when the thing connects - detected through IoT Lifecycle events
+IoT Rule => Lambda Job Updater
+    * This updates DDB when the IoT Job is proceed and completed by the thing
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Prereqs
+* IoT Thing deployed and registered in IoT Core
+* Code to process jobs on the thing, I used [this](https://github.com/aws/aws-iot-device-sdk-python-v2/blob/master/samples/jobs.py) sample as a starter
+* NPM, Docker and Parcel installed
+* AWS CDK installed `npm -g i aws-cdk@1.60.0`
+* AWS CDK bootstrapped in your account, see [here](https://docs.aws.amazon.com/cdk/latest/guide/cli.html#cli-bootstrap)
 
-## Useful commands
+## Install
+1. Git clone the repo
+2. `cd aws-mis/iot-job-queue`
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+3. Deploy the CDK App
+`cdk deploy`
+
+4. Grab the table name that the deployment outputs
+`export iotjobsampletable='theStringfromAboveOutput'`
+
+5. Get the name of the thing from IoT Core
+`export iotjobsamplething='thingNameGoesHere'`
+
+6. Put an active job in DDB
+``` bash
+cd ./func/jobmaker
+npm -i
+node index.js --thing $iotjobsamplething --table $iotjobsampletable
+```
