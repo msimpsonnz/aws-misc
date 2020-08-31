@@ -10,8 +10,6 @@ cd mydemorepo
 git add .
 git commit -m 'initial commit'
 git push
-git checkout -b dev
-git push --set-upstream origin dev
 cd ..
 
 aws cloudformation deploy \
@@ -21,9 +19,16 @@ aws cloudformation deploy \
       Repository=$amprepourl \
   --stack-name AmplifyConsoleDemo
 
+#Copy file for dev change
 cp ./App.js ./mydemorepo/src/App.js
+#Move to repo
 cd mydemorepo
+#trigger master build
+git commit --allow-empty -m "Trigger notification"
+#checkout dev and commit change
+git checkout -b dev
 git add .
-git commit -m 'commiting to dev'
-git push
+git commit -m 'Change Hello World on App.js'
+git push --set-upstream origin dev
 cd ..
+
