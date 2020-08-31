@@ -26,6 +26,7 @@ cp ./App.js ./mydemorepo/src/App.js
 cd mydemorepo
 #trigger master build
 git commit --allow-empty -m "Trigger notification"
+git push
 #checkout dev and commit change
 git checkout -b dev
 git add .
