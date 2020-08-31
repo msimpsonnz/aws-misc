@@ -1,4 +1,5 @@
 #/bin/bash
+date
 export amprepo=$(aws codecommit create-repository --repository-name mydemorepo)
 
 export amprepourl=$(echo $amprepo | jq -r .repositoryMetadata.cloneUrlHttp)
