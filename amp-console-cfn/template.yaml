@@ -50,13 +50,13 @@ Resources:
             baseDirectory: build
             files:
               - '**/*'
-            cache:
-              paths:
-                - node_modules/**/*
+          cache:
+            paths:
+              - node_modules/**/*
       CustomRules:
-        - Source: </^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/>
-            Target: /index.html
-            Status: '200'
+        - Source: '</^[^.]+$|\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/>'
+          Target: /index.html
+          Status: '200'
       Tags:
         - Key: Name
           Value: Todo
