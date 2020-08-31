@@ -1,6 +1,7 @@
 #/bin/bash
 date
-export amprepo=$(aws codecommit create-repository --repository-name mydemorepo)
+export ampreponame=mydemorepo
+export amprepo=$(aws codecommit create-repository --repository-name $ampreponame)
 
 export amprepourl=$(echo $amprepo | jq -r .repositoryMetadata.cloneUrlHttp)
 
@@ -31,4 +32,9 @@ git add .
 git commit -m 'Change Hello World on App.js'
 git push --set-upstream origin dev
 cd ..
+aws codecommit create-pull-request \
+    --title "My Pull Request" \
+    --description "Please review these changes by Tuesday" \
+    --client-request-token 123Example \
+    --targets repositoryName=$ampreponame,sourceReference=dev
 

@@ -64,6 +64,7 @@ Resources:
       AutoBranchCreationConfig:
         EnableAutoBranchCreation: true
         EnableAutoBuild: true
+        EnablePullRequestPreview: true
 
   AmplifyBranch:
     Type: AWS::Amplify::Branch
