@@ -35,7 +35,7 @@ Resources:
     Properties:
       Name: App
       Repository: !Ref Repository
-      Description: VueJS Todo example app
+      Description: Amplify React Demo
       BuildSpec: |-
         version: 0.1
         frontend:
@@ -59,30 +59,22 @@ Resources:
           Status: '200'
       Tags:
         - Key: Name
-          Value: Todo
+          Value: Amplify Demo
       IAMServiceRole: !GetAtt AmplifyRole.Arn
+      AutoBranchCreationConfig:
+        EnableAutoBranchCreation: true
+        EnableAutoBuild: true
 
   AmplifyBranch:
     Type: AWS::Amplify::Branch
     Properties:
       BranchName: master
       AppId: !GetAtt AmplifyApp.AppId
-      Description: Mainline Branch
+      Description: Master Branch
       EnableAutoBuild: true
       Tags:
         - Key: Name
-          Value: mainline
-
-  AmplifyBranch:
-    Type: AWS::Amplify::Branch
-    Properties:
-      BranchName: dev
-      AppId: !GetAtt AmplifyApp.AppId
-      Description: Dev Branch
-      EnableAutoBuild: true
-      Tags:
-        - Key: Name
-          Value: dev
+          Value: master
 
 Outputs:
   DefaultDomain:
