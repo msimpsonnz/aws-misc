@@ -36,6 +36,5 @@ cd ..
 aws codecommit create-pull-request \
     --title "My Pull Request" \
     --description "Please review these changes by Tuesday" \
-    --client-request-token 123Example \
     --targets repositoryName=$ampreponame,sourceReference=dev
 
