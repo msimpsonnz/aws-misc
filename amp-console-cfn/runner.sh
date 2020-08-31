@@ -8,8 +8,10 @@ git clone $amprepourl
 npx create-react-app mydemorepo
 cd mydemorepo
 git add .
-git commit -m 'initial commit!'
+git commit -m 'initial commit to main'
 git push
+git checkout -b dev
+git push origin dev
 cd ..
 
 aws cloudformation deploy \

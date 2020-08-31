@@ -67,13 +67,22 @@ Resources:
     Properties:
       BranchName: master
       AppId: !GetAtt AmplifyApp.AppId
-      Description: Master Branch
+      Description: Mainline Branch
       EnableAutoBuild: true
       Tags:
         - Key: Name
-          Value: todo-master
-        - Key: Branch
-          Value: master
+          Value: mainline
+
+  AmplifyBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      BranchName: dev
+      AppId: !GetAtt AmplifyApp.AppId
+      Description: Dev Branch
+      EnableAutoBuild: true
+      Tags:
+        - Key: Name
+          Value: dev
 
 Outputs:
   DefaultDomain:
