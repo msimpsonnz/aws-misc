@@ -17,7 +17,7 @@ export class KinesisFilterStack extends cdk.Stack {
       shardCount: 1,
     });
 
-    const streamOutput = new s3.Bucket(this, 'analyticsOutputBucket');
+    const bucketOutput = new s3.Bucket(this, 'analyticsOutputBucket');
 
     const fn = new lambdanode.NodejsFunction(this, 'fn', {
       runtime: lambda.Runtime.NODEJS_12_X,
@@ -57,8 +57,8 @@ export class KinesisFilterStack extends cdk.Stack {
         last VARCHAR(16),
         age INTEGER,
         gender VARCHAR(16),
-        latitude FLOAT,
-        longitude FLOAT
+        latitude VARCHAR(16),
+        longitude VARCHAR(16)
       );
       CREATE OR REPLACE PUMP "STREAM_PUMP" AS INSERT INTO "DESTINATION_USER_DATA"
 
@@ -67,47 +67,125 @@ export class KinesisFilterStack extends cdk.Stack {
       WHERE "age" >= 21;
     `;
 
-
-
-    const kinesisApp = new kinesisanalytics.CfnApplicationV2(this, 'kinesisApp', {
-      runtimeEnvironment: 'SQL-1_0',
-      serviceExecutionRole: roleKinesisAnalytics.roleArn,
-      applicationConfiguration: {
-        sqlApplicationConfiguration: {
-          inputs: [
-            {
-              namePrefix: 'SOURCE_SQL_STREAM',
-              inputSchema: {
-                recordColumns: [
-                  {
-                    name: 'first',
-                    mapping: '$.name.first',
-                    sqlType: 'VARCHAR(16)',
-                  },
-                ],
-                recordFormat: {
-                  recordFormatType: 'JSON',
-                  mappingParameters: {
-                    jsonMappingParameters: {
-                      recordRowPath: '$'
-                    }
-                  }
+    const kinesisAppV1 = new kinesisanalytics.CfnApplication(this, 'kinesisAppV1', {
+      applicationCode: sql,
+      inputs: [
+        {
+          namePrefix: 'SOURCE_SQL_STREAM',
+          inputSchema: {
+            recordColumns: [
+              {
+                name: 'first',
+                mapping: '$.first',
+                sqlType: 'VARCHAR(16)',
+              },
+              {
+                name: 'last',
+                mapping: '$.last',
+                sqlType: 'VARCHAR(16)',
+              },
+              {
+                name: 'age',
+                mapping: '$.age',
+                sqlType: 'INTEGER',
+              },
+              {
+                name: 'gender',
+                mapping: '$.gender',
+                sqlType: 'VARCHAR(16)',
+              },
+              {
+                name: 'latitude',
+                mapping: '$.latitude',
+                sqlType: 'VARCHAR(16)',
+              },
+              {
+                name: 'longitude',
+                mapping: '$.longitude',
+                sqlType: 'VARCHAR(16)',
+              },
+            ],
+            recordFormat: {
+              recordFormatType: 'JSON',
+              mappingParameters: {
+                jsonMappingParameters: {
+                  recordRowPath: '$'
                 }
-              },
-              kinesisStreamsInput: {
-                resourceArn: streamInput.streamArn,
-              },
-            },
-          ],
-        },
-        applicationCodeConfiguration: {
-          codeContent: {
-            textContent: sql
+              }
+            }
           },
-          codeContentType: 'PLAINTEXT'
+          kinesisStreamsInput: {
+            resourceArn: streamInput.streamArn,
+            roleArn: roleKinesisAnalytics.roleArn
+          }
         }
-      },
+      ]
     });
+
+    // const kinesisApp = new kinesisanalytics.CfnApplicationV2(this, 'kinesisApp', {
+    //   runtimeEnvironment: 'SQL-1_0',
+    //   serviceExecutionRole: roleKinesisAnalytics.roleArn,
+    //   applicationConfiguration: {
+    //     sqlApplicationConfiguration: {
+    //       inputs: [
+    //         {
+    //           namePrefix: 'SOURCE_SQL_STREAM',
+    //           inputSchema: {
+    //             recordColumns: [
+    //               {
+    //                 name: 'first',
+    //                 mapping: '$.first',
+    //                 sqlType: 'VARCHAR(16)',
+    //               },
+    //               {
+    //                 name: 'last',
+    //                 mapping: '$.last',
+    //                 sqlType: 'VARCHAR(16)',
+    //               },
+    //               {
+    //                 name: 'age',
+    //                 mapping: '$.age',
+    //                 sqlType: 'INTEGER',
+    //               },
+    //               {
+    //                 name: 'gender',
+    //                 mapping: '$.gender',
+    //                 sqlType: 'VARCHAR(16)',
+    //               },
+    //               {
+    //                 name: 'latitude',
+    //                 mapping: '$.latitude',
+    //                 sqlType: 'VARCHAR(16)',
+    //               },
+    //               {
+    //                 name: 'longitude',
+    //                 mapping: '$.longitude',
+    //                 sqlType: 'VARCHAR(16)',
+    //               },
+    //             ],
+    //             recordFormat: {
+    //               recordFormatType: 'JSON',
+    //               mappingParameters: {
+    //                 jsonMappingParameters: {
+    //                   recordRowPath: '$'
+    //                 }
+    //               }
+    //             }
+    //           },
+    //           kinesisStreamsInput: {
+    //             resourceArn: streamInput.streamArn,
+    //           },
+    //         },
+    //       ],
+    //     },
+    //     applicationCodeConfiguration: {
+    //       codeContent: {
+    //         textContent: sql
+    //       },
+    //       codeContentType: 'PLAINTEXT'
+    //     }
+    //   },
+    // });
 
     const roleKinesisFirehose = new iam.Role(this, 'roleKinesisFirehose', {
       assumedBy: new iam.ServicePrincipal('firehose.amazonaws.com'),
@@ -116,7 +194,7 @@ export class KinesisFilterStack extends cdk.Stack {
     roleKinesisFirehose.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        resources: [streamOutput.bucketArn, `${streamOutput.bucketArn}/*`],
+        resources: [bucketOutput.bucketArn, `${bucketOutput.bucketArn}/*`],
         actions: [
           's3:AbortMultipartUpload',
           's3:GetBucketLocation',
@@ -128,38 +206,96 @@ export class KinesisFilterStack extends cdk.Stack {
       })
     );
 
+
+    const streamOutput = new kinesis.Stream(this, 'streamOutput', {
+      streamName: 'streamOutput',
+      shardCount: 1,
+    });
+
+    roleKinesisFirehose.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        //resources: [streamOutput.streamArn],
+        resources: ['*'],
+        actions: [
+          // 'kinesis:DescribeStream'
+          'kinesis:*'
+        ],
+      })
+    );
+
     const firehose = new kinesisfirehose.CfnDeliveryStream(this, 'firehose', {
-      deliveryStreamType: 'DirectPut',
+      deliveryStreamType: 'KinesisStreamAsSource',
+      kinesisStreamSourceConfiguration: {
+        kinesisStreamArn: streamOutput.streamArn,
+        roleArn: roleKinesisFirehose.roleArn
+      },
       s3DestinationConfiguration: {
-        bucketArn: streamOutput.bucketArn,
+        bucketArn: bucketOutput.bucketArn,
         roleArn: roleKinesisFirehose.roleArn,
       },
     });
 
-    const kinesisAnalyticsOutput = new kinesisanalytics.CfnApplicationOutputV2(this, 'kinesisAnalyticsOutput', {
-      applicationName: kinesisApp.ref,
+    // const firehose = new kinesisfirehose.CfnDeliveryStream(this, 'firehose', {
+    //   deliveryStreamType: 'DirectPut',
+    //   s3DestinationConfiguration: {
+    //     bucketArn: bucketOutput.bucketArn,
+    //     roleArn: roleKinesisFirehose.roleArn,
+    //   },
+    // });
+
+    // const kinesisAnalyticsOutput = new kinesisanalytics.CfnApplicationOutputV2(this, 'kinesisAnalyticsOutput', {
+    //   applicationName: kinesisApp.ref,
+    //   output: {
+    //     destinationSchema: {
+    //       recordFormatType: 'JSON'
+    //     },
+    //     kinesisFirehoseOutput: {
+    //       resourceArn: firehose.attrArn
+    //     },
+    //     name: 'DESTINATION_USER_DATA'
+    //   }
+    // });
+
+    const kinesisAnalyticsOutputV1 = new kinesisanalytics.CfnApplicationOutput(this, 'kinesisAnalyticsOutputV1', {
+      applicationName: kinesisAppV1.ref,
       output: {
         destinationSchema: {
           recordFormatType: 'JSON'
         },
-        kinesisFirehoseOutput: {
-          resourceArn: firehose.attrArn
+        kinesisStreamsOutput: {
+          resourceArn: streamOutput.streamArn,
+          roleArn: roleKinesisAnalytics.roleArn      
         },
         name: 'DESTINATION_USER_DATA'
       }
-      
-    })
+    });
+
+
+
+    // roleKinesisAnalytics.addToPolicy(
+    //   new iam.PolicyStatement({
+    //     effect: iam.Effect.ALLOW,
+    //     resources: [firehose.attrArn],
+    //     actions: [
+    //       'firehose:DescribeDeliveryStream',
+    //       'firehose:PutRecord',
+    //       'firehose:PutRecordBatch',
+    //     ],
+    //   })
+    // );
 
     roleKinesisAnalytics.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        resources: [firehose.attrArn],
+        resources: [streamOutput.streamArn],
         actions: [
-          'firehose:DescribeDeliveryStream',
-          'firehose:PutRecord',
-          'firehose:PutRecordBatch',
+          'kinesis:*'
         ],
       })
     );
+
+
+
   }
 }

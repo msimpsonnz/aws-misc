@@ -1,0 +1,13 @@
+{
+    "ApplicationName": "kinesisApp_v5qr6q7AJ5ex",
+    "RunConfiguration": {
+        "SqlRunConfigurations": [
+            {
+                "InputId": "1.1",
+                "InputStartingPositionConfiguration": {
+                    "InputStartingPosition": "NOW"
+                }
+            }
+        ]
+    }
+}
