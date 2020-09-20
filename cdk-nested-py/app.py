@@ -8,6 +8,7 @@ from py_cdk.py_cdk_nest_stack import PyCdkNestStack
 
 app = core.App()
 mainStack = PyCdkStack(app, "py-cdk")
-PyCdkNestStack(mainStack, "py-cdk-nest", mainStack.eks_vpc)
+PyCdkNestStack(app, "py-cdk-nest",
+    vpc=mainStack.eks_vpc)
 
 app.synth()

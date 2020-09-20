@@ -3,7 +3,7 @@ import aws_cdk.aws_iam as iam
 import aws_cdk.aws_ec2 as ec2
 
 
-class PyCdkNestStack(core.NestedStack):
+class PyCdkNestStack(core.Stack):
 
     def __init__(self, scope: core.Construct, id: str, vpc: ec2.Vpc, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
