@@ -1,0 +1,29 @@
+{
+  "name": "sfn-workflow",
+  "version": "0.1.0",
+  "bin": {
+    "sfn-workflow": "bin/sfn-workflow.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "1.64.1",
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.2.0",
+    "aws-cdk": "1.64.1",
+    "ts-node": "^8.1.0",
+    "typescript": "~3.9.7"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-stepfunctions": "^1.64.1",
+    "@aws-cdk/aws-stepfunctions-tasks": "^1.64.1",
+    "@aws-cdk/core": "1.64.1",
+    "source-map-support": "^0.5.16"
+  }
+}
