@@ -1,7 +1,9 @@
 import * as cdk from '@aws-cdk/core';
-import * as dynamo from '@aws-cdk/aws-dynamodb';
 import * as sfn from '@aws-cdk/aws-stepfunctions';
 import * as tasks from '@aws-cdk/aws-stepfunctions-tasks';
+import * as dynamo from '@aws-cdk/aws-dynamodb';
+import * as events from '@aws-cdk/aws-events';
+import * as targets from '@aws-cdk/aws-events-targets';
 import * as iam from '@aws-cdk/aws-iam';
 import * as apigw from '@aws-cdk/aws-apigateway';
 
@@ -9,14 +11,22 @@ export class SfnWorkflowStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // DDB Table for records
+    //#########################################################//
+    // Create Step Function
+    //#########################################################//
+
+    // Create State Machine Workflow, see contruct at end
+    const sfnStateMachineWorker1 = this.CreateSfnStateMachineWorker('sfnStateMachineWorker1');
+    const sfnStateMachineWorker2 = this.CreateSfnStateMachineWorker('sfnStateMachineWorker2');
+    
+    //#########################################################//
+    // Create Step Function History Capture
+    //#########################################################//
+
+    // Create DDB table for Event History
     const table = new dynamo.Table(this, 'table', {
       partitionKey: {
         name: 'pk',
-        type: dynamo.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'sk',
         type: dynamo.AttributeType.STRING,
       },
       billingMode: dynamo.BillingMode.PAY_PER_REQUEST,
@@ -27,50 +37,51 @@ export class SfnWorkflowStack extends cdk.Stack {
     const sfnTaskDDBPut = new tasks.DynamoPutItem(this, id, {
       item: {
         pk: tasks.DynamoAttributeValue.fromString(
-          sfn.JsonPath.stringAt('$$.Execution.Id')
+          sfn.JsonPath.stringAt('$.detail.name')
         ),
-        sk: tasks.DynamoAttributeValue.fromString(
-          sfn.JsonPath.stringAt('$')
-        ),
+        status: tasks.DynamoAttributeValue.fromString(sfn.JsonPath.stringAt('$.detail.status')),
       },
       table,
     });
 
-    const map = new sfn.Map(this, 'Map State', {
-      maxConcurrency: 10,
-      itemsPath: sfn.JsonPath.entirePayload,
+    // Create a StateMachine to process EventBridge and store them in DDB
+    const sfnStateMachineHistory = new sfn.StateMachine(
+      this,
+      'sfnStateMachine',
+      {
+        definition: sfnTaskDDBPut,
+        timeout: cdk.Duration.seconds(30),
+      }
+    );
+    table.grantReadWriteData(sfnStateMachineHistory.role);
+
+    // Create EventBrige Rule for Step Function Events
+    const ruleSfnEvents = new events.Rule(this, 'ruleSfnEvents', {
+      eventPattern: {
+        source: ['aws.states'],
+        detailType: ['Step Functions Execution Status Change'],
+        detail: {
+          status: ['SUCCEEDED']
+        },
+        resources: [ 
+          {
+            "prefix": `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:sfnStateMachineWorker`
+          }
+        ] as any[],
+      },
     });
-    map.iterator(sfnTaskDDBPut);
 
-    const sfnChain = sfn.Chain
-      .start(map);
+    ruleSfnEvents.addTarget(
+      new targets.SfnStateMachine(sfnStateMachineHistory)
+    );
 
-
-    // Parent Sfn using Standard workflow
-    const sfnParent = new sfn.StateMachine(this, 'sfnParent', {
-      stateMachineType: sfn.StateMachineType.STANDARD,
-      definition: sfnChain,
-      timeout: cdk.Duration.seconds(30),
-    });
-
-    table.grantReadWriteData(sfnParent.role);
-
-
-    //#########################################################
-
-
+    //#########################################################//
+    // Create API Gateway
+    //#########################################################//
 
     // API Gateway
     const api = new apigw.RestApi(this, 'api', {
-      restApiName: this.stackId
-    });
-
-    const intergrationAPI = api.root.addResource('executions', {
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigw.Cors.ALL_ORIGINS,
-        allowMethods: apigw.Cors.ALL_METHODS,
-        allowHeaders: apigw.Cors.DEFAULT_HEADERS,
-      },
+      restApiName: this.stackId,
     });
 
     const roleApiSfn = new iam.Role(this, 'roleApiSfn', {
@@ -78,10 +89,11 @@ export class SfnWorkflowStack extends cdk.Stack {
     });
 
     roleApiSfn.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName(
-        'AWSStepFunctionsFullAccess'
-      )
+      iam.ManagedPolicy.fromAwsManagedPolicyName('AWSStepFunctionsFullAccess')
     );
+    const workflowAPI = api.root.addResource('workflow');
+    const workflowExecution = workflowAPI.addResource('execution');
+    const workflowExecutionName = workflowExecution.addResource('{name}');
 
     const sfnIntegration = new apigw.AwsIntegration({
       service: 'states',
@@ -90,8 +102,9 @@ export class SfnWorkflowStack extends cdk.Stack {
         credentialsRole: roleApiSfn,
         requestTemplates: {
           'application/json': JSON.stringify({
-              "input": "$util.escapeJavaScript($input.json('$'))",
-              "stateMachineArn": sfnParent.stateMachineArn
+            input: "$util.escapeJavaScript($input.path('$.input'))",
+            name: "$input.path('$.name')",
+            stateMachineArn: `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stateMachine:$util.escapeJavaScript($input.params('name'))`,
           }),
         },
         integrationResponses: [
@@ -102,7 +115,7 @@ export class SfnWorkflowStack extends cdk.Stack {
       },
     });
 
-    intergrationAPI.addMethod('POST', sfnIntegration, {
+    workflowExecutionName.addMethod('POST', sfnIntegration, {
       methodResponses: [
         {
           statusCode: '200',
@@ -118,19 +131,27 @@ export class SfnWorkflowStack extends cdk.Stack {
     });
 
     roleApiDdb.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName(
-        'AmazonDynamoDBFullAccess'
-      )
+      iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonDynamoDBFullAccess')
     );
 
     const ddbIntegration = new apigw.AwsIntegration({
       service: 'dynamodb',
-      action: 'Scan',
+      action: 'Query',
       options: {
         credentialsRole: roleApiDdb,
+        requestParameters: {
+          "integration.request.querystring.id": 'method.request.querystring.id'
+        },
+        passthroughBehavior: apigw.PassthroughBehavior.NEVER,
         requestTemplates: {
           'application/json': JSON.stringify({
-              TableName: table.tableName,
+            TableName: table.tableName,
+            KeyConditionExpression: "pk = :v1",
+            ExpressionAttributeValues: {
+              ":v1": {
+                  "S": "$input.params('id')"
+              }
+            }
           }),
         },
         integrationResponses: [
@@ -141,7 +162,12 @@ export class SfnWorkflowStack extends cdk.Stack {
       },
     });
 
-    intergrationAPI.addMethod('GET', ddbIntegration, {
+    const workflowHistory = workflowAPI.addResource('history');
+
+    workflowHistory.addMethod('GET', ddbIntegration, {
+      requestParameters: {
+        'method.request.querystring.id': true
+      },
       methodResponses: [
         {
           statusCode: '200',
@@ -151,7 +177,24 @@ export class SfnWorkflowStack extends cdk.Stack {
         },
       ],
     });
-
   }
+  
 
+  private CreateSfnStateMachineWorker(name: string) {
+    
+    // Create a Pass State just for testing
+    const sfnPass = new sfn.Pass(this, `sfnPass-${name}`);
+
+    // Sfn create State Machine using Standard workflow
+    const sfnStateMachineWorker = new sfn.StateMachine(
+      this,
+      name,
+      {
+        stateMachineName: name,
+        definition: sfnPass,
+        timeout: cdk.Duration.seconds(30),
+      }
+    );
+    return sfnStateMachineWorker;
+  }
 }
