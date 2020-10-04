@@ -182,7 +182,7 @@ export class SfnWorkflowStack extends cdk.Stack {
                 "S": "$input.params('id')"
               },
               ":sk": {
-                "S": `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:$util.escapeJavaScript($input.params('name'))#`
+                "S": `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:$util.escapeJavaScript($input.params('name'))`
               }
             }
           }),
@@ -190,6 +190,19 @@ export class SfnWorkflowStack extends cdk.Stack {
         integrationResponses: [
           {
             statusCode: '200',
+            responseTemplates: {
+              'application/json': 
+                `#set($inputRoot = $input.path('$'))
+                  {
+                    "execution": [
+                      #foreach($elem in $inputRoot.Items) {
+                          "name": "$elem.pk.S",
+                          "status": "$elem.status.S",
+                      }#if($foreach.hasNext),#end
+                      #end
+                      ]
+                  }`,
+            }
           },
         ],
       },
@@ -206,7 +219,7 @@ export class SfnWorkflowStack extends cdk.Stack {
         {
           statusCode: '200',
           responseModels: {
-            'application/json': apigw.Model.EMPTY_MODEL,
+            'application/json': apigw.Model.EMPTY_MODEL
           },
         },
       ],
