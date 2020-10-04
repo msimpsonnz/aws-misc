@@ -29,19 +29,49 @@ export class SfnWorkflowStack extends cdk.Stack {
         name: 'pk',
         type: dynamo.AttributeType.STRING,
       },
+      sortKey: {
+        name: 'sk',
+        type: dynamo.AttributeType.STRING,
+      },
       billingMode: dynamo.BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    // Sfn Task to write to context to DDB as example
-    const sfnTaskDDBPut = new tasks.DynamoPutItem(this, id, {
-      item: {
-        pk: tasks.DynamoAttributeValue.fromString(
-          sfn.JsonPath.stringAt('$.detail.name')
-        ),
-        status: tasks.DynamoAttributeValue.fromString(sfn.JsonPath.stringAt('$.detail.status')),
+    const sfnTaskDDBState = {
+      Type: 'Task',
+      Resource: 'arn:aws:states:::dynamodb:putItem',
+      Parameters: {
+        TableName: `${table.tableName}`,
+        Item: {
+          pk: {
+            'S.$': '$.detail.name',
+          },
+          sk: {
+            'S.$': "States.Format('{}#{}', $.detail.executionArn, $.detail.status)",
+          },
+          status: {
+            'S.$': '$.detail.status',
+          },
+        },
       },
-      table,
+      ResultPath: null,
+    };
+
+
+    // const sfnTaskDDBPut = new tasks.DynamoPutItem(this, 'sfnTaskDDBPut', {
+    //   item: {
+    //     pk: tasks.DynamoAttributeValue.fromString(
+    //       sfn.JsonPath.stringAt('$.detail.name')
+    //     ),
+    //     sk: tasks.DynamoAttributeValue.fromString(
+    //       sfn.JsonPath.stringAt('$.pk')
+    //     ),
+    //     status: tasks.DynamoAttributeValue.fromString(sfn.JsonPath.stringAt('$.detail.status')),
+    //   },
+    //   table,
+    // });
+    const sfnTaskDDBPut = new sfn.CustomState(this, 'sfnTaskDDBPut', {
+      stateJson: sfnTaskDDBState,
     });
 
     // Create a StateMachine to process EventBridge and store them in DDB
@@ -60,9 +90,9 @@ export class SfnWorkflowStack extends cdk.Stack {
       eventPattern: {
         source: ['aws.states'],
         detailType: ['Step Functions Execution Status Change'],
-        detail: {
-          status: ['SUCCEEDED']
-        },
+        // detail: {
+        //   status: ['SUCCEEDED']
+        // },
         resources: [ 
           {
             "prefix": `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:sfnStateMachineWorker`
@@ -146,10 +176,13 @@ export class SfnWorkflowStack extends cdk.Stack {
         requestTemplates: {
           'application/json': JSON.stringify({
             TableName: table.tableName,
-            KeyConditionExpression: "pk = :v1",
+            KeyConditionExpression: "pk = :pk and begins_with(sk, :sk)",
             ExpressionAttributeValues: {
-              ":v1": {
-                  "S": "$input.params('id')"
+              ":pk": {
+                "S": "$input.params('id')"
+              },
+              ":sk": {
+                "S": `arn:aws:states:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:execution:$util.escapeJavaScript($input.params('name'))#`
               }
             }
           }),
@@ -163,8 +196,9 @@ export class SfnWorkflowStack extends cdk.Stack {
     });
 
     const workflowHistory = workflowAPI.addResource('history');
+    const workflowHistoryName = workflowHistory.addResource('{name}');
 
-    workflowHistory.addMethod('GET', ddbIntegration, {
+    workflowHistoryName.addMethod('GET', ddbIntegration, {
       requestParameters: {
         'method.request.querystring.id': true
       },
