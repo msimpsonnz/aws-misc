@@ -1,10 +1,13 @@
 import * as cdk from '@aws-cdk/core';
+import * as iam from '@aws-cdk/aws-iam';
 import * as dynamo from '@aws-cdk/aws-dynamodb';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as lambdanode from '@aws-cdk/aws-lambda-nodejs';
 import * as apigateway from '@aws-cdk/aws-apigateway';
 import * as synthetics from '@aws-cdk/aws-synthetics';
 import * as logs from '@aws-cdk/aws-logs';
+import * as events from '@aws-cdk/aws-events';
+import * as targets from '@aws-cdk/aws-events-targets';
 import * as cloudwatch from '@aws-cdk/aws-cloudwatch';
 import { GraphWidget, IMetric, Metric } from '@aws-cdk/aws-cloudwatch';
 
@@ -36,7 +39,12 @@ export class XrayDemoStack extends cdk.Stack {
         FAIL: false.toString(),
       },
       tracing: lambda.Tracing.ACTIVE,
+      currentVersionOptions: {
+        removalPolicy: cdk.RemovalPolicy.DESTROY, // retain old versions
+        retryAttempts: 1                     // async retry attempts
+      }
     });
+    fnDynamo.currentVersion.addAlias('live');
     table.grantReadWriteData(fnDynamo);
 
     const api = new apigateway.LambdaRestApi(this, 'obs-demo', {
@@ -70,6 +78,52 @@ export class XrayDemoStack extends cdk.Stack {
         handler: 'index.handler',
       }),
     });
+
+    const role_fnPutCustomMetric = new iam.Role(
+      this,
+      'role_fnTenantProvision',
+      {
+        assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+      }
+    );
+
+    role_fnPutCustomMetric.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        'service-role/AWSLambdaBasicExecutionRole'
+      )
+    );
+
+    role_fnPutCustomMetric.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        resources: ['*'],
+        actions: [
+          'cloudwatch:PutMetricData',
+        ],
+      })
+    );
+
+
+    const fnPutCustomMetric = new lambda.Function(this, 'fnPutCustomMetric', {
+      code: lambda.Code.fromAsset('./func/custommetric'),
+      handler: 'index.handler',
+      runtime: lambda.Runtime.NODEJS_12_X,
+      role: role_fnPutCustomMetric
+    })
+
+    const ruleSfnEvents = new events.Rule(this, 'ruleSfnEvents', {
+      eventPattern: {
+        source: ['aws.codepipeline'],
+        detailType: ['CodePipeline Pipeline Execution State Change'],
+        detail: {
+          state: ['SUCCEEDED']
+        },
+      }
+    });
+
+    ruleSfnEvents.addTarget(
+      new targets.LambdaFunction(fnPutCustomMetric)
+    );
 
     // From https://github.com/cdk-patterns/serverless/blob/master/the-cloudwatch-dashboard/typescript/lib/the-cloudwatch-dashboard-stack.ts
 
