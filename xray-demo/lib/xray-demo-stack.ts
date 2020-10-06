@@ -63,7 +63,7 @@ export class XrayDemoStack extends cdk.Stack {
 
     const canaryGET = new synthetics.Canary(this, 'canaryGET', {
       runtime: synthetics.Runtime.SYNTHETICS_1_0,
-      schedule: synthetics.Schedule.rate(cdk.Duration.minutes(8)),
+      schedule: synthetics.Schedule.rate(cdk.Duration.minutes(1)),
       test: synthetics.Test.custom({
         code: lambda.Code.fromAsset('./func/canary'),
         handler: 'index.handler',
