@@ -15,5 +15,18 @@
   },
   "devDependencies": {
     "jest": "^26.4.2"
+  },
+  "targets": {
+    "cdk-lambda": {
+      "context": "node",
+      "includeNodeModules": {
+        "aws-sdk": false
+      },
+      "sourceMap": false,
+      "minify": false,
+      "engines": {
+        "node": ">= 10"
+      }
+    }
   }
 }

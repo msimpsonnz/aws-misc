@@ -6,7 +6,7 @@ import * as apigateway from '@aws-cdk/aws-apigateway';
 import * as synthetics from '@aws-cdk/aws-synthetics';
 import * as logs from '@aws-cdk/aws-logs';
 import * as cloudwatch from '@aws-cdk/aws-cloudwatch';
-import { GraphWidget, IMetric, Metric } from "@aws-cdk/aws-cloudwatch";
+import { GraphWidget, IMetric, Metric } from '@aws-cdk/aws-cloudwatch';
 
 export class XrayDemoStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -21,12 +21,13 @@ export class XrayDemoStack extends cdk.Stack {
         name: 'sk',
         type: dynamo.AttributeType.STRING,
       },
-      billingMode: dynamo.BillingMode.PAY_PER_REQUEST,
+      billingMode: dynamo.BillingMode.PROVISIONED,
+      readCapacity: 1,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
     const fnDynamo = new lambdanode.NodejsFunction(this, 'fnDynamo', {
-      entry: './func/RecordHandler/index.js',
+      entry: './func/recordhandler/index.js',
       handler: 'handler',
       memorySize: 512,
       timeout: cdk.Duration.seconds(5),
@@ -108,10 +109,10 @@ export class XrayDemoStack extends cdk.Stack {
       expression: 'm1 + m2',
       label: 'DynamoDB Throttles',
       usingMetrics: {
-        m1: table.metric('ReadThrottleEvents', {statistic: 'sum'}),
-        m2: table.metric('WriteThrottleEvents', {statistic: 'sum'}),
+        m1: table.metric('ReadThrottleEvents', { statistic: 'sum' }),
+        m2: table.metric('WriteThrottleEvents', { statistic: 'sum' }),
       },
-      period: cdk.Duration.minutes(5)
+      period: cdk.Duration.minutes(5),
     });
 
     /**
@@ -127,7 +128,7 @@ export class XrayDemoStack extends cdk.Stack {
       evaluationPeriods: 6,
       datapointsToAlarm: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     // 5xx are internal server errors so we want 0 of these
     new cloudwatch.Alarm(this, 'API Gateway 5XX Errors > 0', {
@@ -142,7 +143,7 @@ export class XrayDemoStack extends cdk.Stack {
       evaluationPeriods: 6,
       datapointsToAlarm: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     new cloudwatch.Alarm(this, 'API p99 latency alarm >= 1s', {
       metric: this.metricForApiGw(
@@ -156,7 +157,7 @@ export class XrayDemoStack extends cdk.Stack {
       evaluationPeriods: 6,
       datapointsToAlarm: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     // Lambda
 
@@ -167,7 +168,7 @@ export class XrayDemoStack extends cdk.Stack {
       evaluationPeriods: 6,
       datapointsToAlarm: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     // 1% of Lambda invocations taking longer than 1 second
     new cloudwatch.Alarm(this, 'Dynamo Lambda p99 Long Duration (>1s)', {
@@ -178,7 +179,7 @@ export class XrayDemoStack extends cdk.Stack {
       datapointsToAlarm: 1,
       statistic: 'p99',
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     // 2% of our lambda invocations are throttled
     new cloudwatch.Alarm(this, 'Dynamo Lambda 2% Throttled', {
@@ -187,7 +188,7 @@ export class XrayDemoStack extends cdk.Stack {
       evaluationPeriods: 6,
       datapointsToAlarm: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     // DynamoDB
 
@@ -198,7 +199,7 @@ export class XrayDemoStack extends cdk.Stack {
       evaluationPeriods: 6,
       datapointsToAlarm: 1,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
-    })
+    });
 
     // // There should be 0 DynamoDB errors
     // new cloudwatch.Alarm(this, 'DynamoDB Errors > 0', {
