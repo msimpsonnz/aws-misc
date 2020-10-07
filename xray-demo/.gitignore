@@ -9,3 +9,9 @@ cdk.out
 
 # Parcel default cache directory
 .parcel-cache
+
+!jest.config.js
+!func/canary/nodejs/node_modules/index.js
+!func/canary1/nodejs/node_modules/index.js
+!func/custommetric/index.js
+!func/recordhandler/index.js

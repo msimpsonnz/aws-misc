@@ -5,7 +5,6 @@ import * as lambda from '@aws-cdk/aws-lambda';
 import * as lambdanode from '@aws-cdk/aws-lambda-nodejs';
 import * as apigateway from '@aws-cdk/aws-apigateway';
 import * as synthetics from '@aws-cdk/aws-synthetics';
-import * as logs from '@aws-cdk/aws-logs';
 import * as events from '@aws-cdk/aws-events';
 import * as targets from '@aws-cdk/aws-events-targets';
 import * as cloudwatch from '@aws-cdk/aws-cloudwatch';
@@ -33,10 +32,12 @@ export class XrayDemoStack extends cdk.Stack {
       entry: './func/recordhandler/index.js',
       handler: 'handler',
       memorySize: 512,
-      timeout: cdk.Duration.seconds(5),
+      timeout: cdk.Duration.seconds(20),
       environment: {
+        LOG_LEVEL: 'debug',
         AWS_DYNAMODB_TABLE: table.tableName,
         FAIL: false.toString(),
+        //FAIL: true.toString(),
       },
       tracing: lambda.Tracing.ACTIVE,
       currentVersionOptions: {
@@ -47,22 +48,17 @@ export class XrayDemoStack extends cdk.Stack {
     fnDynamo.currentVersion.addAlias('live');
     table.grantReadWriteData(fnDynamo);
 
+    const apiName = 'obs-demo'
     const api = new apigateway.LambdaRestApi(this, 'obs-demo', {
+      restApiName: apiName,
       handler: fnDynamo,
       deployOptions: {
-        loggingLevel: apigateway.MethodLoggingLevel.INFO,
-        metricsEnabled: true,
         tracingEnabled: true,
       },
     });
 
-    new logs.LogRetention(this, 'apiLogGroup', {
-      logGroupName: `API-Gateway-Execution-Logs_${api.restApiId}/${api.deploymentStage.stageName}`,
-      retention: logs.RetentionDays.THREE_MONTHS,
-    });
-
     const canaryGET = new synthetics.Canary(this, 'canaryGET', {
-      runtime: synthetics.Runtime.SYNTHETICS_1_0,
+      runtime: synthetics.Runtime.SYNTHETICS_NODEJS_2_0,
       schedule: synthetics.Schedule.rate(cdk.Duration.minutes(1)),
       test: synthetics.Test.custom({
         code: lambda.Code.fromAsset('./func/canary'),
@@ -71,7 +67,7 @@ export class XrayDemoStack extends cdk.Stack {
     });
 
     const canaryPOST = new synthetics.Canary(this, 'canaryPOST', {
-      runtime: synthetics.Runtime.SYNTHETICS_1_0,
+      runtime: synthetics.Runtime.SYNTHETICS_NODEJS_2_0,
       schedule: synthetics.Schedule.rate(cdk.Duration.minutes(60)),
       test: synthetics.Test.custom({
         code: lambda.Code.fromAsset('./func/canary1'),
@@ -98,6 +94,8 @@ export class XrayDemoStack extends cdk.Stack {
         effect: iam.Effect.ALLOW,
         resources: ['*'],
         actions: [
+          'cloudwatch:GetDashboard',
+          'cloudwatch:PutDashboard',
           'cloudwatch:PutMetricData',
         ],
       })
@@ -131,8 +129,8 @@ export class XrayDemoStack extends cdk.Stack {
       expression: 'm1/m2*100',
       label: '% API Gateway 4xx Errors',
       usingMetrics: {
-        m1: this.metricForApiGw(api.restApiId, '4XXError', '4XX Errors', 'sum'),
-        m2: this.metricForApiGw(api.restApiId, 'Count', '# Requests', 'sum'),
+        m1: this.metricForApiGw(apiName, '4XXError', '4XX Errors', 'sum'),
+        m2: this.metricForApiGw(apiName, 'Count', '# Requests', 'sum'),
       },
       period: cdk.Duration.minutes(5),
     });
@@ -187,7 +185,7 @@ export class XrayDemoStack extends cdk.Stack {
     // 5xx are internal server errors so we want 0 of these
     new cloudwatch.Alarm(this, 'API Gateway 5XX Errors > 0', {
       metric: this.metricForApiGw(
-        api.restApiId,
+        apiName,
         '5XXError',
         '5XX Errors',
         'p99'
@@ -201,7 +199,7 @@ export class XrayDemoStack extends cdk.Stack {
 
     new cloudwatch.Alarm(this, 'API p99 latency alarm >= 1s', {
       metric: this.metricForApiGw(
-        api.restApiId,
+        apiName,
         'Latency',
         'API GW Latency',
         'p99'
@@ -270,25 +268,25 @@ export class XrayDemoStack extends cdk.Stack {
 
     new cloudwatch.Dashboard(this, 'CloudWatchDashBoard').addWidgets(
       this.buildGraphWidget('Requests', [
-        this.metricForApiGw(api.restApiId, 'Count', '# Requests', 'sum'),
+        this.metricForApiGw(apiName, 'Count', '# Requests', 'sum'),
       ]),
       this.buildGraphWidget(
         'API GW Latency',
         [
           this.metricForApiGw(
-            api.restApiId,
+            apiName,
             'Latency',
             'API Latency p50',
             'p50'
           ),
           this.metricForApiGw(
-            api.restApiId,
+            apiName,
             'Latency',
             'API Latency p90',
             'p90'
           ),
           this.metricForApiGw(
-            api.restApiId,
+            apiName,
             'Latency',
             'API Latency p99',
             'p99'
@@ -299,8 +297,8 @@ export class XrayDemoStack extends cdk.Stack {
       this.buildGraphWidget(
         'API GW Errors',
         [
-          this.metricForApiGw(api.restApiId, '4XXError', '4XX Errors', 'sum'),
-          this.metricForApiGw(api.restApiId, '5XXError', '5XX Errors', 'sum'),
+          this.metricForApiGw(apiName, '4XXError', '4XX Errors', 'sum'),
+          this.metricForApiGw(apiName, '5XXError', '5XX Errors', 'sum'),
         ],
         true
       ),
@@ -377,13 +375,13 @@ export class XrayDemoStack extends cdk.Stack {
   }
 
   private metricForApiGw(
-    apiId: string,
+    apiName: string,
     metricName: string,
     label: string,
     stat = 'avg'
   ): cloudwatch.Metric {
     let dimensions = {
-      ApiId: apiId,
+      ApiName: apiName,
     };
     return this.buildMetric(
       metricName,
