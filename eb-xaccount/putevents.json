@@ -1,0 +1,22 @@
+[
+    {
+      "Source": "event",
+      "Detail": "{ \"key1\": \"1111\", \"key2\": \"1111\" }",
+      "Resources": [
+        "resource1",
+        "resource2"
+      ],
+      "DetailType": "1111",
+      "EventBusName": "mjsdemo-sending"
+    },
+    {
+        "Source": "event",
+        "Detail": "{ \"key1\": \"2222\", \"key2\": \"2222\" }",
+        "Resources": [
+          "resource1",
+          "resource2"
+        ],
+        "DetailType": "2222",
+        "EventBusName": "mjsdemo-sending"
+      }
+  ]
