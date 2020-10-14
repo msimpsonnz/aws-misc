@@ -3,6 +3,8 @@
   "context": {
     "@aws-cdk/core:enableStackNameDuplicates": "true",
     "aws-cdk:enableDiffNoFail": "true",
-    "@aws-cdk/core:stackRelativeExports": "true"
+    "@aws-cdk/core:stackRelativeExports": "true",
+    "sendingAccountId": "762556623917",
+    "recievingAccountId": "383358879677"
   }
 }

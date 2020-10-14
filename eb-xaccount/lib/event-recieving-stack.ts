@@ -40,7 +40,10 @@ export class EventRecievingStack extends cdk.Stack {
         eventPattern: {
           detailType: [ 
             {
-              "anything-but": `1111`
+              "prefix": "ac-"
+            },
+            {
+              "anything-but": "ac-1111"
             }
           ] as any[],
         },
