@@ -21,9 +21,15 @@ def function_handler(event, context):
         if event['action'] == 'Remove':
             print('Stop Unicorn')
             os.system("pkill -f /src/app.py && /usr/bin/python3 -c 'import unicornhat as unicorn;unicorn.clear();unicorn.off()'")
-        if event['action'] == 'Created':
+        if event['action'] == 'Configure':
             print('Start Unicorn')
-            os.system("/usr/bin/python3 /src/app.py &")
+            os.system("/usr/bin/python3 /src/app.py 255 255 0 &")
+        if event['action'] == 'kCameraStreamStart':
+            print('Start Camera')
+            write_rgb(255,0,0)
+        if event['action'] == 'kCameraStreamStop':
+            print('Stop Camera')
+            write_rgb(255,255,0)
         msg = json.dumps(event)
         response = 'Invoked on topic "%s" with message "%s"' % (input_topic, msg)
         logging.info(response)
@@ -33,3 +39,14 @@ def function_handler(event, context):
     client.publish(topic=OUTPUT_TOPIC, payload=msg)
 
     return
+
+
+def write_rgb(r_value = 255, g_value = 0, b_value = 0):
+    data = {
+        'r': r_value,
+        'g': g_value,
+        'b': b_value,
+    }
+
+    with open('/src/rgb.json', 'w') as outfile:
+        json.dump(data, outfile)
