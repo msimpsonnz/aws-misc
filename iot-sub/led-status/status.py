@@ -2,6 +2,7 @@ import os
 import json
 import time
 import signal
+import socket
 import sys
 import unicornhat as unicorn
 import fonts
@@ -29,7 +30,8 @@ def loop():
     try:
         if os.path.isfile('/src/on.txt'):
             while start:
-                print("Start")
+                # get_lock('iotstatus')
+                #print("Start")
                 unicorn.clear()
                 time.sleep(2)
                 elap=(time.time() - start_time)
@@ -45,7 +47,7 @@ def loop():
                     time.sleep(2)
                     unicorn.clear()
                 else:
-                    print('Number over 10')
+                    #print('Number over 10')
                     splitNum=list(map(int,str(num)))
                     for i in range(8):
                         for cell in range(4):
@@ -73,7 +75,7 @@ def loop():
                 for i in range(8):
                     for cell in matrix[i]:
                         rgb=read_rgb()
-                        unicorn.set_pixel(cell,i,0,rgb['g'],rgb['b'])
+                        unicorn.set_pixel(cell,i,rgb['r'],rgb['g'],rgb['b'])
                         unicorn.show()
                         time.sleep(0.01)
                 time.sleep(0.5)
@@ -95,7 +97,7 @@ def read_rgb():
         data = json.load(json_file)
     return data
 
-def write_rgb(r_value = 255, g_value = 0, b_value = 0):
+def write_rgb(r_value = 0, g_value = 255, b_value = 0):
     data = {
         'r': r_value,
         'g': g_value,
@@ -104,6 +106,16 @@ def write_rgb(r_value = 255, g_value = 0, b_value = 0):
 
     with open('/src/rgb.json', 'w') as outfile:
         json.dump(data, outfile)
+
+# def get_lock(process_name):
+#     get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+#     try:
+#         get_lock._lock_socket.bind('\0' + process_name)
+#         print('Script lock')
+#     except socket.error:
+#         print('Error: script running')
+#         sys.exit()
+
 
 def cleanup (signumber, stackframe):
     global start
