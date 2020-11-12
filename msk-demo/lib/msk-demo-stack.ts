@@ -6,6 +6,8 @@ import * as elbv2 from '@aws-cdk/aws-elasticloadbalancingv2';
 import * as cloudmap from '@aws-cdk/aws-servicediscovery';
 import * as iam from '@aws-cdk/aws-iam';
 import * as lambda from '@aws-cdk/aws-lambda';
+import * as cloud9 from '@aws-cdk/aws-cloud9';
+
 
 export class MskDemoStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -26,6 +28,28 @@ export class MskDemoStack extends cdk.Stack {
           subnetType: ec2.SubnetType.PRIVATE,
         },
       ],
+    });
+
+    const mskClusterV1 = new msk.CfnCluster(this, 'mskClusterV1', {
+      clusterName: 'msk-demo-v1',
+      brokerNodeGroupInfo: {
+        clientSubnets: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE })
+          .subnetIds,
+        instanceType: 'kafka.t3.small',
+        brokerAzDistribution: 'DEFAULT',
+      },
+      numberOfBrokerNodes: 4,
+      kafkaVersion: '1.1.1',
+      encryptionInfo: {
+        encryptionInTransit: {
+          clientBroker: 'TLS_PLAINTEXT',
+        },
+      },
+      // configurationInfo: {
+      //   arn:
+      //     'arn:aws:kafka:ap-southeast-2:383358879677:configuration/msk-demo-config/75dc0e13-0c54-43e9-b06d-dd71243caf48-3',
+      //   revision: 1,
+      // },
     });
 
     const mskCluster = new msk.CfnCluster(this, 'msk-demo', {
@@ -146,11 +170,11 @@ export class MskDemoStack extends cdk.Stack {
           SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS:
             'SSL://b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-4.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9094',
           SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: 'SSL',
-            // SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS:
-            // 'PLAINTEXT://b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092',          
           SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081',
           SCHEMA_REGISTRY_HOST_NAME: 'schema',
-          SCHEMA_REGISTRY_DEBUG: 'true'
+          SCHEMA_REGISTRY_DEBUG: 'true',
+          SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS: 'GET,POST,PUT,OPTIONS',
+          SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN: '*',
         },
       }
     );
@@ -452,5 +476,21 @@ export class MskDemoStack extends cdk.Stack {
       kafkaTopic: 'AWSKafkaTutorialTopic',
       startingPosition: lambda.StartingPosition.TRIM_HORIZON,
     });
+
+    // const c9env = new cloud9.Ec2Environment(this, 'Cloud9Env', {
+    //   vpc,
+    //   instanceType: new ec2.InstanceType('t3.large'),
+    //   ownerarn: 
+    // });
+        
+    //new cdk.CfnOutput(this, 'URL', { value: c9env.ideUrl });
+
+    const c9env = new cloud9.CfnEnvironmentEC2(this, 'Cloud9Env', {
+      instanceType: 't3.large',
+      ownerArn: this.node.tryGetContext('login'),
+      subnetId: vpc.publicSubnets[0].subnetId
+    })
+
+
   }
 }
