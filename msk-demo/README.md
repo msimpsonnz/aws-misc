@@ -14,8 +14,9 @@ export ZookeeperConnectString="z-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazo
 
 bin/kafka-topics.sh --create --zookeeper $ZookeeperConnectString --replication-factor 2 --partitions 1 --topic users
 
-bin/kafka-topics.sh --create --zookeeper $ZookeeperConnectString --replication-factor 1 --partitions 1 --topic pageviews
+bin/kafka-topics.sh --delete --zookeeper $ZookeeperConnectString --topic users
 
+bin/kafka-topics.sh --create --zookeeper $ZookeeperConnectString --replication-factor 1 --partitions 1 --topic pageviews
 
 curl -X POST \
      -H "Content-Type: application/vnd.kafka.json.v2+json" \
@@ -27,7 +28,14 @@ curl -X POST \
 export CONFLUENT_HOME=/home/ec2-user/confluent/confluent-6.0.0
 export PATH=$PATH:$CONFLUENT_HOME/bin
 $CONFLUENT_HOME/bin/ksql-datagen quickstart=pageviews format=delimited topic=pageviews msgRate=5 bootstrap-server=b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092
-$CONFLUENT_HOME/bin/ksql-datagen quickstart=users format=json topic=users msgRate=1 bootstrap-server=b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092
+$CONFLUENT_HOME/bin/ksql-datagen quickstart=users format=avro topic=users msgRate=1 bootstrap-server=b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092 schemaRegistryUrl=http://172.16.3.91:8081
 
 export CONFLUENT_HOME=/home/ec2-user/confluent/confluent-6.0.0
-$CONFLUENT_HOME/bin/ksql http://172.16.2.31:8088
+export KSQL=http://172.16.3.125:8088
+$CONFLUENT_HOME/bin/ksql $KSQL
+
+###KSQL###
+
+CREATE STREAM pageviews (viewtime BIGINT, userid VARCHAR, pageid VARCHAR) 
+WITH (kafka_topic='pageviews', value_format='JSON');
+
