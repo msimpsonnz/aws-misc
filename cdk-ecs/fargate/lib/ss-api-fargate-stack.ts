@@ -1,4 +1,5 @@
 import cdk = require('@aws-cdk/core');
+import iam = require('@aws-cdk/aws-iam');
 import ec2 = require("@aws-cdk/aws-ec2");
 import ecs = require("@aws-cdk/aws-ecs");
 import ecr = require('@aws-cdk/aws-ecr');
@@ -7,28 +8,52 @@ import { Duration } from '@aws-cdk/core';
 import secretmgr = require('@aws-cdk/aws-secretsmanager');
 import acm = require('@aws-cdk/aws-certificatemanager');
 import route53 = require('@aws-cdk/aws-route53');
-import { LoadBalancerTarget } from '@aws-cdk/aws-route53-targets';
-
-
+import { Alarm, ComparisonOperator } from '@aws-cdk/aws-cloudwatch';
+import sns = require('@aws-cdk/aws-sns');
+import lambda = require('@aws-cdk/aws-lambda')
+import { EnvironmentConfig } from './helper';
+import events = require('@aws-cdk/aws-events');
+import targets = require('@aws-cdk/aws-events-targets');
+import { Schedule, RuleTargetInput } from '@aws-cdk/aws-events';
 
 export class SsApiFargateStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const environment = this.node.tryGetContext("environment");
-    const secretUid = this.node.tryGetContext("secretUid");
-    const imageName = this.node.tryGetContext("imageName");
-    const defaultVpc = this.node.tryGetContext("defaultVpc");
-    const domain = this.node.tryGetContext("domain");
-    const certId = this.node.tryGetContext("certId");
+    //Load our context variables from cdk.json or via CLI
+    const config = new EnvironmentConfig(this.node);
 
-    const certArn = `arn:aws:acm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:certificate/${certId}`;
-    const ecrRepo = ecr.Repository.fromRepositoryName(this, 'demo-ecr-api', imageName);
+    //Some addition conditional variables for different config.environment s
+    const albName = `ss-api-alb-${config.environment}`;
+    //We need to provide a public host name for our application that will not clash
+    const apiHostName = (config.environment === 'prod') ? 'api' : `api.${config.environment}`;
+    const apiFqdn = `${apiHostName}.${config.domain}`;
+    //We will use the `latest` image tag for anything other than prod
+    const imageTag = (config.environment === 'prod') ? config.environment : 'latest';
 
-    const vpc = (defaultVpc === true) ? ec2.Vpc.fromLookup(this, 'demo-vpc-default', {
+    //First we import all of the resources created outsite of CDK
+    //Generate the ARN for the certificate from AWS Cert Manager then import it
+    const certArn = `arn:aws:acm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:certificate/${config.certId}`;
+    const certificate = acm.Certificate.fromCertificateArn(this, 'ss-api-certificate', certArn);
+    //Import the Route 53 hosted zone for out public domain
+    const r53zone = route53.HostedZone.fromLookup(this, 'ss-r53-domain', {
+      domainName: config.domain
+    });
+    //Import the ECR repo where the container image is stored
+    const ecrRepo = ecr.Repository.fromRepositoryName(this, 'ss-api-ecr', config.imageName);
+    //Import our Secret Manager Secret for use within the application
+    const secret = secretmgr.Secret.fromSecretArn(this, 'ss-api-secrets',
+      `arn:aws:secretsmanager:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:secret:${config.secretName}`
+    );
+
+    //Import RDS security group
+    const rdsSec = ec2.SecurityGroup.fromSecurityGroupId(this, 'ss-rds-subnet', config.rdsSecurityGroup)
+
+    //We need a VPC - this will use the default VPC but can overide to create a new dedicated VPC
+    const vpc = (config.defaultVpc === true) ? ec2.Vpc.fromLookup(this, 'ss-vpc-default', {
       isDefault: true
     }) :
-      new ec2.Vpc(this, 'demo-vpc', {
+      new ec2.Vpc(this, 'ss-vpc', {
         cidr: '10.0.0.0/16',
         maxAzs: 2,
         subnetConfiguration: [
@@ -40,84 +65,207 @@ export class SsApiFargateStack extends cdk.Stack {
         ],
         natGateways: 0
       });
-    
-    const certificate = acm.Certificate.fromCertificateArn(this, 'Certificate', certArn);
 
-    const appLoadBalancer = new elbv2.ApplicationLoadBalancer(this, 'demo-api-alb', {
+    //Application load balancer will be the public entry point the the application
+    //Deployed in the VPC from above and configured as internet facing with public IP
+    const appLoadBalancer = new elbv2.ApplicationLoadBalancer(this, 'ss-api-alb', {
+      loadBalancerName: albName,
       vpc,
       internetFacing: true,
     });
-
-    const albListener = appLoadBalancer.addListener('demo-api-alb-listener', {
-      port: 443,
+    //We need a listener for the public side this is then bound to the imported certificate
+    const albListener = appLoadBalancer.addListener('ss-api-alb-listener', {
+      port: config.albPort,
       open: true,
-      certificateArns: [ 
-        certificate.certificateArn
+      certificateArns: [
+        certificate.certificateArn,
       ]
     });
 
-    const r53zone = route53.HostedZone.fromLookup(this, 'demo-domain', {
-      domainName: domain
+    //Now the ALB setup is complete we create a Route 53 record in our imported zone and alias to the ALB
+    new route53.CfnRecordSet(this, 'ss-api-r53-alb', {
+      hostedZoneName: `${r53zone.zoneName}.`,
+      name: apiFqdn,
+      type: 'A',
+      aliasTarget: {
+        dnsName: appLoadBalancer.loadBalancerDnsName,
+        hostedZoneId: appLoadBalancer.loadBalancerCanonicalHostedZoneId
+      },
+      weight: 100,
+      setIdentifier: `ss-api-${config.environment}`
     });
 
-    new route53.ARecord(this, 'demo-domain-api', {
-      recordName: 'api',
-      zone: r53zone,
-      target: route53.RecordTarget.fromAlias(new LoadBalancerTarget(appLoadBalancer))
-    });
-
-    const ecsCluster = new ecs.Cluster(this, "demo-fargate-api", {
+    //Create a ECS cluster in the VPC provided
+    const ecsCluster = new ecs.Cluster(this, "ss-api-ecs", {
+      clusterName: `ss-api-${config.environment}-ecs`,
       vpc: vpc
     });
 
-    const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'TaskDef', {
-      memoryLimitMiB: 512,
-      cpu: 256,
-
+    //Create Fargate Task Definition
+    const fargateTaskDefinition = new ecs.FargateTaskDefinition(this, 'ss-fargate-task-def', {
+      memoryLimitMiB: config.fargateMB,
+      cpu: config.fargateCPU
     });
 
-    const secret = secretmgr.Secret.fromSecretArn(this, 'demo-api-secrets',
-      `arn:aws:secretsmanager:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:secret:${environment}/demo-api-${secretUid}`
-    );
-
-    const fargateTask = fargateTaskDefinition.addContainer("demo-ts", {
-      image: ecs.ContainerImage.fromEcrRepository(ecrRepo),
+    //Create Fargate Task Definition
+    //Use image from ECR, setup logging to CloudWatch with custom prefix, get config.environment  variables from Secret Mgr
+    const fargateTask = fargateTaskDefinition.addContainer('ss-ts-container', {
+      image: ecs.ContainerImage.fromEcrRepository(ecrRepo, imageTag),
       logging: ecs.LogDrivers.awsLogs({
-        streamPrefix: `$demo-api${environment}-logs`,
+        streamPrefix: `$ss-api-${config.environment}-logs`,
       }),
       environment: {
-        NODE_ENV: secret.secretValueFromJson('NODE_ENV').toString(),
-        ss_api_env: secret.secretValue.toString()
+        NODE_ENV: config.environment,
+        AWS_DEPLOY: secret.secretValueFromJson('AWS_DEPLOY').toString(),
+        yes_definitely_send_mail: (config.environment === 'prod') ? 'yesplease' : 'nothanks'
+
       },
       secrets: {
-        //Cannot use secrets due to dynamic refs not working, workaround use env as above, but not as secure
+        SS_API_ENV: ecs.Secret.fromSecretsManager(secret)
       }
     });
 
+    //Add a port mapping to the container this exposes the port for the ALB to use
     fargateTask.addPortMappings({
-      containerPort: 80
+      containerPort: config.fargatePort
     });
 
-    const fargateService = new ecs.FargateService(this, 'Service', {
+    //Crearte a Fargate service to run the Task Def
+    //Add to ECS, cluster with task def, no# of replicas
+    //Deployed in VPC and assigned public IP to access ECR without need for NAT
+    const fargateService = new ecs.FargateService(this, 'ss-api-fargate-svc', {
       cluster: ecsCluster,
+      serviceName: `ss-api-${config.environment}-svc`,
       taskDefinition: fargateTaskDefinition,
-      desiredCount: 1,
+      desiredCount: config.fargateReplica,
       vpcSubnets: vpc.selectSubnets({
         subnetType: ec2.SubnetType.PUBLIC
       }),
-      assignPublicIp: true,
-
+      assignPublicIp: true
     });
 
-    albListener.addTargets('demo-api-alb-target', {
-      port: 80,
+    //Update RDS Security Group with rule to allow Fargate
+    rdsSec.addIngressRule(
+      fargateService.connections.securityGroups[0],
+      ec2.Port.tcp(5432),
+      `allow DB access from Fargate ${config.environment}`);
+
+    //Add the Fargate service as a target for the ALB
+    //Deregistration delay for draining connections during CD and provide health check
+    const albTarget = albListener.addTargets('ss-api-alb-target', {
+      port: config.fargatePort,
+      //hostHeader: apiFqdn,
+      //pathPattern: '/*',
+      //priority: (config.environment === 'prod') ? 0 : config.environment.length,
       targets: [fargateService],
-      deregistrationDelay: Duration.seconds(60),
+      deregistrationDelay: Duration.seconds(config.albDelay),
       healthCheck: {
-        path: '/',
-        interval: cdk.Duration.minutes(1),
+        path: config.albHealthPath,
+        interval: cdk.Duration.seconds(config.albHealthInterval),
       }
     });
+
+    //albTarget.addTarget(fargateService);
+
+    //Setup autoscaling based on CPU% for production
+    if (config.environment === 'prod') {
+      const scaling = fargateService.autoScaleTaskCount({ maxCapacity: 2 });
+      scaling.scaleOnCpuUtilization('ss-api-scalingCPU', {
+        targetUtilizationPercent: config.fargateScaleCPU
+      });
+      scaling.scaleOnMemoryUtilization('ss-api-scalingMem', {
+        targetUtilizationPercent: config.fargateScaleMem
+      });
+      scaling.scaleOnRequestCount('ss-api-scalingReq', {
+        requestsPerTarget: config.fargateScaleReq,
+        targetGroup: albTarget
+      });
+    }
+
+    //Setup CloudWatch Alarms for Fargate
+    const alarmTopic = new sns.Topic(this, 'ss-api-alarmTopic', {
+      topicName: `ss-api-${config.environment}-alarmTopic`
+    });
+
+    const alarmCPU = new Alarm(this, 'ss-api-alarmCPU', {
+      alarmName: `ss-api-${config.environment}-alarm-High-CPU`,
+      metric: fargateService.metricCpuUtilization(),
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      threshold: 80,
+      evaluationPeriods: 1
+    });
+
+    alarmCPU.addAlarmAction({
+      bind(scope, alarm) {
+        return { alarmActionArn: alarmTopic.topicArn };
+      },
+    });
+
+    const alarmMem = new Alarm(this, 'ss-api-alarmMem', {
+      alarmName: `ss-api-${config.environment}-alarm-High-Mem`,
+      metric: fargateService.metricMemoryUtilization(),
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      threshold: 80,
+      evaluationPeriods: 1,
+
+    });
+
+    alarmMem.addAlarmAction({
+      bind(scope, alarm) {
+        return { alarmActionArn: alarmTopic.topicArn };
+      },
+    });
+
+    const alarmALB = new Alarm(this, 'ss-api-alarmALB', {
+      alarmName: `ss-api-${config.environment}-alarm-High-Req`,
+      metric: appLoadBalancer.metricActiveConnectionCount(),
+      comparisonOperator: ComparisonOperator.GREATER_THAN_THRESHOLD,
+      threshold: 1000,
+      evaluationPeriods: 1,
+
+    });
+
+    alarmALB.addAlarmAction({
+      bind(scope, alarm) {
+        return { alarmActionArn: alarmTopic.topicArn };
+      },
+    });
+
+    if (config.environment === 'staging') {
+
+
+
+      const fargateFunction = new lambda.Function(this, 'ss-ops-api-staging', {
+        functionName: 'ss-ops-api-staging',
+        runtime: lambda.Runtime.PYTHON_3_7,
+        handler: 'ss-ops-fargate-stage.handler',
+        code: new lambda.AssetCode('../func/ss-ops-fargate-stage/'),
+        environment: {
+          ECS_CLUSTER: ecsCluster.clusterName,
+          ECS_SERVICE: fargateService.serviceName
+        }
+      });
+
+      fargateFunction.addToRolePolicy(new iam.PolicyStatement({
+        actions: [
+          'ecs:UpdateService'],
+        resources: [
+          `arn:aws:ecs:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:service/${ecsCluster.clusterName}/${fargateService.serviceName}`
+        ]
+      })
+      );
+
+      const rule = new events.Rule(this, 'Rule', {
+        schedule: Schedule.cron({
+          minute: '0',
+          hour: '19',
+        })
+      });
+      rule.addTarget(new targets.LambdaFunction(fargateFunction, {
+        event: events.RuleTargetInput.fromObject({ count: 1 })
+        })
+      );
+    }
 
   }
 }
