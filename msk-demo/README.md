@@ -55,6 +55,8 @@ export v1ClusterArn=arn:aws:kafka:ap-southeast-2:383358879677:cluster/msk-demo-v
 export AWS_REGION=ap-southeast-2
 aws kafka describe-cluster --region $AWS_REGION --cluster-arn $v1ClusterArn
 
+export v1Broker=b-4.msk-demo-v1.luylpb.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo-v1.luylpb.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-2.msk-demo-v1.luylpb.c3.kafka.ap-southeast-2.amazonaws.com:9092
+
 export v1ZookeeperConnectString="z-3.msk-demo-v1.luylpb.c3.kafka.ap-southeast-2.amazonaws.com:2181,z-2.msk-demo-v1.luylpb.c3.kafka.ap-southeast-2.amazonaws.com:2181,z-1.msk-demo-v1.luylpb.c3.kafka.ap-southeast-2.amazonaws.com:2181"
 
 bin/kafka-topics.sh --create --zookeeper $v1ZookeeperConnectString --replication-factor 2 --partitions 2 --topic mirrordemo
@@ -69,7 +71,7 @@ cd ~/environment/msk-demo/mirror
 ~/environment/msk-demo/kafka_2.12-2.2.1/bin/kafka-mirror-maker.sh --consumer.config v1Consumer.config --num.streams 1 --producer.config v2Producer.config --whitelist=".*"
 
 ### Produce on V1
-New Terminal
+#New Terminal
 cd ~/environment/msk-demo/kafka_2.12-2.2.1/bin
 ./kafka-console-producer.sh --broker-list $v1Broker --topic mirrordemo
 
