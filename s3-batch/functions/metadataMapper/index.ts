@@ -62,7 +62,7 @@ export const handler: Handler = async (event: any, context: Context) => {
         sourceBucket: record.sourceBucket,
         params: {
           sourceKey: record.sourceKey,
-          extractKey: extractKey
+          extractKey: `${executionId}/output/${extractKey}`
         }
       }
     }
@@ -81,7 +81,7 @@ export const handler: Handler = async (event: any, context: Context) => {
 
   const batchIdFile = event.batchFile.substring(event.batchFile.lastIndexOf("/") + 1, event.id.length);
   const batchId = batchIdFile.split('.')[0]
-  const manifestKey = `extract/${executionId}/manifest/${batchId}.csv`;
+  const manifestKey = `${executionId}/manifest/${batchId}.csv`;
   console.log(JSON.stringify(manifestKey));
   const putObjectReq: S3.PutObjectRequest = {
       Bucket: process.env.AWS_S3_BUCKET_NAME || 'failed to get bucket name',

@@ -63,7 +63,7 @@ export const handler: Handler = async (event: any, context: Context) => {
           Format: 'Report_CSV_20180820',
           ReportScope: 'AllTasks',
           Bucket: `arn:aws:s3:::${bucket}`,
-          Prefix: `extract/reports/${executionId}/${batchId}`,
+          Prefix: `${executionId}/reports/${batchId}`,
         },
         RoleArn: AWS_BATCH_ROLE_ARN,
         ConfirmationRequired: false,

@@ -15,7 +15,7 @@ export const handler: Handler = async (event: any, context: Context) => {
     for await (const batch of batches) {
         console.log(JSON.stringify(batch));
         const executionId = event.id.substring(event.id.lastIndexOf(":") + 1, event.id.length);
-        const s3Key = `extract/${executionId}/task/${batchId}.json`;
+        const s3Key = `${executionId}/jobs/${batchId}.json`;
         console.log(JSON.stringify(s3Key));
         const putObjectReq: S3.PutObjectRequest = {
             Bucket: process.env.AWS_S3_BUCKET_NAME || 'failed to get bucket name',
