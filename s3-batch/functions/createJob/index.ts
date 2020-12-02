@@ -24,7 +24,6 @@ export const handler: Handler = async (event: any, context: Context) => {
       batchFile: string;
       manifests: { Payload: { ETag: any; ObjectArn: any } };
     }) => {
-      //for await (const manifest of event.manifests) {
       console.log(JSON.stringify(manifest));
       const batchFile = manifest.batchFile.substring(
         manifest.batchFile.lastIndexOf('/') + 1,
