@@ -1,4 +1,4 @@
-export ClusterArn=arn:aws:kafka:ap-southeast-2:383358879677:cluster/msk-demo/28392fe6-dd81-472d-a9f6-0276428fc374-3
+export ClusterArn=arn:aws:kafka:ap-southeast-2:383358879677:cluster/msk-demo/e87930bf-f0eb-4e5d-a822-a23456e57f06-3
 export AWS_REGION=ap-southeast-2
 aws kafka describe-cluster --region $AWS_REGION --cluster-arn $ClusterArn
 
@@ -6,6 +6,7 @@ aws kafka describe-cluster --region $AWS_REGION --cluster-arn $ClusterArn
 aws kafka get-bootstrap-brokers --cluster-arn $ClusterArn
 
 sudo yum install java-1.8.0
+sudo alternatives --config java
 wget https://archive.apache.org/dist/kafka/2.2.1/kafka_2.12-2.2.1.tgz
 tar -xzf kafka_2.12-2.2.1.tgz
 
@@ -34,9 +35,12 @@ $CONFLUENT_HOME/bin/ksql-datagen quickstart=users format=avro topic=users msgRat
 
 ###KSQL###
 
-export CONFLUENT_HOME=/home/ec2-user/confluent/confluent-6.0.0
-export KSQL=http://172.16.3.125:8088
+export CONFLUENT_HOME=/home/ec2-user/confluent/confluent-6.0.1
+export KSQL=http://172.16.3.229:8088
 $CONFLUENT_HOME/bin/ksql $KSQL
+
+CREATE STREAM riderLocations (profileId VARCHAR, latitude DOUBLE, longitude DOUBLE)
+  WITH (kafka_topic='locations', value_format='json', partitions=1);
 
 SELECT * FROM riderLocations
   WHERE GEO_DISTANCE(latitude, longitude, 37.4133, -122.1162) <= 5 EMIT CHANGES;

@@ -168,7 +168,7 @@ export class MskDemoStack extends cdk.Stack {
         logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-schema' }),
         environment: {
           SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS:
-            'SSL://b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-4.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9094',
+            'SSL://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094',
           SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: 'SSL',
           SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081',
           SCHEMA_REGISTRY_HOST_NAME: 'schema',
@@ -268,7 +268,7 @@ export class MskDemoStack extends cdk.Stack {
         logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-rest' }),
         environment: {
           KAFKA_REST_BOOTSTRAP_SERVERS:
-            'PLAINTEXT://b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092',
+            'PLAINTEXT://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092',
           KAFKA_REST_LISTENERS: 'http://0.0.0.0:8082',
           KAFKA_REST_HOST_NAME: 'rest',
           KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
@@ -317,7 +317,7 @@ export class MskDemoStack extends cdk.Stack {
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-sql' }),
       environment: {
         KSQL_BOOTSTRAP_SERVERS:
-          'PLAINTEXT://b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092',
+          'PLAINTEXT://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092',
         KSQL_LISTENERS: 'http://0.0.0.0:8088',
         KSQL_KSQL_SERVICE_ID: 'sql',
         KSQL_KSQL_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
