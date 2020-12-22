@@ -30,27 +30,27 @@ export class MskDemoStack extends cdk.Stack {
       ],
     });
 
-    const mskClusterV1 = new msk.CfnCluster(this, 'mskClusterV1', {
-      clusterName: 'msk-demo-v1',
-      brokerNodeGroupInfo: {
-        clientSubnets: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE })
-          .subnetIds,
-        instanceType: 'kafka.t3.small',
-        brokerAzDistribution: 'DEFAULT',
-      },
-      numberOfBrokerNodes: 4,
-      kafkaVersion: '1.1.1',
-      encryptionInfo: {
-        encryptionInTransit: {
-          clientBroker: 'TLS_PLAINTEXT',
-        },
-      },
-      // configurationInfo: {
-      //   arn:
-      //     'arn:aws:kafka:ap-southeast-2:383358879677:configuration/msk-demo-config/75dc0e13-0c54-43e9-b06d-dd71243caf48-3',
-      //   revision: 1,
-      // },
-    });
+    // const mskClusterV1 = new msk.CfnCluster(this, 'mskClusterV1', {
+    //   clusterName: 'msk-demo-v1',
+    //   brokerNodeGroupInfo: {
+    //     clientSubnets: vpc.selectSubnets({ subnetType: ec2.SubnetType.PRIVATE })
+    //       .subnetIds,
+    //     instanceType: 'kafka.t3.small',
+    //     brokerAzDistribution: 'DEFAULT',
+    //   },
+    //   numberOfBrokerNodes: 4,
+    //   kafkaVersion: '1.1.1',
+    //   encryptionInfo: {
+    //     encryptionInTransit: {
+    //       clientBroker: 'TLS_PLAINTEXT',
+    //     },
+    //   },
+    //   // configurationInfo: {
+    //   //   arn:
+    //   //     'arn:aws:kafka:ap-southeast-2:383358879677:configuration/msk-demo-config/75dc0e13-0c54-43e9-b06d-dd71243caf48-3',
+    //   //   revision: 1,
+    //   // },
+    // });
 
     const mskCluster = new msk.CfnCluster(this, 'msk-demo', {
       clusterName: 'msk-demo',
