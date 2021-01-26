@@ -7,6 +7,7 @@ export class DdbQueryStack extends cdk.Stack {
     super(scope, id, props);
 
     const table = new ddb.Table(this, 'table', {
+      tableName: 'demo',
       partitionKey: {
         name: 'pk',
         type: ddb.AttributeType.STRING,
@@ -21,19 +22,11 @@ export class DdbQueryStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    //const sfnParallel = new stepfunctions.Parallel(this, 'sftParallel')
-    const definition = for (let index = 0; index < 5; index++) {
-      let sfnMapChild = this.createMap(index);
-      sfnMapChild.iterator(this.createTask(table.tableName, index));
-      //sfnParallel.branch(sfnMapChild)
-    }
-
     const sfnMapParent = new stepfunctions.Map(this, 'sfnMapParent', {
       maxConcurrency: 10,
-      itemsPath: stepfunctions.JsonPath.stringAt('$.inputForParent'),
+      itemsPath: stepfunctions.JsonPath.stringAt('$.inputForMap'),
     });
-    
-    sfnMapParent.iterator(this.createTask(table.tableName, index);
+    sfnMapParent.iterator(this.createTask(table.tableName, 1))
 
     const sfnChildWorkflow = new stepfunctions.StateMachine(
       this,
@@ -57,15 +50,15 @@ export class DdbQueryStack extends cdk.Stack {
         Item: {
           pk: {
             'S.$':
-              "States.Format('clientId{}', $.ContextIndex)",
+              "States.Format('clientId{}', $.c)",
           },
           sk: {
             'S.$':
-              "States.Format('{}#{}', $$.State.EnteredTime, $.ContextIndex)",
+              "States.Format('{}#{}', $$.State.EnteredTime, $.x)",
           },
           clientId: {
             'S.$':
-              "States.Format('clientId{}', $.ContextIndex)",
+              "States.Format('clientId{}', $.c)",
           },
           date: {
             'S.$': '$$.State.EnteredTime',
@@ -80,16 +73,5 @@ export class DdbQueryStack extends cdk.Stack {
     return new stepfunctions.CustomState(this, `sfnTaskDDBPut-${index}`, {
       stateJson: sfnTaskDDBState,
     });
-  }
-
-  private createMap(index: number) {
-    const sfnMapChild = new stepfunctions.Map(this, `sfnMap-${index}`, {
-      maxConcurrency: 10,
-      itemsPath: stepfunctions.JsonPath.stringAt('$$.Execution.Input.inputForMap'),
-      parameters: {
-        ContextIndex : stepfunctions.JsonPath.stringAt('$$.Map.Item.Value'),
-      }
-    });
-    return sfnMapChild;
   }
 }
