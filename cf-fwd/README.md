@@ -1,14 +1,11 @@
-# Welcome to your CDK TypeScript project!
+## How to run
 
-This is a blank project for TypeScript development with CDK.
+IMPORTANT! You must use 'us-east-1' region for this demo as CloudFront only supports ACM certs from that region.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+1. Create a EC2 Key Pair in 'us-east-1', update './lib/cf-fwd-stack.ts'
+2. Create a Route53 public hosted zone and update './lib/cf-fwd-stack.ts'
+3. Install Node, NPM and NPX
 
-## Useful commands
+npm i
+npx cdk deploy
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template

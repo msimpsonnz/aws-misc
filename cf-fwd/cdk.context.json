@@ -1,0 +1,23 @@
+{
+  "availability-zones:account=383358879677:region=ap-southeast-2": [
+    "ap-southeast-2a",
+    "ap-southeast-2b",
+    "ap-southeast-2c"
+  ],
+  "hosted-zone:account=383358879677:domainName=demo.msimpson.co.nz:region=ap-southeast-2": {
+    "Id": "/hostedzone/Z094674690P7H8EGY5N6",
+    "Name": "demo.msimpson.co.nz."
+  },
+  "availability-zones:account=383358879677:region=us-east-1": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1e",
+    "us-east-1f"
+  ],
+  "hosted-zone:account=383358879677:domainName=demo.msimpson.co.nz:region=us-east-1": {
+    "Id": "/hostedzone/Z094674690P7H8EGY5N6",
+    "Name": "demo.msimpson.co.nz."
+  }
+}
