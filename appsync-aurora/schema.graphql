@@ -1,0 +1,45 @@
+type Mutation {
+    createPet(input: CreatePetInput!): Pet
+    updatePet(input: UpdatePetInput!): Pet
+    deletePet(input: DeletePetInput!): Pet
+}
+
+input CreatePetInput {
+    type: PetType
+    price: Float!
+}
+
+input UpdatePetInput {
+id: ID!
+    type: PetType
+    price: Float!
+}
+
+input DeletePetInput {
+    id: ID!
+}
+
+type Pet {
+    id: ID!
+    type: PetType
+    price: Float
+}
+
+enum PetType {
+    dog
+    cat
+    fish
+    bird
+    gecko
+}
+
+type Query {
+    getPet(id: ID!): Pet
+    listPets: [Pet]
+    listPetsByPriceRange(min: Float, max: Float): [Pet]
+}
+
+schema {
+    query: Query
+    mutation: Mutation
+}
