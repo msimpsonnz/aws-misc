@@ -1,4 +1,1 @@
-
-
-create table demos(id varchar(200), version varchar(200))
-insert 
+create table Pets(id varchar(200), type varchar(200), price float);

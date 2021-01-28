@@ -6,6 +6,6 @@ import { AppsyncAuroraStack } from '../lib/appsync-aurora-stack';
 const app = new cdk.App();
 new AppsyncAuroraStack(app, 'AppsyncAuroraStack', {
     env: {
-        region: 'us-east-1'
+        region: 'ap-southeast-2'//'us-east-1'
     }
 });

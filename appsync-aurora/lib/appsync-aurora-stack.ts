@@ -8,15 +8,24 @@ export class AppsyncAuroraStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    const databaseName = 'TESTDB';
-    const databaseSchema = 'mysql';
+    //Database Name and Engine
+    const databaseName = 'testdb';
+    const databaseEngine = rds.DatabaseClusterEngine.AURORA_POSTGRESQL
+
+    //Infer from Engine
+    const databaseSchema = databaseEngine == rds.DatabaseClusterEngine.AURORA_MYSQL ? 'mysql' : undefined;
+    const rdsEngine = databaseEngine == rds.DatabaseClusterEngine.AURORA_MYSQL ? rds.DatabaseClusterEngine.AURORA_MYSQL : rds.DatabaseClusterEngine.AURORA_POSTGRESQL;
+    const defaultParameterGroup = databaseEngine == rds.DatabaseClusterEngine.AURORA_MYSQL ? 'default.aurora-mysql5.7' : 'default.aurora-postgresql10';
+    const rdsParameterGroup = rds.ParameterGroup.fromParameterGroupName(this, 'ParameterGroup', defaultParameterGroup);
 
     const vpc = new ec2.Vpc(this, 'vpc', {
       maxAzs: 2
     });
 
     const serverless = new rds.ServerlessCluster(this, 'cluster', {
-      engine: rds.DatabaseClusterEngine.AURORA_MYSQL,
+      engine: rdsEngine,
+      parameterGroup: rdsParameterGroup,
+      defaultDatabaseName: databaseName,
       vpc,
       enableDataApi: true
     });
