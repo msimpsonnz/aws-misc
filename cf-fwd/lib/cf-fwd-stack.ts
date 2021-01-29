@@ -90,15 +90,11 @@ export class CfFwdStack extends cdk.Stack {
     });
 
 
-    const myCachePolicy = new cloudfront.CachePolicy(this, 'myCachePolicy', {
-      cachePolicyName: 'CacheAllowHostPolicy',
-      comment: 'Cache policy for host forwarding',
-      defaultTtl: cdk.Duration.days(2),
-      minTtl: cdk.Duration.minutes(1),
-      maxTtl: cdk.Duration.days(10),
-      headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Host'),
-      queryStringBehavior: cloudfront.CacheQueryStringBehavior.all(),
-    });
+    // const myCachePolicy = new cloudfront.CachePolicy(this, 'myCachePolicy', {
+    //   cachePolicyName: 'CacheAllowHostPolicy',
+    //   comment: 'Cache policy for host forwarding',
+    //   headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Host'),
+    // });
 
     const myOriginRequestPolicy = new cloudfront.OriginRequestPolicy(
       this,
@@ -109,7 +105,6 @@ export class CfFwdStack extends cdk.Stack {
         headerBehavior: cloudfront.OriginRequestHeaderBehavior.allowList(
           'Host'
         ),
-        queryStringBehavior: cloudfront.OriginRequestQueryStringBehavior.all(),
       }
     );
 
@@ -118,7 +113,7 @@ export class CfFwdStack extends cdk.Stack {
         origin: new origins.HttpOrigin(nginx.instancePublicDnsName, {
           protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY, //Just for testing
         }),
-        cachePolicy: myCachePolicy,
+        //cachePolicy: myCachePolicy,
         originRequestPolicy: myOriginRequestPolicy,
       },
       domainNames: [cfDomainName],
