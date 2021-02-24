@@ -1,8 +1,8 @@
 {
-  "name": "cf-fwd",
+  "name": "ses-routing",
   "version": "0.1.0",
   "bin": {
-    "cf-fwd": "bin/cf-fwd.js"
+    "ses-routing": "bin/ses-routing.js"
   },
   "scripts": {
     "build": "tsc",
@@ -11,22 +11,18 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@aws-cdk/assert": "1.91.0",
+    "@aws-cdk/assert": "1.90.1",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
     "jest": "^26.4.2",
     "ts-jest": "^26.2.0",
-    "aws-cdk": "1.91.0",
+    "aws-cdk": "1.90.1",
     "ts-node": "^9.0.0",
     "typescript": "~3.9.7"
   },
   "dependencies": {
-    "@aws-cdk/aws-certificatemanager": "^1.91.0",
-    "@aws-cdk/aws-cloudfront": "^1.91.0",
-    "@aws-cdk/aws-cloudfront-origins": "^1.91.0",
-    "@aws-cdk/aws-route53-targets": "^1.91.0",
-    "@aws-cdk/aws-wafv2": "^1.91.0",
-    "@aws-cdk/core": "1.91.0",
+    "@aws-cdk/aws-ses-actions": "^1.90.1",
+    "@aws-cdk/core": "1.90.1",
     "source-map-support": "^0.5.16"
   }
 }

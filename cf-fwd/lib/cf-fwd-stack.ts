@@ -2,6 +2,7 @@ import * as cdk from '@aws-cdk/core';
 import * as ec2 from '@aws-cdk/aws-ec2';
 import * as route53 from '@aws-cdk/aws-route53';
 import * as acm from '@aws-cdk/aws-certificatemanager';
+import * as waf from '@aws-cdk/aws-wafv2';
 import * as cloudfront from '@aws-cdk/aws-cloudfront';
 import * as origins from '@aws-cdk/aws-cloudfront-origins';
 import * as targets from '@aws-cdk/aws-route53-targets';
@@ -10,15 +11,19 @@ export class CfFwdStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    //####### Const #######//
+
     //Change this to EC2 Key Pair name in us-east-1
     const ec2KeyName = 'us-east';
     //Change this to Route53 hosted zone you control
     const myDomainName = 'demo.msimpson.co.nz';
     // Node server for EC2
-    const nodeServer = "https://gist.githubusercontent.com/msimpsonnz/0a1665b6c83bc10067ca7d44b5b1906b/raw/acb0b7ea30c8330190df1d395866bbf58a31756b/echoHeadersNode"
+    const nodeServer =
+      'https://gist.githubusercontent.com/msimpsonnz/0a1665b6c83bc10067ca7d44b5b1906b/raw/acb0b7ea30c8330190df1d395866bbf58a31756b/echoHeadersNode';
     //Enable SSH to EC2 if required
     const enableSSH = false;
 
+    //####### VPC #######//
     const vpc = new ec2.Vpc(this, 'vpc', {
       cidr: `10.0.0.0/21`,
       maxAzs: 2,
@@ -30,6 +35,7 @@ export class CfFwdStack extends cdk.Stack {
       ],
     });
 
+    //####### EC2 and Security Groups #######//
     const nginxSecurityGroup = new ec2.SecurityGroup(
       this,
       'nginxSecurityGroup',
@@ -74,9 +80,10 @@ export class CfFwdStack extends cdk.Stack {
       vpc: vpc,
       securityGroup: nginxSecurityGroup,
       keyName: ec2KeyName,
-      userData: ec2UserData
+      userData: ec2UserData,
     });
 
+    //####### R53 #######//
     const myHostedZone = route53.HostedZone.fromLookup(this, 'myHostedZone', {
       domainName: myDomainName,
     });
@@ -89,13 +96,130 @@ export class CfFwdStack extends cdk.Stack {
       validation: acm.CertificateValidation.fromDns(myHostedZone),
     });
 
+    //####### WAF #######//
+    const wafRegex = new waf.CfnRegexPatternSet(this, 'wafRegex', {
+      scope: 'CLOUDFRONT',
+      regularExpressionList: ['\/(allowed.+)'],
+    });
 
-    // const myCachePolicy = new cloudfront.CachePolicy(this, 'myCachePolicy', {
-    //   cachePolicyName: 'CacheAllowHostPolicy',
-    //   comment: 'Cache policy for host forwarding',
-    //   headerBehavior: cloudfront.CacheHeaderBehavior.allowList('Host'),
-    // });
+    const webAcl = new waf.CfnWebACL(this, 'webAcl', {
+      scope: 'CLOUDFRONT',
+      defaultAction: {
+        allow: {},
+      },
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: 'cf-web-acl-metric',
+        sampledRequestsEnabled: true,
+      },
+      rules: [
+        {
+          name: 'AllowPathRegex',
+          priority: 1,
+          action: {
+            allow: {},
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'AllowPathRegex',
+            sampledRequestsEnabled: true,
+          },
+          statement: {
+            regexPatternSetReferenceStatement: {
+              arn: wafRegex.attrArn,
+              fieldToMatch: {
+                uriPath: {},
+              },
+              textTransformations: [
+                {
+                  priority: 0,
+                  type: 'NONE',
+                },
+              ],
+            },
+          },
+        },
+        {
+          name: 'RuleWithAWSManagedRules',
+          priority: 2,
+          overrideAction: {
+            none: {}
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'RuleWithAWSManagedRulesMetric',
+            sampledRequestsEnabled: true,
+          },
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesCommonRuleSet',
+              excludedRules: [],
+            },
+          },
+        },
+        {
+          name: 'BlockXssAttack',
+          priority: 3,
+          action: {
+            block: {}
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'BlockXssAttackMetric',
+            sampledRequestsEnabled: true,
+          },
+          statement: {
+            xssMatchStatement: {
+              fieldToMatch: {
+                allQueryArguments: {},
+              },
+              textTransformations: [
+                {
+                  priority: 0,
+                  type: 'NONE',
+                },
+              ],
+            },
+          },
+        },
+        {
+          name: 'BlockPathStartsWith',
+          priority: 4,
+          action: {
+            block: {},
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: 'BlockPathStartsWith',
+            sampledRequestsEnabled: true,
+          },
+          statement: {
+            rateBasedStatement: {
+              limit: 100,
+              aggregateKeyType: 'IP',
+              scopeDownStatement: {
+                byteMatchStatement: {
+                  fieldToMatch: {
+                    uriPath: {},
+                  },
+                  positionalConstraint: 'STARTS_WITH',
+                  searchString: '/api/auth',
+                  textTransformations: [
+                    {
+                      priority: 0,
+                      type: 'NONE',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        }
+      ],
+    });
 
+    //####### Cloudfront #######//
     const myOriginRequestPolicy = new cloudfront.OriginRequestPolicy(
       this,
       'OriginRequestPolicy',
@@ -108,22 +232,28 @@ export class CfFwdStack extends cdk.Stack {
       }
     );
 
-    const cfDistWithCustomPolicy = new cloudfront.Distribution(this, 'myDistWithCustomPolicy', {
-      defaultBehavior: {
-        origin: new origins.HttpOrigin(nginx.instancePublicDnsName, {
-          protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY, //Just for testing
-        }),
-        //cachePolicy: myCachePolicy,
-        originRequestPolicy: myOriginRequestPolicy,
-      },
-      domainNames: [cfDomainName],
-      certificate: cfCert,
-    });
+    const cfDistWithCustomPolicy = new cloudfront.Distribution(
+      this,
+      'myDistWithCustomPolicy',
+      {
+        defaultBehavior: {
+          origin: new origins.HttpOrigin(nginx.instancePublicDnsName, {
+            protocolPolicy: cloudfront.OriginProtocolPolicy.HTTP_ONLY, //Just for testing
+          }),
+          originRequestPolicy: myOriginRequestPolicy,
+        },
+        domainNames: [cfDomainName],
+        certificate: cfCert,
+        webAclId: webAcl.attrArn,
+      }
+    );
 
     new route53.ARecord(this, 'cname', {
       recordName: cfRecordName,
       zone: myHostedZone,
-      target: route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(cfDistWithCustomPolicy))
+      target: route53.RecordTarget.fromAlias(
+        new targets.CloudFrontTarget(cfDistWithCustomPolicy)
+      ),
     });
   }
 }
