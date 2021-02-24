@@ -14,9 +14,9 @@ export class CfFwdStack extends cdk.Stack {
     //####### Const #######//
 
     //Change this to EC2 Key Pair name in us-east-1
-    const ec2KeyName = 'us-east';
+    const ec2KeyName = this.node.tryGetContext('us-east');
     //Change this to Route53 hosted zone you control
-    const myDomainName = 'demo.msimpson.co.nz';
+    const myDomainName = this.node.tryGetContext('myDomainName');
     // Node server for EC2
     const nodeServer =
       'https://gist.githubusercontent.com/msimpsonnz/0a1665b6c83bc10067ca7d44b5b1906b/raw/acb0b7ea30c8330190df1d395866bbf58a31756b/echoHeadersNode';
