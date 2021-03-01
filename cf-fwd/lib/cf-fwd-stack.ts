@@ -154,7 +154,9 @@ export class CfFwdStack extends cdk.Stack {
             managedRuleGroupStatement: {
               vendorName: 'AWS',
               name: 'AWSManagedRulesCommonRuleSet',
-              excludedRules: [],
+              excludedRules: [
+                
+              ],
             },
           },
         },

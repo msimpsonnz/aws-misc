@@ -1,0 +1,43 @@
+{
+    "timestamp":1592357192516
+    ,"formatVersion":1
+    ,"webaclId":"arn:aws:wafv2:us-east-1:123456789012:global/webacl/hello-world/5933d6d9-9dde-js82-v8aw-9ck28nv9"
+    ,"terminatingRuleId":"Default_Action"
+    ,"terminatingRuleType":"REGULAR"
+    ,"action":"{{random.arrayElement(
+        ["ALLOW","BLOCK"]
+    )}}"
+    ,"terminatingRuleMatchDetails":[]
+    ,"httpSourceName":"-"
+    ,"httpSourceId":"-"
+    ,"ruleGroupList":[]
+    ,"rateBasedRuleList":[]
+    ,"nonTerminatingMatchingRules":
+    [{
+        "ruleId":"TestRule"
+        ,"action":"COUNT"
+        ,"ruleMatchDetails":
+        [{
+            "conditionType":"SQL_INJECTION"
+            ,"location":"HEADER"
+            ,"matchedData":[
+                "10"
+                ,"and"
+                ,"1"]
+            }]
+    }]
+    ,"httpRequest":{
+        "clientIp":"3.3.3.3"
+        ,"country":"US"
+        ,"headers":[
+            {"name":"Host","value":"localhost:1989"}
+            ,{"name":"User-Agent","value":"curl/7.61.1"}
+            ,{"name":"Accept","value":"*/*"}
+            ,{"name":"foo","value":"10 AND 1=1"}
+            ]
+            ,"uri":"/foo","args":""
+            ,"httpVersion":"HTTP/1.1"
+            ,"httpMethod":"GET"
+            ,"requestId":"rid"
+    }
+}
