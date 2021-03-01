@@ -3,7 +3,6 @@ import * as iam from '@aws-cdk/aws-iam';
 import * as s3 from '@aws-cdk/aws-s3';
 import * as firehose from '@aws-cdk/aws-kinesisfirehose';
 import * as lambdaNode from '@aws-cdk/aws-lambda-nodejs'
-import { type } from 'os';
 
 export class FirehoseLoadStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
