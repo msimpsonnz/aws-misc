@@ -74,16 +74,16 @@ export class MskDemoStack extends cdk.Stack {
       },
     });
 
-    const mySecurityGroup = new ec2.SecurityGroup(this, 'SecurityGroup', {
-      vpc,
-      description: 'Allow ssh access to ec2 instances',
-      allowAllOutbound: true, // Can be set to false
-    });
-    mySecurityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      ec2.Port.tcp(22),
-      'allow ssh access from the world'
-    );
+    // const mySecurityGroup = new ec2.SecurityGroup(this, 'SecurityGroup', {
+    //   vpc,
+    //   description: 'Allow ssh access to ec2 instances',
+    //   allowAllOutbound: true, // Can be set to false
+    // });
+    // mySecurityGroup.addIngressRule(
+    //   ec2.Peer.anyIpv4(),
+    //   ec2.Port.tcp(22),
+    //   'allow ssh access from the world'
+    // );
 
     //const sgDefault
 
@@ -100,152 +100,152 @@ export class MskDemoStack extends cdk.Stack {
       vpc: vpc,
     });
 
-    //######
+    // //######
 
-    const fargateTaskDefinitionShell = new ecs.FargateTaskDefinition(
-      this,
-      'fargateTaskDefinitionShell',
-      {
-        memoryLimitMiB: 512,
-        cpu: 256,
-      }
-    );
+    // const fargateTaskDefinitionShell = new ecs.FargateTaskDefinition(
+    //   this,
+    //   'fargateTaskDefinitionShell',
+    //   {
+    //     memoryLimitMiB: 512,
+    //     cpu: 256,
+    //   }
+    // );
 
-    const containerShell = fargateTaskDefinitionShell.addContainer(
-      'containerShell',
-      {
-        // Use an image from DockerHub
-        image: ecs.ContainerImage.fromAsset('./ssh'),
-        logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-shell' }),
-        command: [
-          '/bin/sh',
-          '-c',
-          'SSH_ENABLED=true /usr/local/bin/docker-entrypoint.sh && sleep infinity',
-        ],
-      }
-    );
+    // const containerShell = fargateTaskDefinitionShell.addContainer(
+    //   'containerShell',
+    //   {
+    //     // Use an image from DockerHub
+    //     image: ecs.ContainerImage.fromAsset('./ssh'),
+    //     logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-shell' }),
+    //     command: [
+    //       '/bin/sh',
+    //       '-c',
+    //       'SSH_ENABLED=true /usr/local/bin/docker-entrypoint.sh && sleep infinity',
+    //     ],
+    //   }
+    // );
 
-    containerShell.addPortMappings({
-      containerPort: 22,
-    });
+    // containerShell.addPortMappings({
+    //   containerPort: 22,
+    // });
 
-    const serviceShell = new ecs.FargateService(this, 'serviceShell', {
-      cluster: ecsCluster,
-      taskDefinition: fargateTaskDefinitionShell,
-      desiredCount: 1,
-      securityGroups: [
-        ec2.SecurityGroup.fromSecurityGroupId(
-          this,
-          'sgServiceShell',
-          vpc.vpcDefaultSecurityGroup
-        ),
-      ],
-      cloudMapOptions: {
-        name: 'shell',
-        failureThreshold: 2,
-        cloudMapNamespace,
-      },
-    });
+    // const serviceShell = new ecs.FargateService(this, 'serviceShell', {
+    //   cluster: ecsCluster,
+    //   taskDefinition: fargateTaskDefinitionShell,
+    //   desiredCount: 1,
+    //   securityGroups: [
+    //     ec2.SecurityGroup.fromSecurityGroupId(
+    //       this,
+    //       'sgServiceShell',
+    //       vpc.vpcDefaultSecurityGroup
+    //     ),
+    //   ],
+    //   cloudMapOptions: {
+    //     name: 'shell',
+    //     failureThreshold: 2,
+    //     cloudMapNamespace,
+    //   },
+    // });
 
-    //######
+    // //######
 
-    const fargateTaskDefinitionSchema = new ecs.FargateTaskDefinition(
-      this,
-      'fargateTaskDefinitionSchema',
-      {
-        memoryLimitMiB: 512,
-        cpu: 256,
-      }
-    );
+    // const fargateTaskDefinitionSchema = new ecs.FargateTaskDefinition(
+    //   this,
+    //   'fargateTaskDefinitionSchema',
+    //   {
+    //     memoryLimitMiB: 512,
+    //     cpu: 256,
+    //   }
+    // );
 
-    const containerSchema = fargateTaskDefinitionSchema.addContainer(
-      'containerSchema',
-      {
-        // Use an image from DockerHub
-        image: ecs.ContainerImage.fromRegistry(
-          'confluentinc/cp-schema-registry'
-        ),
-        logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-schema' }),
-        environment: {
-          SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS:
-            'SSL://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094',
-          SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: 'SSL',
-          SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081',
-          SCHEMA_REGISTRY_HOST_NAME: 'schema',
-          SCHEMA_REGISTRY_DEBUG: 'true',
-          SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS: 'GET,POST,PUT,OPTIONS',
-          SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN: '*',
-        },
-      }
-    );
+    // const containerSchema = fargateTaskDefinitionSchema.addContainer(
+    //   'containerSchema',
+    //   {
+    //     // Use an image from DockerHub
+    //     image: ecs.ContainerImage.fromRegistry(
+    //       'confluentinc/cp-schema-registry'
+    //     ),
+    //     logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-schema' }),
+    //     environment: {
+    //       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS:
+    //         'SSL://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9094',
+    //       SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: 'SSL',
+    //       SCHEMA_REGISTRY_LISTENERS: 'http://0.0.0.0:8081',
+    //       SCHEMA_REGISTRY_HOST_NAME: 'schema',
+    //       SCHEMA_REGISTRY_DEBUG: 'true',
+    //       SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_METHODS: 'GET,POST,PUT,OPTIONS',
+    //       SCHEMA_REGISTRY_ACCESS_CONTROL_ALLOW_ORIGIN: '*',
+    //     },
+    //   }
+    // );
 
-    containerSchema.addPortMappings({
-      containerPort: 8081,
-    });
+    // containerSchema.addPortMappings({
+    //   containerPort: 8081,
+    // });
 
-    const serviceSchema = new ecs.FargateService(this, 'serviceSchema', {
-      cluster: ecsCluster,
-      taskDefinition: fargateTaskDefinitionSchema,
-      desiredCount: 1,
-      securityGroups: [
-        ec2.SecurityGroup.fromSecurityGroupId(
-          this,
-          'sgServiceSchema',
-          vpc.vpcDefaultSecurityGroup
-        ),
-      ],
-      cloudMapOptions: {
-        name: 'schema',
-        failureThreshold: 2,
-        cloudMapNamespace,
-      },
-    });
+    // const serviceSchema = new ecs.FargateService(this, 'serviceSchema', {
+    //   cluster: ecsCluster,
+    //   taskDefinition: fargateTaskDefinitionSchema,
+    //   desiredCount: 1,
+    //   securityGroups: [
+    //     ec2.SecurityGroup.fromSecurityGroupId(
+    //       this,
+    //       'sgServiceSchema',
+    //       vpc.vpcDefaultSecurityGroup
+    //     ),
+    //   ],
+    //   cloudMapOptions: {
+    //     name: 'schema',
+    //     failureThreshold: 2,
+    //     cloudMapNamespace,
+    //   },
+    // });
 
-    //######
+    // //######
 
-    const fargateTaskDefinitionSchemaUI = new ecs.FargateTaskDefinition(
-      this,
-      'fargateTaskDefinitionSchemaUI',
-      {
-        memoryLimitMiB: 512,
-        cpu: 256,
-      }
-    );
+    // const fargateTaskDefinitionSchemaUI = new ecs.FargateTaskDefinition(
+    //   this,
+    //   'fargateTaskDefinitionSchemaUI',
+    //   {
+    //     memoryLimitMiB: 512,
+    //     cpu: 256,
+    //   }
+    // );
 
-    const containerSchemaUI = fargateTaskDefinitionSchemaUI.addContainer(
-      'containerSchemaUI',
-      {
-        // Use an image from DockerHub
-        image: ecs.ContainerImage.fromRegistry('landoop/schema-registry-ui'),
-        logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-schema-ui' }),
-        environment: {
-          SCHEMAREGISTRY_URL: 'http://schema.msk:8081',
-          PROXY: 'true'
-        },
-      }
-    );
+    // const containerSchemaUI = fargateTaskDefinitionSchemaUI.addContainer(
+    //   'containerSchemaUI',
+    //   {
+    //     // Use an image from DockerHub
+    //     image: ecs.ContainerImage.fromRegistry('landoop/schema-registry-ui'),
+    //     logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-schema-ui' }),
+    //     environment: {
+    //       SCHEMAREGISTRY_URL: 'http://schema.msk:8081',
+    //       PROXY: 'true'
+    //     },
+    //   }
+    // );
 
-    containerSchemaUI.addPortMappings({
-      containerPort: 8000,
-    });
+    // containerSchemaUI.addPortMappings({
+    //   containerPort: 8000,
+    // });
 
-    const serviceSchemaUI = new ecs.FargateService(this, 'serviceSchemaUI', {
-      cluster: ecsCluster,
-      taskDefinition: fargateTaskDefinitionSchemaUI,
-      desiredCount: 1,
-      securityGroups: [
-        ec2.SecurityGroup.fromSecurityGroupId(
-          this,
-          'sgServiceSchemaUI',
-          vpc.vpcDefaultSecurityGroup
-        ),
-      ],
-      cloudMapOptions: {
-        name: 'schema-ui',
-        failureThreshold: 2,
-        cloudMapNamespace,
-      },
-    });
+    // const serviceSchemaUI = new ecs.FargateService(this, 'serviceSchemaUI', {
+    //   cluster: ecsCluster,
+    //   taskDefinition: fargateTaskDefinitionSchemaUI,
+    //   desiredCount: 1,
+    //   securityGroups: [
+    //     ec2.SecurityGroup.fromSecurityGroupId(
+    //       this,
+    //       'sgServiceSchemaUI',
+    //       vpc.vpcDefaultSecurityGroup
+    //     ),
+    //   ],
+    //   cloudMapOptions: {
+    //     name: 'schema-ui',
+    //     failureThreshold: 2,
+    //     cloudMapNamespace,
+    //   },
+    // });
 
     //######
 
@@ -268,7 +268,7 @@ export class MskDemoStack extends cdk.Stack {
         logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-rest' }),
         environment: {
           KAFKA_REST_BOOTSTRAP_SERVERS:
-            'PLAINTEXT://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092',
+            'PLAINTEXT://b-4.msk-demo.r6qmch.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.r6qmch.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo.r6qmch.c3.kafka.ap-southeast-2.amazonaws.com:9092',
           KAFKA_REST_LISTENERS: 'http://0.0.0.0:8082',
           KAFKA_REST_HOST_NAME: 'rest',
           KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
@@ -295,6 +295,7 @@ export class MskDemoStack extends cdk.Stack {
         name: 'rest',
         failureThreshold: 2,
         cloudMapNamespace,
+        dnsRecordType: cloudmap.DnsRecordType.A
       },
     });
 
@@ -317,10 +318,10 @@ export class MskDemoStack extends cdk.Stack {
       logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-sql' }),
       environment: {
         KSQL_BOOTSTRAP_SERVERS:
-          'PLAINTEXT://b-3.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-4.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.exlfg6.c3.kafka.ap-southeast-2.amazonaws.com:9092',
+        'b-4.msk-demo.r6qmch.c3.kafka.ap-southeast-2.amazonaws.com:9092',
         KSQL_LISTENERS: 'http://0.0.0.0:8088',
-        KSQL_KSQL_SERVICE_ID: 'sql',
-        KSQL_KSQL_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
+        KSQL_KSQL_SERVICE_ID: 'ksql_service',
+        //KSQL_KSQL_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
       },
     });
 
@@ -346,78 +347,78 @@ export class MskDemoStack extends cdk.Stack {
       },
     });
 
-    //######
+    // //######
 
-    // const fargateTaskDefinitionConnect = new ecs.FargateTaskDefinition(
-    //   this,
-    //   'fargateTaskDefinitionConnect',
-    //   {
-    //     memoryLimitMiB: 512,
-    //     cpu: 256,
-    //   }
-    // );
+    // // const fargateTaskDefinitionConnect = new ecs.FargateTaskDefinition(
+    // //   this,
+    // //   'fargateTaskDefinitionConnect',
+    // //   {
+    // //     memoryLimitMiB: 512,
+    // //     cpu: 256,
+    // //   }
+    // // );
 
-    // const containerConnect = fargateTaskDefinitionConnect.addContainer('containerConnect', {
-    //   // Use an image from DockerHub
-    //   image: ecs.ContainerImage.fromRegistry(
-    //     'confluentinc/cp-kafka-connect:latest'
-    //   ),
-    //   logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-connect' }),
-    //   environment: {
-    //     CONNECT_BOOTSTRAP_SERVERS:
-    //       'PLAINTEXT://b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092',
-    //     CONNECT_GROUP_ID: 'kafka-connect-group',
-    //     CONNECT_CONFIG_STORAGE_TOPIC: 'kafka-connect-config',
-    //     CONNECT_OFFSET_STORAGE_TOPIC: 'kafka-connect-offset',
-    //     CONNECT_STATUS_STORAGE_TOPIC: 'kafka-connect-status',
-    //     CONNECT_KEY_CONVERTER: 'io.confluent.connect.avro.AvroConverter',
-    //     CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter',
-    //     CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter',
-    //     CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter',
-    //     CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect',
-    //     CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
-    //     CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/'
-    //   },
-    // });
+    // // const containerConnect = fargateTaskDefinitionConnect.addContainer('containerConnect', {
+    // //   // Use an image from DockerHub
+    // //   image: ecs.ContainerImage.fromRegistry(
+    // //     'confluentinc/cp-kafka-connect:latest'
+    // //   ),
+    // //   logging: ecs.LogDrivers.awsLogs({ streamPrefix: 'ecs-msk-connect' }),
+    // //   environment: {
+    // //     CONNECT_BOOTSTRAP_SERVERS:
+    // //       'PLAINTEXT://b-2.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-3.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092,b-1.msk-demo.g4yywa.c3.kafka.ap-southeast-2.amazonaws.com:9092',
+    // //     CONNECT_GROUP_ID: 'kafka-connect-group',
+    // //     CONNECT_CONFIG_STORAGE_TOPIC: 'kafka-connect-config',
+    // //     CONNECT_OFFSET_STORAGE_TOPIC: 'kafka-connect-offset',
+    // //     CONNECT_STATUS_STORAGE_TOPIC: 'kafka-connect-status',
+    // //     CONNECT_KEY_CONVERTER: 'io.confluent.connect.avro.AvroConverter',
+    // //     CONNECT_VALUE_CONVERTER: 'io.confluent.connect.avro.AvroConverter',
+    // //     CONNECT_INTERNAL_KEY_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter',
+    // //     CONNECT_INTERNAL_VALUE_CONVERTER: 'org.apache.kafka.connect.json.JsonConverter',
+    // //     CONNECT_REST_ADVERTISED_HOST_NAME: 'kafka-connect',
+    // //     CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/',
+    // //     CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: 'http://schema.msk:8081/'
+    // //   },
+    // // });
 
-    // containerConnect.addPortMappings({
-    //   containerPort: 8083,
-    // });
+    // // containerConnect.addPortMappings({
+    // //   containerPort: 8083,
+    // // });
 
-    // const serviceConnect = new ecs.FargateService(this, 'serviceConnect', {
-    //   cluster: ecsCluster,
-    //   taskDefinition: fargateTaskDefinitionConnect,
-    //   desiredCount: 1,
-    //   securityGroups: [
-    //     ec2.SecurityGroup.fromSecurityGroupId(
-    //       this,
-    //       'sgServiceConnect',
-    //       vpc.vpcDefaultSecurityGroup
-    //     ),
-    //   ],
-    //   cloudMapOptions: {
-    //     name: 'kafka-connect',
-    //     failureThreshold: 2,
-    //     cloudMapNamespace,
-    //   },
-    // });
+    // // const serviceConnect = new ecs.FargateService(this, 'serviceConnect', {
+    // //   cluster: ecsCluster,
+    // //   taskDefinition: fargateTaskDefinitionConnect,
+    // //   desiredCount: 1,
+    // //   securityGroups: [
+    // //     ec2.SecurityGroup.fromSecurityGroupId(
+    // //       this,
+    // //       'sgServiceConnect',
+    // //       vpc.vpcDefaultSecurityGroup
+    // //     ),
+    // //   ],
+    // //   cloudMapOptions: {
+    // //     name: 'kafka-connect',
+    // //     failureThreshold: 2,
+    // //     cloudMapNamespace,
+    // //   },
+    // // });
 
-    //######
+    // //######
 
     const lb = new elbv2.ApplicationLoadBalancer(this, 'LB', {
       vpc,
       internetFacing: true,
     });
 
-    const listenerSchemaUI = lb.addListener('listenerSchemaUI', {
-      port: 8000,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-    });
-    const targetGroupSchemaUI = listenerSchemaUI.addTargets('SchemaUI', {
-      port: 8000,
-      protocol: elbv2.ApplicationProtocol.HTTP,
-      targets: [serviceSchemaUI],
-    });
+    // const listenerSchemaUI = lb.addListener('listenerSchemaUI', {
+    //   port: 8000,
+    //   protocol: elbv2.ApplicationProtocol.HTTP,
+    // });
+    // // const targetGroupSchemaUI = listenerSchemaUI.addTargets('SchemaUI', {
+    // //   port: 8000,
+    // //   protocol: elbv2.ApplicationProtocol.HTTP,
+    // //   targets: [serviceSchemaUI],
+    // // });
 
     const listenerRest = lb.addListener('listenerRest', {
       port: 8082,
@@ -439,57 +440,51 @@ export class MskDemoStack extends cdk.Stack {
     //   targets: [serviceSQL],
     // });
 
-    const lambdaRole = new iam.Role(this, 'msk-LambdaRole', {
-      assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
-    });
-    lambdaRole.addManagedPolicy(
-      iam.ManagedPolicy.fromAwsManagedPolicyName(
-        'service-role/AWSLambdaMSKExecutionRole'
-      )
-    );
-
-    const fnStd = new lambda.Function(this, 'fnStd', {
-      runtime: lambda.Runtime.NODEJS_12_X,
-      role: lambdaRole,
-      timeout: cdk.Duration.seconds(20),
-      handler: 'index.handler',
-      code: lambda.Code.fromInline(`
-        exports.handler = async (event) => {
-          // Iterate through keys
-          for (let key in event.records) {
-            console.log('Key: ', key)
-            // Iterate through records
-            event.records[key].map((record) => {
-              console.log('Record: ', record)
-              // Decode base64
-              const msg = Buffer.from(record.value, 'base64').toString()
-              console.log('Message:', msg)
-            }) 
-          }
-        }
-      `),
-    });
-
-    new lambda.EventSourceMapping(this, 'EventSourceMapping', {
-      eventSourceArn: mskCluster.ref,
-      target: fnStd,
-      kafkaTopic: 'AWSKafkaTutorialTopic',
-      startingPosition: lambda.StartingPosition.TRIM_HORIZON,
-    });
-
-    // const c9env = new cloud9.Ec2Environment(this, 'Cloud9Env', {
-    //   vpc,
-    //   instanceType: new ec2.InstanceType('t3.large'),
-    //   ownerarn: 
+    // const lambdaRole = new iam.Role(this, 'msk-LambdaRole', {
+    //   assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
     // });
-        
-    //new cdk.CfnOutput(this, 'URL', { value: c9env.ideUrl });
+    // lambdaRole.addManagedPolicy(
+    //   iam.ManagedPolicy.fromAwsManagedPolicyName(
+    //     'service-role/AWSLambdaMSKExecutionRole'
+    //   )
+    // );
+
+    // const fnStd = new lambda.Function(this, 'fnStd', {
+    //   runtime: lambda.Runtime.NODEJS_12_X,
+    //   role: lambdaRole,
+    //   timeout: cdk.Duration.seconds(20),
+    //   handler: 'index.handler',
+    //   code: lambda.Code.fromInline(`
+    //     exports.handler = async (event) => {
+    //       // Iterate through keys
+    //       for (let key in event.records) {
+    //         console.log('Key: ', key)
+    //         // Iterate through records
+    //         event.records[key].map((record) => {
+    //           console.log('Record: ', record)
+    //           // Decode base64
+    //           const msg = Buffer.from(record.value, 'base64').toString()
+    //           console.log('Message:', msg)
+    //         }) 
+    //       }
+    //     }
+    //   `),
+    // });
+
+    // new lambda.EventSourceMapping(this, 'EventSourceMapping', {
+    //   eventSourceArn: mskCluster.ref,
+    //   target: fnStd,
+    //   kafkaTopic: 'AWSKafkaTutorialTopic',
+    //   startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+    // });
 
     const c9env = new cloud9.CfnEnvironmentEC2(this, 'Cloud9Env', {
       instanceType: 't3.large',
       ownerArn: this.node.tryGetContext('login'),
-      subnetId: vpc.publicSubnets[0].subnetId
-    })
+      subnetId: vpc.publicSubnets[0].subnetId,
+    });
+
+    
 
 
   }
