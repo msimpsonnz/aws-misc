@@ -1,0 +1,28 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "OnlyAllowAwsIntegrations",
+        "Effect": "Allow",
+        "Action": [
+          "apigateway:PUT",
+          "apigateway:POST",
+          "apigateway:PATCH"
+        ],
+        "Resource": [
+          "arn:aws:apigateway:us-east-1::/apis",
+          "arn:aws:apigateway:us-east-1::/apis/??????????",
+          "arn:aws:apigateway:us-east-1::/apis/*/authorizers",
+          "arn:aws:apigateway:us-east-1::/apis/*/authorizers/*"
+        ],
+        "Condition": {
+          "ForAllValues:StringEqualsIfExists": {
+            "apigateway:Request/AuthorizerType": [
+              "REQUEST",
+              "JWT"
+            ]
+          }
+        }
+      }
+    ]
+  }
