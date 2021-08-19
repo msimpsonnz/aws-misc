@@ -21,11 +21,6 @@ export class FisDemoInfraStack extends Stack {
       defaultDatabaseName: 'demo',
       credentials: rds.Credentials.fromGeneratedSecret('clusteradmin'),
       instanceProps: {
-        // optional , defaults to t3.medium
-        instanceType: ec2.InstanceType.of(
-          ec2.InstanceClass.BURSTABLE2,
-          ec2.InstanceSize.SMALL
-        ),
         vpcSubnets: {
           subnetType: ec2.SubnetType.PRIVATE,
         },
@@ -37,7 +32,26 @@ export class FisDemoInfraStack extends Stack {
     });
 
     const fnGetPosts = new lambda_node.NodejsFunction(this, 'fnGetPosts', {
-      entry: './functions/getPosts/index.ts',
+      entry: './functions/index.ts',
+      bundling: {
+        nodeModules: ['@prisma/client', 'prisma'],
+        commandHooks: {
+          beforeBundling(inputDir: string, outputDir: string): string[] {
+            return []
+          },
+          beforeInstall(inputDir: string, outputDir: string) {
+            return [`cp -R ${inputDir}/prisma ${outputDir}/`]
+          },
+          afterBundling(inputDir: string, outputDir: string): string[] {
+            return [
+              `cd ${outputDir}`,
+              `yarn prisma generate`,
+              `rm -rf node_modules/@prisma/engines`,
+              `rm -rf node_modules/@prisma/client/node_modules node_modules/.bin node_modules/prisma`,
+            ]
+          },
+        },
+      },
       vpc: vpc,
       vpcSubnets: {
         subnetType: ec2.SubnetType.PRIVATE,
@@ -46,7 +60,7 @@ export class FisDemoInfraStack extends Stack {
         dbSecurityGroup
       ],
       environment: {
-        DATABASE_URL: `postgresql://clusteradmin:${cluster.secret?.secretValue.toString}@${cluster.clusterEndpoint}/demo`
+        DATABASE_URL: `postgresql://clusteradmin:${cluster.secret?.secretValueFromJson('password')}@${cluster.clusterEndpoint.hostname}/demo`
       }
     });
 

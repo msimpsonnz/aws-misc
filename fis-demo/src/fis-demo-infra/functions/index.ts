@@ -1,9 +1,9 @@
-import { Handler, Context } from 'aws-lambda';
+//import { Handler, Context } from 'aws-lambda';
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-export const handler: Handler = async (event: any, context: Context) => {
+export const handler = async (event: any) => {
   console.log(JSON.stringify(event));
   try {
     const posts = await prisma.post.findMany({
