@@ -60,7 +60,7 @@ export class FisDemoInfraStack extends Stack {
         dbSecurityGroup
       ],
       environment: {
-        DATABASE_URL: `postgresql://clusteradmin:${cluster.secret?.secretValueFromJson('password')}@${cluster.clusterEndpoint.hostname}/demo`
+        DATABASE_URL: `postgresql://clusteradmin:${cluster.secret?.secretValueFromJson('password')}@${cluster.clusterEndpoint.hostname}/demo?schema=public`
       }
     });
 
