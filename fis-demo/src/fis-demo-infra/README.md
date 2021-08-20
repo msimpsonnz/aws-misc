@@ -1,14 +1,35 @@
-# Welcome to your CDK TypeScript project!
 
-This is a blank project for TypeScript development with CDK.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
-## Useful commands
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk synth`       emits the synthesized CloudFormation template
+export HOSTNAME=fisdemoinfrastack-databaseb269d8bb-1s37mv1sw452i.cluster-c0dngne2r7ev.ap-southeast-2.rds.amazonaws.com
+export PORT=5432
+export USERNAME=clusteradmin
+export DATABASE_NAME=demo
+
+psql --host $HOSTNAME --port $PORT --user $USERNAME --dbname $DATABASE_NAME
+
+CREATE TABLE "public"."User" (
+  id SERIAL PRIMARY KEY NOT NULL,
+  name VARCHAR(255),
+  email VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE "public"."Post" (
+  id SERIAL PRIMARY KEY NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+  content TEXT,
+  published BOOLEAN NOT NULL DEFAULT false,
+  "authorId" INTEGER NOT NULL,
+  FOREIGN KEY ("authorId") REFERENCES "public"."User"(id)
+);
+
+CREATE TABLE "public"."Profile" (
+  id SERIAL PRIMARY KEY NOT NULL,
+  bio TEXT,
+  "userId" INTEGER UNIQUE NOT NULL,
+  FOREIGN KEY ("userId") REFERENCES "public"."User"(id)
+);
+
+npx prisma db seed --preview-feature
