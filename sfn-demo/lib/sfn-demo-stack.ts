@@ -43,7 +43,7 @@ export class SfnDemoStack extends Stack {
       'sfnTask_callFirstService',
       {
         lambdaFunction: fn_postExternal,
-        payload: stepfunctions.TaskInput.fromJsonPathAt('$.Payload'),
+        payload: stepfunctions.TaskInput.fromJsonPathAt('$'),
       }
     );
 
@@ -52,7 +52,7 @@ export class SfnDemoStack extends Stack {
       'sfnTask_callSecondService',
       {
         lambdaFunction: fn_postExternal,
-        payload: stepfunctions.TaskInput.fromJsonPathAt('$.Payload'),
+        payload: stepfunctions.TaskInput.fromJsonPathAt('$'),
       }
     );
 
@@ -61,7 +61,7 @@ export class SfnDemoStack extends Stack {
       'sfnTask_callThirdService',
       {
         lambdaFunction: fn_postExternal,
-        payload: stepfunctions.TaskInput.fromJsonPathAt('$.Payload'),
+        payload: stepfunctions.TaskInput.fromJsonPathAt('$'),
       }
     );
 

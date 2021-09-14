@@ -9,7 +9,7 @@ export const handler: Handler = async (event: any, context: Context) => {
       const params: StartExecutionCommandInput = {
         stateMachineArn: process.env.AWS_SFN_ARN,
         name: event.Records[0].eventID,
-        input: event.Records[0].eventID,
+        input: JSON.stringify(event.Records[0])
       };
       const command = new StartExecutionCommand(params);
     
