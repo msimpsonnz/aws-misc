@@ -8,10 +8,10 @@
   "profile": "",
   "region": "",
   "configuration": "Release",
-  "framework": "net6.0",
-  "function-runtime": "provided",
+  "framework": "netcoreapp3.1",
+  "function-runtime": "dotnetcore3.1",
   "function-memory-size": 256,
   "function-timeout": 30,
-  "function-handler": "bootstrap::CustomRuntimeFunction.Function::FunctionHandler",
-  "msbuild-parameters": "--runtime linux-arm64 --self-contained true"
+  "function-handler": "lambda-net-arm::lambda_net_arm.Function::FunctionHandler",
+  "msbuild-parameters": "--runtime linux-arm64"
 }
