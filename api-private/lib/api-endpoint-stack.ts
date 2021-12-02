@@ -4,20 +4,20 @@ import {
   aws_ec2 as ec2,
   aws_elasticloadbalancingv2 as elasticloadbalancingv2,
   aws_elasticloadbalancingv2_targets as elasticloadbalancingv2_targets,
+  aws_iam as iam,
   aws_lambda as lambda,
   aws_route53 as route53,
   Stack,
   StackProps
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { DomainName, HttpApi } from '@aws-cdk/aws-apigatewayv2-alpha';
-import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations-alpha';
 
 export class ApiEndpointStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     // Constants
+    const hostedZoneId = 'Z036911133KLHE4Z6V31Y';
     const domainName = 'dev.simpsnm.people.aws.dev';
     const apiDomainName = `api.${domainName}`;
     const eip1 = '10.0.2.59';
@@ -78,24 +78,12 @@ export class ApiEndpointStack extends Stack {
     });
 
     // Route53
-    const zone = route53.HostedZone.fromHostedZoneId(this, 'zone', 'Z036911133KLHE4Z6V31Y');
+    const zone = route53.HostedZone.fromHostedZoneId(this, 'zone', hostedZoneId);
 
     // Certificate Manager
     const cert_api_internal = new certificatemanager.Certificate(this, 'cert_api_internal', {
       domainName: apiDomainName,
       validation: certificatemanager.CertificateValidation.fromDns(zone),
-    });
-
-    // Lambda Echo
-    const fnEcho = new lambda.Function(this, 'fnEcho', {
-      runtime: lambda.Runtime.NODEJS_14_X,
-      handler: 'index.handler',
-      code: lambda.Code.fromInline(`
-      exports.handler = async function (event) {
-          console.log(JSON.stringify(event));
-          return event;
-      }
-      `)
     });
 
     const alb = new elasticloadbalancingv2.ApplicationLoadBalancer(this, 'alb', {
@@ -118,19 +106,52 @@ export class ApiEndpointStack extends Stack {
       ],
     });
 
-    // Internal API
-    const dn = new DomainName(this, 'DN', {
-      domainName: apiDomainName,
-      certificate: cert_api_internal,
-    });
-
-    const api_internal = new HttpApi(this, 'HttpProxyProdApi', {
-      defaultIntegration: new LambdaProxyIntegration({ handler: fnEcho }),
-      defaultDomainMapping: {
-        domainName: dn
+    // Private API
+    const privateApi = new apigateway.RestApi(this, 'privateApi', {
+      endpointConfiguration: {
+        types: [apigateway.EndpointType.PRIVATE],
+        vpcEndpoints: [endpoint_api_internal]
       },
+      policy: new iam.PolicyDocument({
+        statements: [
+          new iam.PolicyStatement({
+            principals: [new iam.AnyPrincipal],
+            actions: ['execute-api:Invoke'],
+            resources: ['execute-api:/*'],
+            effect: iam.Effect.DENY,
+            conditions: {
+              StringNotEquals: {
+                "aws:SourceVpce": endpoint_api_internal.vpcEndpointId
+              }
+            }
+          }),
+          new iam.PolicyStatement({
+            principals: [new iam.AnyPrincipal],
+            actions: ['execute-api:Invoke'],
+            resources: ['execute-api:/*'],
+            effect: iam.Effect.ALLOW
+          })
+        ]
+      })
     });
-
+    privateApi.root.addResource('foo').addMethod('GET', new apigateway.MockIntegration({
+      integrationResponses: [{
+        statusCode: '200',
+        responseTemplates: {
+          "application/json": `{
+                "id": "$context.requestId",
+                "createdAt": $context.requestTimeEpoch,
+                "updatedAt": $context.requestTimeEpoch
+            }`
+        }
+      }],
+      passthroughBehavior: apigateway.PassthroughBehavior.NEVER,
+      requestTemplates: {
+        'application/json': '{ "statusCode": 200 }',
+      },
+    }), {
+      methodResponses: [{ statusCode: '200' }],
+    });
 
     // Public API
     const publicApi = new apigateway.RestApi(this, 'publicApi');
@@ -160,8 +181,8 @@ export class ApiEndpointStack extends Stack {
       handler: 'index.handler',
       vpc,
       environment: {
-        INTERNAL_API: `https://${apiDomainName}/foo`,
-        INTERNAL_API_ID: api_internal.apiId,
+        INTERNAL_API: `https://${apiDomainName}/prod/foo`,
+        INTERNAL_API_ID: privateApi.restApiId,
         PUBLIC_API: `${publicApi.url}foo`
       },
       code: lambda.Code.fromInline(`
