@@ -23,5 +23,29 @@ export class TgwVpnCustomerStack extends Stack {
         });
 
 
+        const customerInstanceSG = new ec2.SecurityGroup(
+            this,
+            'customerInstanceSG',
+            {
+                vpc: customerVpc,
+                securityGroupName: 'customerInstanceSG',
+                description: 'Allow port 80',
+                allowAllOutbound: true,
+            }
+        );
+
+        const customerInstance = new ec2.Instance(this, 'customerInstance', {
+            instanceType: ec2.InstanceType.of(
+                ec2.InstanceClass.T3,
+                ec2.InstanceSize.NANO
+            ),
+            machineImage: new ec2.AmazonLinuxImage({
+                generation: ec2.AmazonLinuxGeneration.AMAZON_LINUX_2,
+            }),
+            vpc: customerVpc,
+            securityGroup: customerInstanceSG,
+            keyName: 'ap2'
+        });
+
     }
 }

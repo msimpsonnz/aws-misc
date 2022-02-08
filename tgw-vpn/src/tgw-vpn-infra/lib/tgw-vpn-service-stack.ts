@@ -6,7 +6,7 @@ import {
   aws_elasticloadbalancingv2_targets as elbv2_targets,
 } from 'aws-cdk-lib';
 
-export class TgwVpnInfraStack extends Stack {
+export class TgwVpnServiceStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -21,7 +21,7 @@ export class TgwVpnInfraStack extends Stack {
     //--- Service ---//
 
     const serviceVpc = new ec2.Vpc(this, 'serviceVpc', {
-      cidr: '10.64.1.0/24',
+      cidr: '10.10.1.0/24',
       maxAzs: 2,
       subnetConfiguration: [
         {
