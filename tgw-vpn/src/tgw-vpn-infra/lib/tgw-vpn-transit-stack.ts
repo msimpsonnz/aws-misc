@@ -43,16 +43,17 @@ export class TgwVpnTransitStack extends Stack {
             transitGatewayId: tgw.ref
         });
 
-        (vpc.publicSubnets[0] as ec2.Subnet).addRoute("StaticRoute", {
-            routerId: tgw.ref,
-            routerType: ec2.RouterType.GATEWAY,
-            destinationCidrBlock: destinationCidrBlock
-        });
-        (vpc.publicSubnets[1] as ec2.Subnet).addRoute("StaticRoute", {
-            routerId: tgw.ref,
-            routerType: ec2.RouterType.GATEWAY,
-            destinationCidrBlock: destinationCidrBlock
-        });
+        // This didn't work had to create routes manually
+        // (vpc.publicSubnets[0] as ec2.Subnet).addRoute("StaticRoute", {
+        //     routerId: tgw.ref,
+        //     routerType: ec2.RouterType.GATEWAY,
+        //     destinationCidrBlock: destinationCidrBlock
+        // });
+        // (vpc.publicSubnets[1] as ec2.Subnet).addRoute("StaticRoute", {
+        //     routerId: tgw.ref,
+        //     routerType: ec2.RouterType.GATEWAY
+        //     destinationCidrBlock: destinationCidrBlock
+        // });
 
 
         new ec2.InterfaceVpcEndpoint(this, 'VPC Endpoint', {
