@@ -368,3 +368,5 @@ tf-lambda/storeFunc/main
 tf-lambda/schedFunc/main
 .DS_Store
 amp-console-cfn/mydemorepo
+*.jar
+appflow-custom/appflow-custom-connector/target/*
