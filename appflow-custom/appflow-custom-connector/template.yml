@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Template to deploy the lambda connector in your account.
+Resources:
+  ConnectorFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: "org.custom.connector.saas.handler.JDBCConnectorLambdaHandler::handleRequest"
+      CodeUri: "./target/appflow-custom-connector-saas-1.0.jar"
+      Description: "AppFlow custom SaaS connector example"
+      Runtime: java11
+      Timeout: 30
+      MemorySize: 1024
+      Policies:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Action: 'secretsmanager:GetSecretValue'
+          Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:appflow!${AWS::AccountId}-*'
+
+  PolicyPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt ConnectorFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: 'appflow.amazonaws.com'
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:appflow:${AWS::Region}:${AWS::AccountId}:*'
